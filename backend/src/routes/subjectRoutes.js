@@ -7,12 +7,19 @@ const {
   getSubjectPosts
 } = require('../controllers/subjectController');
 const { getSubjectResources } = require('../controllers/resourceController');
-const authMiddleware = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
-router.get('/', getSubjects);
-router.post('/', authMiddleware, createSubject);
-router.get('/:id', getSubjectById);
-router.get('/:id/posts', getSubjectPosts);
-router.get('/:id/resources', getSubjectResources);
+router.route('/')
+  .get(getSubjects)
+  .post(protect, createSubject);
+
+router.route('/:id')
+  .get(getSubjectById);
+
+router.route('/:id/posts')
+  .get(getSubjectPosts);
+
+router.route('/:id/resources')
+  .get(getSubjectResources);
 
 module.exports = router;

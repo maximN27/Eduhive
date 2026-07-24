@@ -4,25 +4,27 @@ const User = require('../models/User');
 
 const generateToken = (userId, role) => {
   return jwt.sign(
-    { userId, role },
+    { id: userId, userId, role },
     process.env.JWT_SECRET || 'eduhive_dev_secret_key_12345',
-    { expiresIn: '7d' }
+    { expiresIn: '30d' }
   );
 };
 
 // @desc    Register a new user
-// @route   POST /auth/register
+// @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res, next) => {
   try {
-    const { username, name, email, password, role, bio, college, experienceLevel, interests, preferredLanguage, preferredResourceType } = req.body;
+    const { username, name, email, password, role, bio, college, profilePic, experienceLevel, interests, preferredLanguage, preferredResourceType } = req.body;
 
     if (!username || !name || !email || !password) {
       return res.status(400).json({
+        success: false,
         error: {
           message: 'Please provide username, name, email, and password',
           code: 'BAD_REQUEST'
-        }
+        },
+        message: 'Please provide username, name, email, and password'
       });
     }
 
@@ -32,10 +34,12 @@ const registerUser = async (req, res, next) => {
 
     if (existingUser) {
       return res.status(409).json({
+        success: false,
         error: {
           message: 'User with this email or username already exists',
           code: 'CONFLICT'
-        }
+        },
+        message: 'User with this email or username already exists'
       });
     }
 
@@ -47,9 +51,10 @@ const registerUser = async (req, res, next) => {
       name,
       email: email.toLowerCase(),
       passwordHash,
-      role: role || 'student',
+      role: role || 'Student',
       bio: bio || '',
       college: college || '',
+      profilePic: profilePic || '',
       experienceLevel: experienceLevel || 'Beginner',
       interests: interests || [],
       preferredLanguage: preferredLanguage || 'English',
@@ -57,20 +62,22 @@ const registerUser = async (req, res, next) => {
     });
 
     const token = generateToken(user._id, user.role);
-
     const userResponse = await User.findById(user._id).select('-passwordHash');
 
     res.status(201).json({
+      success: true,
       token,
-      user: userResponse
+      user: userResponse,
+      data: userResponse
     });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Authenticate user & get token
-// @route   POST /auth/login
+// @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res, next) => {
   try {
@@ -78,10 +85,12 @@ const loginUser = async (req, res, next) => {
 
     if (!email || !password) {
       return res.status(400).json({
+        success: false,
         error: {
           message: 'Please provide email and password',
           code: 'BAD_REQUEST'
-        }
+        },
+        message: 'Please provide email and password'
       });
     }
 
@@ -89,10 +98,12 @@ const loginUser = async (req, res, next) => {
 
     if (!user) {
       return res.status(401).json({
+        success: false,
         error: {
-          message: 'Invalid email or password',
+          message: 'Invalid credentials',
           code: 'UNAUTHORIZED'
-        }
+        },
+        message: 'Invalid credentials'
       });
     }
 
@@ -100,10 +111,12 @@ const loginUser = async (req, res, next) => {
 
     if (!isMatch) {
       return res.status(401).json({
+        success: false,
         error: {
-          message: 'Invalid email or password',
+          message: 'Invalid credentials',
           code: 'UNAUTHORIZED'
-        }
+        },
+        message: 'Invalid credentials'
       });
     }
 
@@ -114,46 +127,64 @@ const loginUser = async (req, res, next) => {
     const userResponse = await User.findById(user._id).select('-passwordHash');
 
     res.status(200).json({
+      success: true,
       token,
-      user: userResponse
+      user: userResponse,
+      data: userResponse
     });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Get current user profile
-// @route   GET /auth/me
+// @route   GET /api/auth/me
 // @access  Private
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId).select('-passwordHash');
+    const userId = req.user._id || req.user.userId || req.user.id;
+    const user = await User.findById(userId)
+      .select('-passwordHash')
+      .populate('joinedCommunities', 'name description tags membersCount')
+      .populate('savedPosts', 'title voteScore createdAt')
+      .populate('savedResources', 'title type URL');
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         error: {
           message: 'User not found',
           code: 'NOT_FOUND'
-        }
+        },
+        message: 'User not found'
       });
     }
 
-    res.status(200).json({ user });
+    res.status(200).json({
+      success: true,
+      user,
+      data: user
+    });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Logout user (discard client token)
-// @route   POST /auth/logout
+// @desc    Logout user
+// @route   POST /api/auth/logout
 // @access  Public
 const logoutUser = (req, res) => {
-  res.status(200).json({ message: 'Logged out successfully' });
+  res.status(200).json({ success: true, message: 'Successfully logged out' });
 };
 
 module.exports = {
   registerUser,
   loginUser,
   getMe,
-  logoutUser
+  logoutUser,
+  register: registerUser,
+  login: loginUser,
+  logout: logoutUser
 };

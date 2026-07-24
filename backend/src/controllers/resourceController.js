@@ -1,8 +1,59 @@
 const Resource = require('../models/Resource');
+const Vote = require('../models/Vote');
 const Subject = require('../models/Subject');
 const DiscoveryLog = require('../models/DiscoveryLog');
 const discoveryService = require('../services/discoveryService');
 const mongoose = require('mongoose');
+
+// @desc    Vote on a resource (Convenience endpoint for resources)
+// @route   PUT /api/resources/:id/vote
+// @access  Private
+const voteResource = async (req, res, next) => {
+  try {
+    const { voteType } = req.body; // 'up' or 'down'
+
+    if (!voteType || !['up', 'down'].includes(voteType)) {
+      return res.status(400).json({ success: false, message: 'Invalid voteType. Must be "up" or "down"' });
+    }
+
+    const resource = await Resource.findById(req.params.id);
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found' });
+    }
+
+    const userId = req.user._id || req.user.userId || req.user.id;
+    const existingVote = await Vote.findOne({
+      userId,
+      targetType: 'Resource',
+      targetId: resource._id
+    });
+
+    if (existingVote) {
+      if (existingVote.voteType === voteType) {
+        await existingVote.deleteOne();
+        resource.votes += voteType === 'up' ? -1 : 1;
+      } else {
+        existingVote.voteType = voteType;
+        await existingVote.save();
+        resource.votes += voteType === 'up' ? 2 : -2;
+      }
+    } else {
+      await Vote.create({
+        userId,
+        targetType: 'Resource',
+        targetId: resource._id,
+        voteType
+      });
+      resource.votes += voteType === 'up' ? 1 : -1;
+    }
+
+    await resource.save();
+    res.status(200).json({ success: true, data: resource, resource });
+  } catch (error) {
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // Helper to resolve Subject document from ID or string slug
 const findSubject = async (subjectId) => {
@@ -13,7 +64,6 @@ const findSubject = async (subjectId) => {
     if (s) return s;
   }
 
-  // Fallback map for common string codes/slugs
   const nameMap = {
     'cs': 'Computer Science',
     'physics': 'Physics',
@@ -32,7 +82,7 @@ const findSubject = async (subjectId) => {
 };
 
 // @desc    Get resources for a subject with automatic external discovery fan-out
-// @route   GET /subjects/:id/resources
+// @route   GET /api/subjects/:id/resources
 // @access  Public
 const getSubjectResources = async (req, res, next) => {
   try {
@@ -60,7 +110,6 @@ const getSubjectResources = async (req, res, next) => {
 
     let existingCount = await Resource.countDocuments(queryFilter);
 
-    // Auto-discovery trigger: < 5 cached items and tag provided
     if (existingCount < 5 && tag) {
       const normalizedTag = tag.toLowerCase().trim();
       const log = await DiscoveryLog.findOne({ subjectId, tag: normalizedTag });
@@ -107,7 +156,9 @@ const getSubjectResources = async (req, res, next) => {
     }
 
     res.status(200).json({
+      success: true,
       resources,
+      data: resources,
       pagination: {
         total,
         page,
@@ -116,10 +167,12 @@ const getSubjectResources = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 module.exports = {
+  voteResource,
   getSubjectResources
 };

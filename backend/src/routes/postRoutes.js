@@ -6,23 +6,33 @@ const {
   createPost,
   updatePost,
   deletePost,
+  getPostResources,
+  addPostResource,
   summarizePostHandler
 } = require('../controllers/postController');
 const {
   getPostComments,
   createComment
 } = require('../controllers/commentController');
-const authMiddleware = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
-router.get('/', getPosts);
-router.post('/', authMiddleware, createPost);
-router.get('/:id', getPostById);
-router.put('/:id', authMiddleware, updatePost);
-router.delete('/:id', authMiddleware, deletePost);
-router.post('/:id/summarize', authMiddleware, summarizePostHandler);
+router.route('/')
+  .get(getPosts)
+  .post(protect, createPost);
 
-// Comment sub-routes
-router.get('/:id/comments', getPostComments);
-router.post('/:id/comments', authMiddleware, createComment);
+router.route('/:id')
+  .get(getPostById)
+  .put(protect, updatePost)
+  .delete(protect, deletePost);
+
+router.post('/:id/summarize', protect, summarizePostHandler);
+
+router.route('/:id/comments')
+  .get(getPostComments)
+  .post(protect, createComment);
+
+router.route('/:id/resources')
+  .get(getPostResources)
+  .post(protect, addPostResource);
 
 module.exports = router;

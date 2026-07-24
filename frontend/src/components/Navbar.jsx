@@ -1,22 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import AuthModal from './AuthModal';
 import NotificationsModal from './NotificationsModal';
 
 export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }) {
-  const { 
-    searchQuery, 
-    setSearchQuery, 
-    user: appUser, 
-    savedPosts = [], 
-    savedResources = [], 
-    clearFilters, 
+  const {
+    searchQuery,
+    setSearchQuery,
+    user: appUser,
+    token: appToken,
+    savedPosts = [],
+    savedResources = [],
+    clearFilters,
     setIsSettingsOpen,
+    isAuthOpen,
+    setIsAuthOpen,
+    setAuthMode,
     isNotificationsOpen,
     setIsNotificationsOpen,
-    setIsCreatePostOpen,
-    goHome,
-    openProfile
+    handleLogout,
+    notifications = [],
+    navigateToProfile,
+    openProfile,
+    goHome
   } = useApp();
 
   let authUser = null;
@@ -26,28 +33,53 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
     authUser = authContext?.user || null;
     logout = authContext?.logout || null;
   } catch (e) {
-    // Graceful fallback if context is unmounted
+    // Graceful fallback if AuthContext is unmounted
   }
 
   const user = authUser || appUser || {};
+  const token = appToken || (authUser ? 'token' : null);
   const userName = user.name || user.username || 'Scholar';
   const userHandle = user.handle || (user.username ? `@${user.username}` : '@scholar');
   const userAvatar = user.avatar || user.profilePic || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150';
   const userRole = user.role || 'Student';
-  const userReputation = user.reputation !== undefined ? user.reputation : 120;
-  
+  const userReputation = user.reputation !== undefined ? user.reputation : (user.streak ? user.streak * 250 : 120);
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const dropdownRef = useRef(null);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const unreadCount = notifications.filter(n => !n.isRead && n.unread !== false).length;
+
+  const handleSignOut = () => {
+    setShowProfileMenu(false);
+    if (logout) logout();
+    if (handleLogout) handleLogout();
+  };
+
+  const handleLoginClick = () => {
+    if (onOpenLogin) onOpenLogin();
+    else {
+      setAuthMode('login');
+      setIsAuthOpen(true);
+    }
+  };
+
+  const handleRegisterClick = () => {
+    if (onOpenSignup) onOpenSignup();
+    else {
+      setAuthMode('register');
+      setIsAuthOpen(true);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 theme-navbar transition-all duration-200">
@@ -66,7 +98,7 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
           </button>
 
           <div 
-            onClick={() => { clearFilters(); goHome(); }}
+            onClick={goHome}
             className="flex items-center gap-2.5 cursor-pointer group"
           >
             <div 
@@ -75,7 +107,7 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
               </svg>
             </div>
             <div className="flex items-center gap-2">
@@ -86,7 +118,7 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
                 className="hidden sm:inline-block text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border"
                 style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}
               >
-                Academic
+                Academic API
               </span>
             </div>
           </div>
@@ -127,152 +159,125 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
         {/* Right: Notifications & User Profile */}
         <div className="flex items-center gap-2.5 shrink-0">
           
-          {/* Notification Button */}
-          <div className="relative">
-            <button 
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="relative p-2 rounded-xl border transition-colors hover:bg-slate-500/10 cursor-pointer"
-              style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-              title="Notifications"
-            >
-              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2" style={{ backgroundColor: 'var(--primary)', ringColor: 'var(--card-bg)' }}></span>
-            </button>
-
-            {/* Notification Popover Dropdown */}
-            {isNotificationsOpen && (
-              <NotificationsModal 
-                isOpen={isNotificationsOpen}
-                onClose={() => setIsNotificationsOpen(false)}
-              />
-            )}
-          </div>
-
-          {/* New Post Button (Placed before user profile) */}
-          <button
-            onClick={() => setIsCreatePostOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+          {/* Notifications Button */}
+          <button 
+            onClick={() => setIsNotificationsOpen(true)}
+            className="relative p-2 rounded-xl border transition-colors hover:bg-slate-500/10 cursor-pointer"
+            style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+            title="Notifications"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+            <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span className="hidden sm:inline">New Post</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2" style={{ backgroundColor: 'var(--primary)', ringColor: 'var(--card-bg)' }}></span>
+            )}
           </button>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 p-1 rounded-xl border transition-all hover:bg-slate-500/5 focus:outline-none group cursor-pointer"
-              style={{ borderColor: 'var(--border-color)' }}
-            >
-              <img
-                src={userAvatar}
-                alt={userName}
-                className="w-8 h-8 rounded-lg object-cover ring-2 transition-all"
-                style={{ ringColor: 'var(--primary-border)' }}
-              />
-              
-              <div className="hidden lg:flex flex-col text-left pr-1">
-                <span className="text-xs font-bold theme-text-primary leading-tight">
-                  {userName}
-                </span>
-                <span className="text-[9px] font-semibold" style={{ color: 'var(--primary)' }}>
-                  ⚡ {userReputation} XP
-                </span>
-              </div>
-
-              <svg className={`w-3.5 h-3.5 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Dropdown Menu Modal */}
-            {showProfileMenu && (
-              <div 
-                className="absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
-                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: 'var(--radius)' }}
+          {/* Authentication / Profile Button */}
+          {!token && !user.email ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleLoginClick}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer"
+                style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
               >
-                <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                  <div className="flex items-center gap-3">
-                    <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-lg object-cover" />
-                    <div>
-                      <p className="text-sm font-bold theme-text-primary">{userName}</p>
-                      <p className="text-xs theme-text-muted">{userHandle}</p>
+                Sign In
+              </button>
+              <button
+                onClick={handleRegisterClick}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl text-white transition-all shadow-sm cursor-pointer"
+                style={{ backgroundColor: 'var(--primary)' }}
+              >
+                Register
+              </button>
+            </div>
+          ) : (
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 p-1 rounded-xl border transition-all hover:bg-slate-500/5 focus:outline-none group cursor-pointer"
+                style={{ borderColor: 'var(--border-color)' }}
+              >
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  className="w-8 h-8 rounded-lg object-cover ring-2 transition-all"
+                  style={{ ringColor: 'var(--primary-border)' }}
+                />
+                
+                <div className="hidden lg:flex flex-col text-left pr-1">
+                  <span className="text-xs font-bold theme-text-primary leading-tight">
+                    {userName}
+                  </span>
+                  <span className="text-[9px] font-semibold" style={{ color: 'var(--primary)' }}>
+                    ⚡ {userReputation} XP
+                  </span>
+                </div>
+
+                <svg className={`w-3.5 h-3.5 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {showProfileMenu && (
+                <div 
+                  className="absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: 'var(--radius)' }}
+                >
+                  <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                    <div className="flex items-center gap-3">
+                      <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-lg object-cover" />
+                      <div>
+                        <p className="text-sm font-bold theme-text-primary">{userName}</p>
+                        <p className="text-xs theme-text-muted">{userHandle}</p>
+                      </div>
+                    </div>
+                    <div 
+                      className="mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium uppercase tracking-wider"
+                      style={{ backgroundColor: 'var(--primary-light)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}
+                    >
+                      <span>{userRole}</span>
+                      <span className="font-bold">⚡ {userReputation} XP</span>
                     </div>
                   </div>
-                  <div 
-                    className="mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium uppercase tracking-wider"
-                    style={{ backgroundColor: 'var(--primary-light)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}
-                  >
-                    <span>{userRole}</span>
-                    <span className="font-bold">⚡ {userReputation} XP</span>
-                  </div>
-                </div>
 
-                <div className="py-2">
-                  <div className="px-4 py-1 text-[11px] font-bold uppercase tracking-wider theme-text-muted">
-                    Quick Stats
-                  </div>
-                  <div className="px-4 py-1 flex justify-between text-xs theme-text-secondary">
-                    <span>Saved Posts</span>
-                    <span className="font-semibold" style={{ color: 'var(--primary)' }}>{savedPosts.length}</span>
-                  </div>
-                  <div className="px-4 py-1 flex justify-between text-xs theme-text-secondary">
-                    <span>Saved Resources</span>
-                    <span className="font-semibold" style={{ color: 'var(--primary)' }}>{savedResources.length}</span>
-                  </div>
-                </div>
-
-                <div className="border-t pt-1 mt-1" style={{ borderColor: 'var(--border-color)' }}>
-                  <button 
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      openProfile();
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    View Full Profile
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      setIsSettingsOpen(true);
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Appearance & Theme Settings
-                  </button>
-                  {logout && (
+                  <div className="py-2">
+                    <button
+                      onClick={() => { setShowProfileMenu(false); if (openProfile) openProfile(); else navigateToProfile(); }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      👤 View Profile
+                    </button>
                     <button 
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        logout();
-                      }}
+                      onClick={() => { setShowProfileMenu(false); setIsSettingsOpen(true); }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      ⚙️ Appearance Settings
+                    </button>
+                  </div>
+
+                  <div className="border-t pt-1 mt-1" style={{ borderColor: 'var(--border-color)' }}>
+                    <button 
+                      onClick={handleSignOut}
                       className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors cursor-pointer"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Sign Out
+                      🚪 Sign Out
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+
         </div>
 
       </div>
+
+      {/* Modals */}
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <NotificationsModal isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
     </header>
   );
 }

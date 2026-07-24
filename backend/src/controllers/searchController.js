@@ -3,82 +3,87 @@ const User = require('../models/User');
 const Subject = require('../models/Subject');
 const Resource = require('../models/Resource');
 
-// @desc    Search posts, users, or subjects by query
-// @route   GET /search?q=&type=posts|users|subjects
+// @desc    Universal search across posts, users, or subjects
+// @route   GET /api/search
 // @access  Public
 const searchAll = async (req, res, next) => {
   try {
     const q = req.query.q ? req.query.q.trim() : '';
-    const type = req.query.type ? req.query.type.toLowerCase() : 'posts';
+    const type = req.query.type ? req.query.type.toLowerCase() : '';
 
     if (!q) {
-      return res.status(200).json({ results: [], count: 0 });
+      return res.status(200).json({ success: true, results: [], data: [], count: 0 });
     }
 
-    let results = [];
+    const regex = new RegExp(q, 'i');
+    let results = {};
 
-    if (type === 'posts') {
+    if (!type || type === 'posts') {
       try {
-        results = await Post.find({ $text: { $search: q } })
-          .populate('authorId', 'username name profilePic role')
+        results.posts = await Post.find({ $text: { $search: q } })
           .populate('subjectId', 'name description tags')
-          .populate('resourceIds')
-          .sort({ createdAt: -1 });
-      } catch (err) {
-        results = [];
+          .populate('authorId', 'name username avatar profilePic role')
+          .sort({ createdAt: -1 })
+          .limit(20);
+      } catch (e) {
+        results.posts = [];
       }
 
-      // Regex fallback if text search produced no results
-      if (results.length === 0) {
-        const regex = new RegExp(q, 'i');
-        results = await Post.find({
+      if (!results.posts || results.posts.length === 0) {
+        results.posts = await Post.find({
           $or: [
             { title: regex },
             { content: regex },
             { tags: regex }
           ]
         })
-          .populate('authorId', 'username name profilePic role')
           .populate('subjectId', 'name description tags')
-          .populate('resourceIds')
-          .sort({ createdAt: -1 });
+          .populate('authorId', 'name username avatar profilePic role')
+          .sort({ createdAt: -1 })
+          .limit(20);
       }
-    } else if (type === 'users') {
-      const regex = new RegExp(q, 'i');
-      results = await User.find({
+    }
+
+    if (!type || type === 'users') {
+      results.users = await User.find({
         $or: [
           { username: regex },
           { name: regex },
+          { college: regex },
+          { bio: regex },
           { email: regex }
         ]
-      }).select('-passwordHash');
-    } else if (type === 'subjects') {
-      const regex = new RegExp(q, 'i');
-      results = await Subject.find({
+      })
+        .select('-passwordHash')
+        .limit(20);
+    }
+
+    if (!type || type === 'subjects') {
+      results.subjects = await Subject.find({
         $or: [
           { name: regex },
           { description: regex },
           { tags: regex }
         ]
-      });
-    } else {
-      return res.status(400).json({
-        error: {
-          message: 'Invalid search type. Must be posts, users, or subjects',
-          code: 'BAD_REQUEST'
-        }
-      });
+      }).limit(20);
     }
 
+    const responseData = type ? (results[type] || []) : results;
+    const count = Array.isArray(responseData) ? responseData.length : Object.keys(results).reduce((acc, k) => acc + results[k].length, 0);
+
     res.status(200).json({
-      results,
-      count: results.length
+      success: true,
+      data: responseData,
+      results: responseData,
+      count
     });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 module.exports = {
-  searchAll
+  searchAll,
+  search: searchAll
 };

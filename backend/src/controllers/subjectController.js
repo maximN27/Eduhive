@@ -1,60 +1,86 @@
 const Subject = require('../models/Subject');
 const Post = require('../models/Post');
-const Resource = require('../models/Resource');
+const mongoose = require('mongoose');
 
-// @desc    Get paginated subjects
-// @route   GET /subjects
+// @desc    Get all subjects with optional search and pagination
+// @route   GET /api/subjects
 // @access  Public
 const getSubjects = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
-    const skip = (page - 1) * limit;
+    const { search, tag, page, limit } = req.query;
+    let query = {};
 
-    const total = await Subject.countDocuments();
-    const subjects = await Subject.find()
-      .sort({ createdAt: -1, _id: -1 })
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (tag) {
+      query.tags = tag;
+    }
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 50;
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await Subject.countDocuments(query);
+    const subjects = await Subject.find(query)
+      .sort({ membersCount: -1, createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limitNum);
 
     res.status(200).json({
+      success: true,
+      count: subjects.length,
+      data: subjects,
       subjects,
       pagination: {
         total,
-        page,
-        pages: Math.ceil(total / limit),
-        limit
+        page: pageNum,
+        pages: Math.ceil(total / limitNum) || 1,
+        limit: limitNum
       }
     });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get single subject by ID
-// @route   GET /subjects/:id
+// @desc    Get subject by ID
+// @route   GET /api/subjects/:id
 // @access  Public
 const getSubjectById = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Subject not found', code: 'NOT_FOUND' },
+        message: 'Subject not found'
+      });
+    }
+
     const subject = await Subject.findById(req.params.id);
 
     if (!subject) {
       return res.status(404).json({
-        error: {
-          message: 'Subject not found',
-          code: 'NOT_FOUND'
-        }
+        success: false,
+        error: { message: 'Subject not found', code: 'NOT_FOUND' },
+        message: 'Subject not found'
       });
     }
 
-    res.status(200).json({ subject });
+    res.status(200).json({ success: true, data: subject, subject });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Create new subject
-// @route   POST /subjects
+// @desc    Create a new subject
+// @route   POST /api/subjects
 // @access  Private
 const createSubject = async (req, res, next) => {
   try {
@@ -62,20 +88,18 @@ const createSubject = async (req, res, next) => {
 
     if (!name) {
       return res.status(400).json({
-        error: {
-          message: 'Subject name is required',
-          code: 'BAD_REQUEST'
-        }
+        success: false,
+        error: { message: 'Subject name is required', code: 'BAD_REQUEST' },
+        message: 'Subject name is required'
       });
     }
 
     const existingSubject = await Subject.findOne({ name: name.trim() });
     if (existingSubject) {
       return res.status(409).json({
-        error: {
-          message: 'Subject already exists',
-          code: 'CONFLICT'
-        }
+        success: false,
+        error: { message: 'Subject already exists', code: 'CONFLICT' },
+        message: 'Subject already exists'
       });
     }
 
@@ -85,50 +109,63 @@ const createSubject = async (req, res, next) => {
       tags: tags || []
     });
 
-    res.status(201).json({ subject });
+    res.status(201).json({ success: true, data: subject, subject });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get posts belonging to a subject (paginated)
-// @route   GET /subjects/:id/posts
+// @desc    Get all posts belonging to a subject
+// @route   GET /api/subjects/:id/posts
 // @access  Public
 const getSubjectPosts = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Subject not found', code: 'NOT_FOUND' },
+        message: 'Subject not found'
+      });
+    }
+
     const subject = await Subject.findById(req.params.id);
     if (!subject) {
       return res.status(404).json({
-        error: {
-          message: 'Subject not found',
-          code: 'NOT_FOUND'
-        }
+        success: false,
+        error: { message: 'Subject not found', code: 'NOT_FOUND' },
+        message: 'Subject not found'
       });
     }
 
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const limit = parseInt(req.query.limit, 10) || 50;
     const skip = (page - 1) * limit;
 
     const total = await Post.countDocuments({ subjectId: req.params.id });
     const posts = await Post.find({ subjectId: req.params.id })
-      .populate('authorId', 'username name profilePic role')
+      .populate('authorId', 'name username avatar profilePic role')
+      .populate('reserouseIds')
       .populate('resourceIds')
-      .sort({ createdAt: -1, _id: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
     res.status(200).json({
+      success: true,
+      count: posts.length,
+      data: posts,
       posts,
       pagination: {
         total,
         page,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / limit) || 1,
         limit
       }
     });
   } catch (error) {
-    next(error);
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
