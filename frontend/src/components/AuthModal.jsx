@@ -52,7 +52,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-md p-6 rounded-3xl border shadow-2xl relative transition-all"
         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
       >

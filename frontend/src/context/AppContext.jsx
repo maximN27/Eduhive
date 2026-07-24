@@ -95,6 +95,7 @@ export const AppProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('eduhive_token') || null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   // Filtering & Sorting
   const [activeSubject, setActiveSubject] = useState(null); // subjectId or null
@@ -152,8 +153,8 @@ export const AppProvider = ({ children }) => {
           id: s._id,
           name: s.name,
           icon: s.name.toLowerCase().includes('computer') ? '💻' :
-                s.name.toLowerCase().includes('math') ? '📐' :
-                s.name.toLowerCase().includes('data') ? '🤖' :
+            s.name.toLowerCase().includes('math') ? '📐' :
+              s.name.toLowerCase().includes('data') ? '🤖' :
                 s.name.toLowerCase().includes('web') ? '🌐' : '⚡',
           count: s.membersCount || 0,
           description: s.description || ''
@@ -526,6 +527,8 @@ export const AppProvider = ({ children }) => {
         activePost,
         navigateToPost,
         navigateToProfile,
+        openProfile: navigateToProfile,
+        openPost: navigateToPost,
         goHome,
         subjects,
         tags,
@@ -539,6 +542,9 @@ export const AppProvider = ({ children }) => {
         setIsAuthOpen,
         authMode,
         setAuthMode,
+        isNotificationsOpen,
+        setIsNotificationsOpen,
+        openNotifications: () => setIsNotificationsOpen(true),
         handleLogin,
         handleRegister,
         handleLogout,

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import AuthModal from './AuthModal';
+import NotificationsModal from './NotificationsModal';
 
 export default function Navbar({ onMobileMenuToggle }) {
   const {
@@ -15,32 +16,29 @@ export default function Navbar({ onMobileMenuToggle }) {
     isAuthOpen,
     setIsAuthOpen,
     setAuthMode,
+    isNotificationsOpen,
+    setIsNotificationsOpen,
     handleLogout,
     notifications,
     navigateToProfile,
+    openProfile,
     goHome
   } = useApp();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-
   const profileRef = useRef(null);
-  const notifRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter(n => !n.isRead || n.unread).length;
 
   return (
     <header className="sticky top-0 z-40 theme-navbar transition-all duration-200">
@@ -121,51 +119,20 @@ export default function Navbar({ onMobileMenuToggle }) {
         {/* Right: Notifications & User Profile */}
         <div className="flex items-center gap-3 shrink-0">
           
-          {/* Notifications Button & Dropdown */}
-          <div className="relative" ref={notifRef}>
-            <button 
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2.5 rounded-xl border transition-colors hover:bg-slate-500/10"
-              style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-              title="Notifications"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {unreadCount > 0 && (
-                <span 
-                  className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full ring-2" 
-                  style={{ backgroundColor: 'var(--primary)', ringColor: 'var(--card-bg)' }}
-                ></span>
-              )}
-            </button>
-
-            {showNotifications && (
-              <div 
-                className="absolute right-0 mt-2 w-72 rounded-2xl border shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
-                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
-              >
-                <div className="flex items-center justify-between border-b pb-2 mb-2" style={{ borderColor: 'var(--border-color)' }}>
-                  <span className="text-xs font-bold theme-text-primary">Notifications</span>
-                  <span className="text-[10px] font-mono theme-text-muted">{notifications.length} Total</span>
-                </div>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="text-center py-4 text-xs theme-text-muted">
-                      No new notifications right now.
-                    </div>
-                  ) : (
-                    notifications.map(n => (
-                      <div key={n._id} className="p-2 rounded-xl text-xs bg-slate-500/10 border" style={{ borderColor: 'var(--border-color)' }}>
-                        <p className="font-semibold theme-text-primary">{n.title || 'System Notification'}</p>
-                        <p className="text-[11px] theme-text-secondary">{n.message || 'Activity updated'}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+          {/* Notifications Button */}
+          <button 
+            onClick={() => setIsNotificationsOpen(true)}
+            className="relative p-2.5 rounded-xl border transition-colors hover:bg-slate-500/10"
+            style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+            title="Notifications"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full ring-2" style={{ backgroundColor: 'var(--primary)', ringColor: 'var(--card-bg)' }}></span>
             )}
-          </div>
+          </button>
 
           {/* Authentication / Profile Button */}
           {!token ? (
@@ -268,8 +235,9 @@ export default function Navbar({ onMobileMenuToggle }) {
 
       </div>
 
-      {/* Auth Modal Render */}
+      {/* Modals */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <NotificationsModal isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
     </header>
   );
 }
