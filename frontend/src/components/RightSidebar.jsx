@@ -4,14 +4,14 @@ import SavedPostItem from './SavedPostItem';
 import SavedResourceItem from './SavedResourceItem';
 
 export default function RightSidebar() {
-  const { savedPosts, savedResources } = useApp();
+  const { savedPosts = [], savedResources = [] } = useApp();
 
   return (
-    <aside className="w-full space-y-6">
+    <aside className="w-full space-y-3.5">
       
       {/* 1. Saved Posts Section */}
-      <div className="theme-card p-5">
-        <div className="flex items-center justify-between pb-3.5 mb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="theme-card p-3.5">
+        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-amber-500 fill-amber-500" viewBox="0 0 24 24">
               <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -45,8 +45,8 @@ export default function RightSidebar() {
       </div>
 
       {/* 2. Saved Resources Section */}
-      <div className="theme-card p-5">
-        <div className="flex items-center justify-between pb-3.5 mb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="theme-card p-3.5">
+        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

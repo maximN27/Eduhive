@@ -1,4 +1,5 @@
 import React from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
 import Home from './pages/Home';
 import PostPage from './pages/PostPage';
@@ -13,9 +14,11 @@ function MainRouter() {
 
 function App() {
   return (
-    <AppProvider>
-      <MainRouter />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <MainRouter />
+      </AppProvider>
+    </AuthProvider>
   );
 }
 

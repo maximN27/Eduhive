@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import CreatePostBox from './CreatePostBox';
 import PostCard from './PostCard';
+import { ResourcesTab } from './ResourcesTab';
 
 export default function CenterFeed() {
+  const [activeTab, setActiveTab] = useState('feed'); // 'feed' | 'resources'
   const {
     posts,
     allPostsCount,
@@ -24,14 +26,48 @@ export default function CenterFeed() {
   return (
     <section className="w-full flex-1 max-w-full">
       
-      {/* Feed Control Bar: Sorting & Counter */}
-      <div className="theme-card p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+      {/* Top Tab Switcher */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('feed')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'feed'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'theme-card theme-text-secondary hover:theme-text-primary'
+          }`}
+        >
+          💬 Discussion Feed
+        </button>
+        <button
+          onClick={() => setActiveTab('resources')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'resources'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'theme-card theme-text-secondary hover:theme-text-primary'
+          }`}
+        >
+          🌐 External Resources (YouTube • GitHub • arXiv)
+        </button>
+      </div>
+
+      {activeTab === 'resources' ? (
+        <ResourcesTab />
+      ) : (
+        <>
+      
+      {/* Feed Control Bar: Counter on Left, Sorting Tabs on Right */}
+      <div className="theme-card p-2.5 mb-3.5 flex flex-wrap items-center justify-between gap-2">
         
-        {/* Sorting Tabs */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl border" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
+        {/* Left: Counter Info */}
+        <div className="text-xs font-medium theme-text-muted pl-1">
+          Showing <span className="font-bold theme-text-primary">{posts.length}</span> of {allPostsCount} posts
+        </div>
+
+        {/* Right: Sorting Tabs */}
+        <div className="flex items-center gap-1 p-0.5 rounded-xl border ml-auto" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
           <button
             onClick={() => setFeedSort('latest')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            className="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer"
             style={{
               backgroundColor: feedSort === 'latest' ? 'var(--primary)' : 'transparent',
               color: feedSort === 'latest' ? '#FFFFFF' : 'var(--text-secondary)'
@@ -41,7 +77,7 @@ export default function CenterFeed() {
           </button>
           <button
             onClick={() => setFeedSort('trending')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            className="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer"
             style={{
               backgroundColor: feedSort === 'trending' ? 'var(--primary)' : 'transparent',
               color: feedSort === 'trending' ? '#FFFFFF' : 'var(--text-secondary)'
@@ -51,7 +87,7 @@ export default function CenterFeed() {
           </button>
           <button
             onClick={() => setFeedSort('top')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            className="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer"
             style={{
               backgroundColor: feedSort === 'top' ? 'var(--primary)' : 'transparent',
               color: feedSort === 'top' ? '#FFFFFF' : 'var(--text-secondary)'
@@ -59,11 +95,6 @@ export default function CenterFeed() {
           >
             ⭐ Top Rated
           </button>
-        </div>
-
-        {/* Counter Info */}
-        <div className="text-xs font-medium theme-text-muted">
-          Showing <span className="font-bold theme-text-primary">{posts.length}</span> of {allPostsCount} posts
         </div>
       </div>
 
@@ -143,6 +174,9 @@ export default function CenterFeed() {
             Reset Filters
           </button>
         </div>
+      )}
+
+      </>
       )}
 
     </section>
