@@ -9,7 +9,8 @@ export default function LeftSidebar() {
     activeTag,
     handleSelectSubject,
     handleSelectTag,
-    clearFilters
+    clearFilters,
+    openProfile
   } = useApp();
 
   // Get active subtopic tags list
@@ -19,6 +20,22 @@ export default function LeftSidebar() {
 
   return (
     <aside className="w-full space-y-6">
+      
+      {/* Quick Profile Navigation Card */}
+      <div className="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-2xl p-3.5 shadow-xl">
+        <button
+          onClick={openProfile}
+          className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-indigo-600/30 to-cyan-500/20 hover:from-indigo-600/40 hover:to-cyan-500/30 border border-indigo-500/40 text-white text-xs font-bold transition-all shadow-md group"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-base group-hover:scale-110 transition-transform">👤</span>
+            <span>My Academic Profile</span>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-mono">
+            View &gt;
+          </span>
+        </button>
+      </div>
       
       {/* Subject Section (Communities) */}
       <div className="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-xl">
