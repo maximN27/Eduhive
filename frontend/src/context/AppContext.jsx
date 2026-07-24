@@ -20,6 +20,18 @@ export const AppProvider = ({ children }) => {
   const [activeTag, setActiveTag] = useState(null); // tagId or null
   const [searchQuery, setSearchQuery] = useState('');
   const [feedSort, setFeedSort] = useState('latest'); // 'latest', 'trending', 'top'
+  const [activePostId, setActivePostId] = useState(null); // postId or null
+
+  // Open post detail view
+  const openPost = (postId) => {
+    setActivePostId(postId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Return to home feed view
+  const goHome = () => {
+    setActivePostId(null);
+  };
 
   // Toggle saving a post
   const toggleSavePost = (postId) => {
@@ -127,11 +139,12 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Clear all filters
+  // Clear all filters and return home
   const clearFilters = () => {
     setActiveSubject(null);
     setActiveTag(null);
     setSearchQuery('');
+    setActivePostId(null);
   };
 
   // Filtered & Sorted Posts
@@ -172,6 +185,12 @@ export const AppProvider = ({ children }) => {
     });
   }, [posts, activeSubject, activeTag, searchQuery, feedSort]);
 
+  // Currently selected active post object
+  const activePost = useMemo(() => {
+    if (!activePostId) return null;
+    return posts.find(p => p.id === activePostId) || null;
+  }, [posts, activePostId]);
+
   // Derived Saved Posts List
   const savedPosts = useMemo(() => {
     return posts.filter(p => p.saved);
@@ -191,6 +210,10 @@ export const AppProvider = ({ children }) => {
         activeTag,
         searchQuery,
         feedSort,
+        activePostId,
+        activePost,
+        openPost,
+        goHome,
         setFeedSort,
         handleSelectSubject,
         handleSelectTag,

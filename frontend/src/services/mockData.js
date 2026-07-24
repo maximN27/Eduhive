@@ -81,6 +81,32 @@ def bfs_shortest_path(graph, start, target):
         content: 'This queue breakdown makes memory footprint comparison with DFS stack recursion so much clearer!',
         createdAt: '1 hour ago'
       }
+    ],
+    resources: [
+      {
+        id: 'p1-r1',
+        title: 'BFS & DFS Complexity Cheat Sheet (PDF)',
+        type: 'PDF Document',
+        size: '1.2 MB',
+        icon: '📄',
+        url: '#'
+      },
+      {
+        id: 'p1-r2',
+        title: 'Graph Traversal Python Notebook (.ipynb)',
+        type: 'Jupyter Notebook',
+        size: '850 KB',
+        icon: '📓',
+        url: '#'
+      },
+      {
+        id: 'p1-r3',
+        title: 'Shortest Path Algorithm Visualizer Link',
+        type: 'Web Resource',
+        size: 'External',
+        icon: '🔗',
+        url: '#'
+      }
     ]
   },
   {
@@ -122,6 +148,24 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
         content: 'The explanation on vanishing softmax gradients when d_k grows large is spot on.',
         createdAt: '3 hours ago'
       }
+    ],
+    resources: [
+      {
+        id: 'p2-r1',
+        title: 'Annotated Attention Is All You Need Paper',
+        type: 'Research Paper',
+        size: '3.4 MB',
+        icon: '📚',
+        url: '#'
+      },
+      {
+        id: 'p2-r2',
+        title: 'PyTorch Transformer Attention Implementation Guide',
+        type: 'Code Repository',
+        size: '2.1 MB',
+        icon: '💻',
+        url: '#'
+      }
     ]
   },
   {
@@ -143,7 +187,25 @@ Combining custom hooks with utility-first Tailwind v4 CSS variables makes buildi
     userVoted: false,
     saved: true,
     createdAt: '6 hours ago',
-    comments: []
+    comments: [],
+    resources: [
+      {
+        id: 'p3-r1',
+        title: 'React 19 Hooks & Server Actions Cheat Sheet',
+        type: 'PDF Guide',
+        size: '1.9 MB',
+        icon: '📄',
+        url: '#'
+      },
+      {
+        id: 'p3-r2',
+        title: 'Tailwind v4 Setup Starter Kit Zip',
+        type: 'Archive File',
+        size: '4.5 MB',
+        icon: '📦',
+        url: '#'
+      }
+    ]
   },
   {
     id: 'post-4',
@@ -164,7 +226,17 @@ SVD generalizes this concept to non-square matrices A = U Σ V^T, decomposing an
     userVoted: false,
     saved: false,
     createdAt: '1 day ago',
-    comments: []
+    comments: [],
+    resources: [
+      {
+        id: 'p4-r1',
+        title: 'SVD Matrix Transformation Visual Proofs',
+        type: 'Interactive PDF',
+        size: '2.8 MB',
+        icon: '📐',
+        url: '#'
+      }
+    ]
   }
 ];
 

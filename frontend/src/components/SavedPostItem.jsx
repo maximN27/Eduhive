@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function SavedPostItem({ post }) {
-  const { toggleSavePost } = useApp();
+  const { toggleSavePost, openPost } = useApp();
 
   return (
     <div className="group relative p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all">
@@ -21,7 +21,10 @@ export default function SavedPostItem({ post }) {
         </button>
       </div>
 
-      <h4 className="text-xs font-semibold text-slate-200 mt-2 line-clamp-2 group-hover:text-white leading-snug">
+      <h4 
+        onClick={() => openPost(post.id)}
+        className="text-xs font-semibold text-slate-200 mt-2 line-clamp-2 group-hover:text-indigo-300 leading-snug cursor-pointer transition-colors"
+      >
         {post.title}
       </h4>
 
