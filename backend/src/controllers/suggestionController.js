@@ -1,24 +1,30 @@
 /**
  * Suggestion System Controller
- * Handles evaluation of conflict priority, reaction count incrementing, and suggestion dismissal.
+ * Handles evaluation of conflict priority via evaluator framework, reaction count incrementing, and suggestion dismissal.
  */
 
 const dataStore = require('../data/dataStore');
-const { evaluatePostConflictPairs } = require('../utils/scoringEngine');
+const evaluatorRegistry = require('../evaluators/evaluatorRegistry');
+const conflictEvaluator = require('../evaluators/conflictEvaluator');
 const { generateConflictSuggestionMessage, DEFAULT_SAFE_MESSAGE } = require('../services/geminiService');
 
-const SUGGESTION_THRESHOLD = 50;
+// Register official conflict evaluator in production registry (exactly ONE real evaluator)
+evaluatorRegistry.registerEvaluator(conflictEvaluator);
 
 /**
  * POST /api/suggestions/evaluate
- * Body: { postId }
+ * Body: { postId, userId }
  */
 async function evaluateSuggestions(req, res) {
   try {
-    const { postId } = req.body || {};
+    const { postId, userId } = req.body || {};
 
     if (!postId || typeof postId !== 'string' || !postId.trim()) {
       return res.status(400).json({ error: 'postId is required and must be a valid string' });
+    }
+
+    if (!userId || typeof userId !== 'string' || !userId.trim()) {
+      return res.status(400).json({ error: 'userId is required and must be a valid string' });
     }
 
     const post = await dataStore.getPostById(postId.trim());
@@ -26,30 +32,39 @@ async function evaluateSuggestions(req, res) {
       return res.status(404).json({ error: `Post with ID '${postId}' not found` });
     }
 
-    // Run scoring function across all verified answer pairs
-    const { maxScore, bestPair } = evaluatePostConflictPairs(post);
+    const user = await dataStore.getUserById(userId.trim());
+    if (!user) {
+      return res.status(404).json({ error: `User with ID '${userId}' not found` });
+    }
 
-    const triggerType = 'conflict';
-    const isDismissed = Array.isArray(post.dismissedSuggestions) && post.dismissedSuggestions.includes(triggerType);
+    // Execute evaluator framework
+    const winningCandidate = evaluatorRegistry.evaluateAll(post, user);
 
-    // If score clears threshold (score >= 50) and triggerType is not dismissed
-    if (maxScore >= SUGGESTION_THRESHOLD && !isDismissed && bestPair) {
-      const [answerA, answerB] = bestPair;
-
+    if (winningCandidate) {
       let message;
-      // Allow mock option override for testing step 2
-      if (req.body.mock === true || process.env.SKIP_GEMINI === 'true') {
-        message = DEFAULT_SAFE_MESSAGE;
+
+      if (winningCandidate.triggerType === 'conflict') {
+        if (req.body.mock === true || process.env.SKIP_GEMINI === 'true') {
+          message = DEFAULT_SAFE_MESSAGE;
+        } else {
+          message = await generateConflictSuggestionMessage(
+            post, 
+            winningCandidate.answerA, 
+            winningCandidate.answerB, 
+            req.serviceOptions || {}
+          );
+        }
       } else {
-        message = await generateConflictSuggestionMessage(post, answerA, answerB, req.serviceOptions || {});
+        // Generic message for non-conflict candidates (e.g. stub evaluators in testing)
+        message = winningCandidate.message || 'Suggestion generated for post.';
       }
 
       return res.status(200).json({
         hasSuggestion: true,
-        triggerType,
-        priorityScore: maxScore,
+        triggerType: winningCandidate.triggerType,
+        priorityScore: winningCandidate.priorityScore,
         message,
-        relatedAnswerIds: [answerA.id, answerB.id]
+        relatedAnswerIds: winningCandidate.relatedAnswerIds || []
       });
     }
 

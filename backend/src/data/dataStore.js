@@ -3,7 +3,7 @@
  * Structured to cleanly interface with MongoDB/Mongoose in future passes.
  */
 
-const { INITIAL_FIXTURE_POSTS } = require('./fixtures');
+const { INITIAL_FIXTURE_POSTS, INITIAL_FIXTURE_USERS } = require('./fixtures');
 
 class DataStore {
   constructor() {
@@ -14,8 +14,9 @@ class DataStore {
    * Reset store to initial fixture state (useful between automated tests)
    */
   reset() {
-    // Deep clone fixture posts to prevent mutation leaks across test runs
+    // Deep clone fixture posts and users to prevent mutation leaks across test runs
     this.posts = JSON.parse(JSON.stringify(INITIAL_FIXTURE_POSTS));
+    this.users = JSON.parse(JSON.stringify(INITIAL_FIXTURE_USERS));
   }
 
   /**
@@ -27,6 +28,34 @@ class DataStore {
     if (!postId) return null;
     const post = this.posts.find(p => p.id === postId);
     return post ? JSON.parse(JSON.stringify(post)) : null;
+  }
+
+  /**
+   * Get user by ID
+   * @param {string} userId 
+   * @returns {Object|null}
+   */
+  async getUserById(userId) {
+    if (!userId) return null;
+    const user = this.users.find(u => u.id === userId);
+    return user ? JSON.parse(JSON.stringify(user)) : null;
+  }
+
+  /**
+   * Update user preferences (e.g., suggestionsEnabled toggle)
+   * @param {string} userId 
+   * @param {Object} prefs { suggestionsEnabled: boolean }
+   * @returns {Object|null}
+   */
+  async updateUserPreferences(userId, prefs) {
+    if (!userId || !prefs || typeof prefs.suggestionsEnabled !== 'boolean') {
+      return null;
+    }
+    const user = this.users.find(u => u.id === userId);
+    if (!user) return null;
+
+    user.suggestionsEnabled = prefs.suggestionsEnabled;
+    return JSON.parse(JSON.stringify(user));
   }
 
   /**

@@ -1,10 +1,26 @@
 /**
- * Test Fixture Posts Dataset for Conflict-Priority Suggestion System
- * Contains 10 posts covering all scoring engine cases, dismissal status, and edge cases.
+ * Test Fixture Dataset for Conflict-Priority Suggestion System
+ * Contains mock posts and mock users covering all scoring combinations, borderline boundary cases,
+ * regression cases, and user preferences.
  */
 
+const INITIAL_FIXTURE_USERS = [
+  {
+    id: 'user-1',
+    suggestionsEnabled: true
+  },
+  {
+    id: 'user-2',
+    suggestionsEnabled: false
+  },
+  {
+    id: 'user-3',
+    suggestionsEnabled: true
+  }
+];
+
 const INITIAL_FIXTURE_POSTS = [
-  // 1. Case (a): High Conflict - Two verified profs, differing conclusions, high views, cs tag -> score >= 50
+  // 1. Case (a): High Conflict - Two verified profs, differing conclusions, high views, cs tag -> score = 95
   {
     id: 'post-high-conflict',
     title: 'Optimal Graph Search Algorithm for Unweighted Networks',
@@ -18,7 +34,7 @@ const INITIAL_FIXTURE_POSTS = [
         isVerified: true,
         content: 'Breadth-First Search guarantees shortest path in O(V + E) time.',
         conclusion: 'Breadth-First Search (BFS) is strictly optimal for unweighted graphs.',
-        confusedReactionCount: 2,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       },
       {
@@ -27,13 +43,13 @@ const INITIAL_FIXTURE_POSTS = [
         isVerified: true,
         content: 'Bidirectional BFS reduces search space exponentially in practice.',
         conclusion: 'Bidirectional Search is superior to standard BFS for unweighted graphs.',
-        confusedReactionCount: 1,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       }
     ]
   },
 
-  // 2. Case (b): Student vs Professor - differing conclusions -> score < 50
+  // 2. Case (b): Student vs Professor - Hard precondition returns score = 0
   {
     id: 'post-student-prof',
     title: 'Causes of the French Revolution Economic Collapse',
@@ -62,7 +78,36 @@ const INITIAL_FIXTURE_POSTS = [
     ]
   },
 
-  // 3. Case (c): Two verified profs, same conclusion -> score < 50
+  // 3. Regression Test Post: Student vs Professor with max views & CS tag -> Hard precondition returns score = 0
+  {
+    id: 'post-student-prof-high-views',
+    title: 'Sorting Algorithm Benchmark in Embedded Systems',
+    communityTag: 'cs',
+    viewCount: 100,
+    dismissedSuggestions: [],
+    answers: [
+      {
+        id: 'ans-301-s',
+        authorRole: 'student',
+        isVerified: true,
+        content: 'QuickSort is always faster.',
+        conclusion: 'QuickSort is optimal.',
+        confusedReactionCount: 5,
+        hasResolvingComment: false
+      },
+      {
+        id: 'ans-302-p',
+        authorRole: 'professor',
+        isVerified: true,
+        content: 'HeapSort provides worst-case O(N log N) memory safety.',
+        conclusion: 'HeapSort is optimal for memory bounds.',
+        confusedReactionCount: 5,
+        hasResolvingComment: false
+      }
+    ]
+  },
+
+  // 4. Case (c): Two verified profs, same conclusion, resolving comment -> score = 40 (< 50)
   {
     id: 'post-same-conclusion',
     title: 'Role of Ribosomes in Protein Synthesis',
@@ -71,16 +116,16 @@ const INITIAL_FIXTURE_POSTS = [
     dismissedSuggestions: [],
     answers: [
       {
-        id: 'ans-301',
+        id: 'ans-401',
         authorRole: 'professor',
         isVerified: true,
         content: 'Ribosomes translate mRNA sequences into polypeptide chains.',
         conclusion: 'Ribosomes translate mRNA into amino acid sequences.',
         confusedReactionCount: 0,
-        hasResolvingComment: false
+        hasResolvingComment: true
       },
       {
-        id: 'ans-302',
+        id: 'ans-402',
         authorRole: 'professor',
         isVerified: true,
         content: 'Cellular ribosomes link amino acids according to mRNA codons.',
@@ -91,7 +136,7 @@ const INITIAL_FIXTURE_POSTS = [
     ]
   },
 
-  // 4. Case (d): High Conflict with Resolving Comment -> score decreases (-10)
+  // 5. Case (d): High Conflict with Resolving Comment -> score = 85
   {
     id: 'post-resolved-comment',
     title: 'Transformer Self-Attention Scaling Factor Justification',
@@ -100,16 +145,16 @@ const INITIAL_FIXTURE_POSTS = [
     dismissedSuggestions: [],
     answers: [
       {
-        id: 'ans-401',
+        id: 'ans-501',
         authorRole: 'professor',
         isVerified: true,
         content: 'Scaling by sqrt(d_k) prevents large dot product magnitudes.',
         conclusion: 'Scaling prevents vanishing gradients in softmax layer.',
-        confusedReactionCount: 1,
+        confusedReactionCount: 0,
         hasResolvingComment: true
       },
       {
-        id: 'ans-402',
+        id: 'ans-502',
         authorRole: 'professor',
         isVerified: true,
         content: 'Without scaling, variance grows linearly with dimension d_k.',
@@ -120,7 +165,7 @@ const INITIAL_FIXTURE_POSTS = [
     ]
   },
 
-  // 5. Case (e): High Conflict with Low Views (viewCount = 2) -> score decreases (-10)
+  // 6. Case (e): High Conflict with Low Views (viewCount = 2) -> score = 85
   {
     id: 'post-low-views',
     title: 'Derivation of Maxwell Wave Equations in Vacuum',
@@ -129,7 +174,7 @@ const INITIAL_FIXTURE_POSTS = [
     dismissedSuggestions: [],
     answers: [
       {
-        id: 'ans-501',
+        id: 'ans-601',
         authorRole: 'professor',
         isVerified: true,
         content: 'Use curl of curl vector identity on Faraday law.',
@@ -138,7 +183,7 @@ const INITIAL_FIXTURE_POSTS = [
         hasResolvingComment: false
       },
       {
-        id: 'ans-502',
+        id: 'ans-602',
         authorRole: 'professor',
         isVerified: true,
         content: 'Use vector potential formulation A and scalar potential phi.',
@@ -149,7 +194,7 @@ const INITIAL_FIXTURE_POSTS = [
     ]
   },
 
-  // 6. Case (f1): Fast Changing Field Tag (ml) -> +5 bonus
+  // 7. Case (f1): Fast Changing Field Tag (ml) -> +5 bonus (score = 90)
   {
     id: 'post-tech-tag',
     title: 'Llama 3 Fine-tuning vs LoRA Adapter Performance',
@@ -158,27 +203,27 @@ const INITIAL_FIXTURE_POSTS = [
     dismissedSuggestions: [],
     answers: [
       {
-        id: 'ans-601',
+        id: 'ans-701',
         authorRole: 'professor',
         isVerified: true,
         content: 'Full fine-tuning captures subtle domain knowledge better.',
         conclusion: 'Full fine-tuning achieves higher task accuracy.',
-        confusedReactionCount: 2,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       },
       {
-        id: 'ans-602',
+        id: 'ans-702',
         authorRole: 'professor',
         isVerified: true,
         content: 'LoRA achieves 99% performance with 10x lower memory overhead.',
         conclusion: 'LoRA is more cost-effective for deployment.',
-        confusedReactionCount: 1,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       }
     ]
   },
 
-  // 7. Case (f2): Non-Tech Tag (philosophy) -> no +5 bonus
+  // 8. Case (f2): Non-Tech Tag (philosophy) -> no +5 bonus (score = 85)
   {
     id: 'post-nontech-tag',
     title: 'Epistemological Foundations of Descartes Cogito',
@@ -187,27 +232,85 @@ const INITIAL_FIXTURE_POSTS = [
     dismissedSuggestions: [],
     answers: [
       {
-        id: 'ans-701',
+        id: 'ans-801',
         authorRole: 'professor',
         isVerified: true,
         content: 'Descartes establishes intuition of self-existence.',
         conclusion: 'Cogito is an foundational intuitive axiom.',
-        confusedReactionCount: 2,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       },
       {
-        id: 'ans-702',
+        id: 'ans-802',
         authorRole: 'professor',
         isVerified: true,
         content: 'Descartes uses implicit syllogistic deduction.',
         conclusion: 'Cogito is a logical deductive inference.',
-        confusedReactionCount: 1,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       }
     ]
   },
 
-  // 8. Dismissed Post Case: High Conflict (Score >= 50) BUT dismissedSuggestions contains "conflict"
+  // 9. Borderline Post - EXACTLY 50: Dual profs (+40), same conclusion (+0), viewCount = 6 (+5), resolving comment (+0), cs tag (+5) -> Total = 50
+  {
+    id: 'post-borderline-50',
+    title: 'Memory Alignment Rules in C Systems Programming',
+    communityTag: 'cs',
+    viewCount: 6,
+    dismissedSuggestions: [],
+    answers: [
+      {
+        id: 'ans-b50-1',
+        authorRole: 'professor',
+        isVerified: true,
+        content: 'Data structures align according to natural word boundaries.',
+        conclusion: 'Struct padding aligns to natural word boundaries.',
+        confusedReactionCount: 0,
+        hasResolvingComment: true
+      },
+      {
+        id: 'ans-b50-2',
+        authorRole: 'professor',
+        isVerified: true,
+        content: 'Compilers insert padding bytes to optimize memory accesses.',
+        conclusion: 'Struct padding aligns to natural word boundaries.',
+        confusedReactionCount: 0,
+        hasResolvingComment: false
+      }
+    ]
+  },
+
+  // 10. Borderline Post - EXACTLY 48: Dual profs (+40), same conclusion (+0), viewCount = 2 (+0), resolving comment (+0), confused = 4 (+8), history tag (+0) -> Total = 48
+  {
+    id: 'post-borderline-48',
+    title: 'Trade Routes of the Mediterranean Bronze Age',
+    communityTag: 'history',
+    viewCount: 2,
+    dismissedSuggestions: [],
+    answers: [
+      {
+        id: 'ans-b48-1',
+        authorRole: 'professor',
+        isVerified: true,
+        content: 'Maritime trade was primarily focused on tin and copper barter.',
+        conclusion: 'Maritime trade centered on raw metals.',
+        confusedReactionCount: 2,
+        hasResolvingComment: true
+      },
+      {
+        id: 'ans-b48-2',
+        authorRole: 'professor',
+        isVerified: true,
+        content: 'Seafaring routes connected Egypt, Cyprus, and Mycenaean ports.',
+        conclusion: 'Maritime trade centered on raw metals.',
+        confusedReactionCount: 2,
+        hasResolvingComment: false
+      }
+    ]
+  },
+
+  // 11. Dismissed Post Case: High Conflict (Score >= 50) BUT dismissedSuggestions contains "conflict"
   {
     id: 'post-dismissed-conflict',
     title: 'P vs NP Completeness Proof Approaches',
@@ -216,69 +319,20 @@ const INITIAL_FIXTURE_POSTS = [
     dismissedSuggestions: ['conflict'],
     answers: [
       {
-        id: 'ans-801',
+        id: 'ans-d-1',
         authorRole: 'professor',
         isVerified: true,
         content: 'Circuit complexity barrier prevents natural proofs.',
         conclusion: 'Relativization barriers prevent standard diagonalized proofs.',
-        confusedReactionCount: 5,
+        confusedReactionCount: 0,
         hasResolvingComment: false
       },
       {
-        id: 'ans-802',
+        id: 'ans-d-2',
         authorRole: 'professor',
         isVerified: true,
         content: 'Algebraic geometry offers structural separation.',
         conclusion: 'Geometric complexity theory is the viable path.',
-        confusedReactionCount: 4,
-        hasResolvingComment: false
-      }
-    ]
-  },
-
-  // 9. Confusion-Heavy Post Case: High reaction count
-  {
-    id: 'post-high-confusion',
-    title: 'Understanding Quantum Entanglement Bell Inequalities',
-    communityTag: 'physics',
-    viewCount: 18,
-    dismissedSuggestions: [],
-    answers: [
-      {
-        id: 'ans-901',
-        authorRole: 'professor',
-        isVerified: true,
-        content: 'Local hidden variable theories are ruled out by experiment.',
-        conclusion: 'Locality assumption is violated in quantum mechanics.',
-        confusedReactionCount: 6,
-        hasResolvingComment: false
-      },
-      {
-        id: 'ans-902',
-        authorRole: 'professor',
-        isVerified: true,
-        content: 'Non-locality does not allow faster than light signaling.',
-        conclusion: 'No superluminal information transfer occurs.',
-        confusedReactionCount: 4,
-        hasResolvingComment: false
-      }
-    ]
-  },
-
-  // 10. Single Answer Post Case: Only 1 answer (no pair possible) -> score = 0
-  {
-    id: 'post-single-answer',
-    title: 'How to configure CORS in Express.js',
-    communityTag: 'cs',
-    viewCount: 40,
-    dismissedSuggestions: [],
-    answers: [
-      {
-        id: 'ans-1001',
-        authorRole: 'professor',
-        isVerified: true,
-        content: 'Use app.use(cors()) middleware.',
-        conclusion: 'Use cors npm package middleware.',
         confusedReactionCount: 0,
         hasResolvingComment: false
       }
@@ -287,5 +341,6 @@ const INITIAL_FIXTURE_POSTS = [
 ];
 
 module.exports = {
+  INITIAL_FIXTURE_USERS,
   INITIAL_FIXTURE_POSTS
 };

@@ -1,6 +1,7 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert');
 const { calculateConflictPriority, evaluatePostConflictPairs } = require('../src/utils/scoringEngine');
+const { INITIAL_FIXTURE_POSTS } = require('../src/data/fixtures');
 
 describe('Conflict Priority Scoring Engine Tests', () => {
 
@@ -10,29 +11,27 @@ describe('Conflict Priority Scoring Engine Tests', () => {
     const answerB = { id: 'a2', authorRole: 'professor', isVerified: true, conclusion: 'Approach Y is optimal', confusedReactionCount: 0, hasResolvingComment: false };
 
     const score = calculateConflictPriority(post, answerA, answerB);
-    // Breakdown: 40 (two profs) + 30 (differing conclusions) + 10 (views > 20) + 10 (no resolving comment) + 0 (confused) + 5 (cs tag) = 95
+    // Breakdown: 40 (two profs gate) + 30 (differing conclusions) + 10 (views > 20) + 10 (no resolving comment) + 0 (confused) + 5 (cs tag) = 95
     assert.ok(score >= 50, `Expected score >= 50, got ${score}`);
     assert.strictEqual(score, 95);
   });
 
-  test('(b) One student one professor, differing conclusions -> score well below 50', () => {
+  test('(b) Student vs professor -> returns score = 0 due to hard precondition', () => {
     const post = { communityTag: 'history', viewCount: 2, dismissedSuggestions: [], answers: [] };
     const answerA = { id: 'a1', authorRole: 'student', isVerified: true, conclusion: 'Option A', confusedReactionCount: 0, hasResolvingComment: false };
     const answerB = { id: 'a2', authorRole: 'professor', isVerified: true, conclusion: 'Option B', confusedReactionCount: 0, hasResolvingComment: false };
 
     const score = calculateConflictPriority(post, answerA, answerB);
-    // Breakdown: 0 (not dual profs) + 30 (differing conclusions) + 0 (views <= 5) + 10 (no resolving comment) + 0 (confused) + 0 (non-tech tag) = 40
-    assert.ok(score < 50, `Expected score < 50, got ${score}`);
-    assert.strictEqual(score, 40);
+    assert.strictEqual(score, 0, `Hard precondition: student-vs-prof MUST return 0, got ${score}`);
   });
 
-  test('(c) Two verified professors, same conclusion -> score below 50', () => {
+  test('(c) Two verified professors, same conclusion, resolving comment -> score below 50', () => {
     const post = { communityTag: 'biology', viewCount: 2, dismissedSuggestions: [], answers: [] };
     const answerA = { id: 'a1', authorRole: 'professor', isVerified: true, conclusion: 'Same conclusion text', confusedReactionCount: 0, hasResolvingComment: true };
     const answerB = { id: 'a2', authorRole: 'professor', isVerified: true, conclusion: 'Same conclusion text', confusedReactionCount: 0, hasResolvingComment: false };
 
     const score = calculateConflictPriority(post, answerA, answerB);
-    // Breakdown: 40 (two profs) + 0 (same conclusion) + 0 (views <= 5) + 0 (hasResolvingComment on answerA) = 40
+    // Breakdown: 40 (two profs) + 0 (same conclusion) + 0 (views <= 5) + 0 (hasResolvingComment) = 40
     assert.ok(score < 50, `Expected score < 50, got ${score}`);
     assert.strictEqual(score, 40);
   });
@@ -74,6 +73,32 @@ describe('Conflict Priority Scoring Engine Tests', () => {
     const scoreNonTech = calculateConflictPriority(postNonTech, answerA, answerB);
 
     assert.strictEqual(scoreTech, scoreNonTech + 5, 'Fast changing field tag (ai/cs/ml) should grant isolated +5 bonus');
+  });
+
+  test('Borderline Fixture 50: Dual profs, same conclusion (+0), viewCount=6 (+5), resolving comment (+0), cs tag (+5) -> score EXACTLY 50', () => {
+    const post50 = INITIAL_FIXTURE_POSTS.find(p => p.id === 'post-borderline-50');
+    const { maxScore } = evaluatePostConflictPairs(post50);
+    assert.strictEqual(maxScore, 50, `Expected score 50, got ${maxScore}`);
+    assert.ok(maxScore >= 50, 'Score 50 clears threshold (>= 50)');
+  });
+
+  test('Borderline Fixture 48: Dual profs, same conclusion (+0), viewCount=2 (+0), resolving comment (+0), confused=4 (+8), nontech tag (+0) -> score EXACTLY 48', () => {
+    const post48 = INITIAL_FIXTURE_POSTS.find(p => p.id === 'post-borderline-48');
+    const { maxScore } = evaluatePostConflictPairs(post48);
+    assert.strictEqual(maxScore, 48, `Expected score 48, got ${maxScore}`);
+    assert.ok(maxScore < 50, 'Score 48 fails threshold (< 50)');
+  });
+
+  test('REGRESSION TEST: Student-vs-professor conflict with 100 views and CS tag returns score = 0', () => {
+    const postStudentProfHighViews = INITIAL_FIXTURE_POSTS.find(p => p.id === 'post-student-prof-high-views');
+    const answerS = postStudentProfHighViews.answers[0];
+    const answerP = postStudentProfHighViews.answers[1];
+
+    const pairScore = calculateConflictPriority(postStudentProfHighViews, answerS, answerP);
+    const { maxScore } = evaluatePostConflictPairs(postStudentProfHighViews);
+
+    assert.strictEqual(pairScore, 0, 'Student-vs-professor pair MUST score 0');
+    assert.strictEqual(maxScore, 0, 'Post with no dual-verified-prof pair MUST evaluate to 0');
   });
 
 });
