@@ -96,6 +96,8 @@ export const AppProvider = ({ children }) => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false);
 
   // Filtering & Sorting
   const [activeSubject, setActiveSubject] = useState(null); // subjectId or null
@@ -107,16 +109,10 @@ export const AppProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => localStorage.getItem('eduhive_theme') || 'system');
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('eduhive_accent') || 'blue');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-<<<<<<< HEAD
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
-  const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false);
 
   const handlePostCreated = (newPost) => {
     setPosts(prev => [newPost, ...prev]);
   };
-=======
->>>>>>> cb994f01c783478e22c914410cc049d348d848e2
 
   // Status flags
   const [loading, setLoading] = useState(false);
@@ -483,11 +479,6 @@ export const AppProvider = ({ children }) => {
     setSearchQuery('');
   };
 
-  // Derived Active Post
-  const activePost = useMemo(() => {
-    return posts.find(p => p.id === activePostId) || null;
-  }, [posts, activePostId]);
-
   // Filtered & Sorted Posts
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
@@ -528,6 +519,7 @@ export const AppProvider = ({ children }) => {
     return posts.filter(p => p.saved);
   }, [posts]);
 
+  // Derived Active Post
   const activePost = useMemo(() => {
     if (!activePostId) return null;
     return posts.find(p => p.id === activePostId || p._id === activePostId) || null;
@@ -559,6 +551,11 @@ export const AppProvider = ({ children }) => {
         setAuthMode,
         isNotificationsOpen,
         setIsNotificationsOpen,
+        isCreatePostOpen,
+        setIsCreatePostOpen,
+        isCreateSubjectOpen,
+        setIsCreateSubjectOpen,
+        handlePostCreated,
         openNotifications: () => setIsNotificationsOpen(true),
         handleLogin,
         handleRegister,
@@ -573,28 +570,9 @@ export const AppProvider = ({ children }) => {
         theme,
         accentColor,
         isSettingsOpen,
-<<<<<<< HEAD
-        isNotificationsOpen,
-        isCreatePostOpen,
-        isCreateSubjectOpen,
-        currentView,
-        activePostId,
-        activePost,
-        goHome,
-        openProfile,
-        openPost,
-        setIsSettingsOpen,
-        setIsNotificationsOpen,
-        setIsCreatePostOpen,
-        setIsCreateSubjectOpen,
-        handlePostCreated,
-        setThemePreference,
-        setAccentColorPreference,
-=======
         setIsSettingsOpen,
         setThemePreference: (t) => { setTheme(t); localStorage.setItem('eduhive_theme', t); },
         setAccentColorPreference: (a) => { setAccentColor(a); localStorage.setItem('eduhive_accent', a); },
->>>>>>> cb994f01c783478e22c914410cc049d348d848e2
         setFeedSort,
         handleSelectSubject,
         handleSelectTag,

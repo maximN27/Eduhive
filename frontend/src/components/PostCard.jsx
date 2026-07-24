@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function PostCard({ post }) {
-<<<<<<< HEAD
-  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost } = useApp();
-=======
-  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, navigateToPost } = useApp();
->>>>>>> cb994f01c783478e22c914410cc049d348d848e2
+  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost, navigateToPost } = useApp();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -19,102 +15,113 @@ export default function PostCard({ post }) {
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
-    addComment(post.id, commentText);
-    setCommentText('');
+    if (commentText.trim()) {
+      addComment(post.id, commentText);
+      setCommentText('');
+    }
   };
 
-  const handleShare = () => {
-    navigator.clipboard?.writeText?.(window.location.href);
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyCode = () => {
     if (post.codeSnippet) {
-      navigator.clipboard?.writeText?.(post.codeSnippet);
+      navigator.clipboard.writeText(post.codeSnippet);
       setCodeCopied(true);
       setTimeout(() => setCodeCopied(false), 2000);
     }
   };
 
-  // Tag pill styling helper
-  const getTagStyle = (tag) => {
-    const lower = tag.toLowerCase();
-    if (lower.includes('algorithm') || lower.includes('dsa') || lower.includes('sys-design') || lower.includes('os')) {
-      return { backgroundColor: 'var(--tag-blue-bg)', color: 'var(--tag-blue-text)' };
+  const handleSummarizeToggle = async () => {
+    if (showSummary) {
+      setShowSummary(false);
+      return;
     }
-    if (lower.includes('ml') || lower.includes('neural') || lower.includes('llm') || lower.includes('python')) {
-      return { backgroundColor: 'var(--tag-purple-bg)', color: 'var(--tag-purple-text)' };
+
+    if (summary) {
+      setShowSummary(true);
+      return;
     }
-    if (lower.includes('calculus') || lower.includes('linear') || lower.includes('probability') || lower.includes('discrete')) {
-      return { backgroundColor: 'var(--tag-orange-bg)', color: 'var(--tag-orange-text)' };
+
+    setIsSummarizing(true);
+    try {
+      const response = await fetch(`http://localhost:5000/posts/${post.id}/summarize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('eduhive_token') || ''}`
+        }
+      });
+      const data = await response.json();
+      if (data.summary) {
+        setSummary(data.summary);
+        setIsCached(data.cached || false);
+        setShowSummary(true);
+      } else {
+        setSummary('Unable to generate AI summary at this time.');
+        setShowSummary(true);
+      }
+    } catch (err) {
+      setSummary('Failed to generate summary. Please try again later.');
+      setShowSummary(true);
+    } finally {
+      setIsSummarizing(false);
     }
-    if (lower.includes('react') || lower.includes('tailwind') || lower.includes('backend') || lower.includes('typescript')) {
-      return { backgroundColor: 'var(--tag-cyan-bg)', color: 'var(--tag-cyan-text)' };
-    }
-    if (lower.includes('quantum') || lower.includes('circuit') || lower.includes('electromagnetics')) {
-      return { backgroundColor: 'var(--tag-yellow-bg)', color: 'var(--tag-yellow-text)' };
-    }
-    return { backgroundColor: 'var(--tag-teal-bg)', color: 'var(--tag-teal-text)' };
   };
 
+  const navigateHandler = openPost || navigateToPost;
+
   return (
-    <article className="theme-card theme-card-hover p-4 mb-3.5">
-      
-      {/* Header: Larger 44px Avatar & Meta */}
-      <div className="flex items-start justify-between gap-3 mb-3.5">
-        <div className="flex items-center gap-3.5">
-          <img
-            src={post.author.avatar}
-            alt={post.author.name}
-            className="w-11 h-11 rounded-xl object-cover ring-2 shrink-0"
-            style={{ ringColor: 'var(--primary-border)' }}
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold theme-text-primary">{post.author.name}</h3>
-              <span className="text-xs font-mono theme-text-muted">{post.author.handle}</span>
-            </div>
-            <p className="text-xs font-medium" style={{ color: 'var(--primary)' }}>{post.author.role}</p>
-          </div>
-        </div>
-
-        <span className="text-xs font-medium theme-text-muted">{post.createdAt}</span>
-      </div>
-
-      {/* Badges: Subject & Subtopic Pills */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+    <article 
+      className="theme-card rounded-2xl p-5 mb-4 border transition-all duration-200 hover:shadow-lg relative overflow-hidden"
+      style={{
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+      }}
+    >
+      {/* Subject Badge & Tags Header */}
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <span 
-          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
-          style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}
+          className="text-xs font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5"
+          style={{
+            backgroundColor: 'var(--primary-light)',
+            borderColor: 'var(--primary-border)',
+            color: 'var(--primary)'
+          }}
         >
-          {post.subjectName}
+          <span>⚡</span>
+          <span>{post.subjectName}</span>
         </span>
-        {post.tags.map(tag => {
-          const pill = getTagStyle(tag);
-          return (
-            <button
-              key={tag}
-              onClick={() => handleSelectTag(tag)}
-              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-opacity hover:opacity-80"
-              style={pill}
-            >
-              #{tag}
-            </button>
-          );
-        })}
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {post.tags.map((tag, idx) => {
+            const tagColors = [
+              { bg: 'rgba(59, 130, 246, 0.1)', border: 'rgba(59, 130, 246, 0.2)', text: '#3B82F6' },
+              { bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', text: '#10B981' },
+              { bg: 'rgba(168, 85, 247, 0.1)', border: 'rgba(168, 85, 247, 0.2)', text: '#A855F7' },
+              { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.2)', text: '#F97316' }
+            ];
+            const pill = tagColors[idx % tagColors.length];
+            return (
+              <button
+                key={tag}
+                onClick={() => handleSelectTag(tag)}
+                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-opacity hover:opacity-80"
+                style={{ backgroundColor: pill.bg, border: `1px solid ${pill.border}`, color: pill.text }}
+              >
+                #{tag}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Title */}
       <h2 
-<<<<<<< HEAD
-        onClick={() => openPost && openPost(post.id)}
+        onClick={() => navigateHandler && navigateHandler(post.id)}
         className="text-lg font-bold tracking-tight theme-text-primary leading-snug mb-3 cursor-pointer hover:text-blue-500 transition-colors"
-=======
-        onClick={() => navigateToPost(post.id)}
-        className="text-lg font-bold tracking-tight theme-text-primary leading-snug mb-3 cursor-pointer hover:opacity-80 transition-opacity"
->>>>>>> cb994f01c783478e22c914410cc049d348d848e2
       >
         {post.title}
       </h2>
@@ -126,208 +133,208 @@ export default function PostCard({ post }) {
 
       {/* Syntax Code Block (if present) */}
       {post.codeSnippet && (
-        <div 
-          className="mb-4 rounded-xl border overflow-hidden shadow-inner"
-          style={{ backgroundColor: 'var(--code-bg)', borderColor: 'var(--code-border)' }}
-        >
-          <div 
-            className="flex items-center justify-between px-3.5 py-2 border-b text-xs font-mono"
-            style={{ backgroundColor: 'var(--code-header-bg)', borderColor: 'var(--code-border)', color: 'var(--code-text)' }}
-          >
-            <span className="font-semibold text-cyan-400">Code Snippet</span>
-            <button
-              onClick={handleCopyCode}
-              className="px-2 py-0.5 rounded text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
-            >
-              {codeCopied ? 'Copied ✓' : 'Copy Code'}
+        <div className="mb-4 rounded-xl border overflow-hidden shadow-inner" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--input-bg)' }}>
+          <div className="flex items-center justify-between px-3 py-1.5 border-b bg-slate-500/5 text-xs font-mono theme-text-muted" style={{ borderColor: 'var(--border-color)' }}>
+            <span>Code Snippet</span>
+            <button onClick={handleCopyCode} className="hover:theme-text-primary text-[11px] font-semibold transition-colors">
+              {codeCopied ? 'Copied!' : 'Copy Code'}
             </button>
           </div>
-          <pre className="p-4 text-xs font-mono overflow-x-auto leading-relaxed custom-scrollbar" style={{ color: 'var(--code-text)' }}>
+          <pre className="p-3.5 text-xs font-mono overflow-x-auto theme-text-primary leading-relaxed">
             <code>{post.codeSnippet}</code>
           </pre>
         </div>
       )}
 
-      {/* Gemini AI Summary Card */}
-      {showSummary && (
-        <div className="mb-4 p-4 rounded-xl border bg-purple-500/10 border-purple-500/30 text-xs leading-relaxed">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 font-bold text-purple-400">
-              <span>⚡ Gemini 2.5 Flash Summary</span>
-            </div>
-            {isCached && (
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                ⚡ Instant Cache Hit
-              </span>
-            )}
+      {/* Attachments / Resources Section */}
+      {post.resources && post.resources.length > 0 && (
+        <div className="mb-4 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <span className="text-[11px] font-bold uppercase tracking-wider theme-text-muted block mb-2">
+            Attached Learning Resources ({post.resources.length})
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {post.resources.map(res => (
+              <a
+                key={res.id}
+                href={res.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 p-2 rounded-xl border transition-all hover:bg-slate-500/5 group"
+                style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-bg)' }}
+              >
+                <span className="text-xl p-1 rounded-lg bg-slate-500/10 shrink-0">{res.icon || '📄'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold theme-text-primary truncate group-hover:text-blue-500 transition-colors">
+                    {res.title}
+                  </p>
+                  <p className="text-[10px] theme-text-muted">
+                    {res.type} • {res.size || 'External'}
+                  </p>
+                </div>
+              </a>
+            ))}
           </div>
-          {isSummarizing ? (
-            <div className="flex items-center gap-2 text-purple-300 py-2">
-              <svg className="w-4 h-4 animate-spin text-purple-400" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              <span>Generating AI summary using Gemini...</span>
-            </div>
-          ) : (
-            <div className="theme-text-secondary space-y-1 font-sans whitespace-pre-line">
-              {summary}
-            </div>
-          )}
         </div>
       )}
 
-      {/* Actions Footer */}
-      <div className="flex items-center justify-between pt-3.5 border-t" style={{ borderColor: 'var(--border-color)' }}>
+      {/* AI Summary Dropdown Box */}
+      {showSummary && (
+        <div className="mb-4 p-3.5 rounded-xl border bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10" style={{ borderColor: 'rgba(168, 85, 247, 0.3)' }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+              <span>✨</span> Gemini AI Post Summary
+            </span>
+            {isCached && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300">
+                Cached
+              </span>
+            )}
+          </div>
+          <p className="text-xs leading-relaxed theme-text-primary whitespace-pre-line">
+            {summary}
+          </p>
+        </div>
+      )}
+
+      {/* Author & Footer Action Toolbar */}
+      <div className="pt-3 border-t flex flex-wrap items-center justify-between gap-3" style={{ borderColor: 'var(--border-color)' }}>
         
-        <div className="flex items-center gap-2">
+        {/* Author Avatar & Info */}
+        <div className="flex items-center gap-2.5">
+          <img
+            src={post.author.avatar}
+            alt={post.author.name}
+            className="w-8 h-8 rounded-full object-cover ring-2"
+            style={{ ringColor: 'var(--primary-border)' }}
+          />
+          <div className="flex flex-col">
+            <span className="text-xs font-bold theme-text-primary leading-tight">
+              {post.author.name}
+            </span>
+            <span className="text-[10px] theme-text-muted">
+              {post.author.handle} • {post.createdAt}
+            </span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1.5">
+          
+          {/* AI Summarize Button */}
+          <button
+            onClick={handleSummarizeToggle}
+            disabled={isSummarizing}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all hover:bg-purple-500/10 text-purple-600 dark:text-purple-400"
+            style={{ borderColor: 'rgba(168, 85, 247, 0.3)' }}
+            title="Summarize with Gemini AI"
+          >
+            <span>✨</span>
+            <span className="hidden sm:inline">{isSummarizing ? 'Summarizing...' : showSummary ? 'Hide Summary' : 'Summarize'}</span>
+          </button>
+
           {/* Upvote Button */}
           <button
             onClick={() => toggleUpvotePost(post.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-semibold border transition-all"
-            style={{
-              backgroundColor: post.userVoted ? 'var(--primary-light)' : 'var(--surface-main)',
-              color: post.userVoted ? 'var(--primary)' : 'var(--text-secondary)',
-              borderColor: post.userVoted ? 'var(--primary)' : 'var(--border-color)'
-            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+              post.userVoted
+                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                : 'theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10'
+            }`}
+            style={{ borderColor: post.userVoted ? 'transparent' : 'var(--border-color)' }}
           >
-            <svg className={`w-4 h-4 ${post.userVoted ? 'fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+            <svg className="w-3.5 h-3.5" fill={post.userVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 15l7-7 7 7" />
             </svg>
             <span>{post.upvotes}</span>
           </button>
 
-          {/* Comment Button */}
+          {/* Comment Toggle Button */}
           <button
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all"
-            style={{
-              backgroundColor: showComments ? 'var(--primary-light)' : 'var(--surface-main)',
-              color: showComments ? 'var(--primary)' : 'var(--text-secondary)',
-              borderColor: showComments ? 'var(--primary)' : 'var(--border-color)'
-            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 transition-all border"
+            style={{ borderColor: 'var(--border-color)' }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <span>{post.comments.length}</span>
+            <span>{post.comments ? post.comments.length : 0}</span>
           </button>
 
-          {/* Gemini AI Summarize Button */}
-          <button
-            onClick={async () => {
-              if (summary) {
-                setShowSummary(!showSummary);
-                return;
-              }
-              setIsSummarizing(true);
-              setShowSummary(true);
-              try {
-                const res = await fetch(`/api/posts/${post.id || 'p-1'}/summarize`, { method: 'POST' });
-                if (res.ok) {
-                  const data = await res.json();
-                  setSummary(data.summary || data.data?.summary);
-                  setIsCached(data.cached);
-                } else {
-                  setSummary(`• Key Takeaway: ${post.title}\n• Core Concept: ${post.content.slice(0, 120)}...\n• Discussion: High academic engagement across ${post.comments?.length || 0} discussion replies.`);
-                }
-              } catch (err) {
-                setSummary(`• Key Takeaway: ${post.title}\n• Core Concept: ${post.content.slice(0, 120)}...\n• Discussion: High academic engagement across ${post.comments?.length || 0} discussion replies.`);
-              } finally {
-                setIsSummarizing(false);
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer"
-            style={{
-              backgroundColor: showSummary ? 'rgba(168, 85, 247, 0.12)' : 'var(--surface-main)',
-              color: showSummary ? '#A855F7' : 'var(--text-secondary)',
-              borderColor: showSummary ? 'rgba(168, 85, 247, 0.4)' : 'var(--border-color)'
-            }}
-          >
-            <span className="text-amber-400 font-bold">⚡</span>
-            <span>AI Summary</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Share Button */}
-          <button
-            onClick={handleShare}
-            className="p-2 rounded-xl border theme-text-muted hover:theme-text-primary transition-colors relative"
-            style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--surface-main)' }}
-            title="Share post"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            {copied && (
-              <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 text-white text-[9px] rounded font-bold whitespace-nowrap shadow-lg">
-                Link Copied!
-              </span>
-            )}
-          </button>
-
-          {/* Bookmark Button */}
+          {/* Bookmark / Save Button */}
           <button
             onClick={() => toggleSavePost(post.id)}
-            className="p-2 rounded-xl border transition-all"
-            style={{
-              backgroundColor: post.saved ? 'var(--primary-light)' : 'var(--surface-main)',
-              color: post.saved ? 'var(--primary)' : 'var(--text-muted)',
-              borderColor: post.saved ? 'var(--primary)' : 'var(--border-color)'
-            }}
-            title={post.saved ? 'Remove from Saved' : 'Save Post'}
+            className={`p-2 rounded-xl text-xs transition-all border ${
+              post.saved
+                ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                : 'theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10'
+            }`}
+            style={{ borderColor: post.saved ? 'rgba(245,158,11,0.3)' : 'var(--border-color)' }}
+            title={post.saved ? 'Remove Bookmark' : 'Bookmark Post'}
           >
-            <svg className={`w-4 h-4 ${post.saved ? 'fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill={post.saved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
           </button>
-        </div>
 
+          {/* Copy Share Link */}
+          <button
+            onClick={handleCopyLink}
+            className="p-2 rounded-xl text-xs theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 transition-all border"
+            style={{ borderColor: 'var(--border-color)' }}
+            title="Share Post Link"
+          >
+            {copied ? (
+              <span className="text-[10px] font-bold text-emerald-500">✓</span>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+            )}
+          </button>
+
+        </div>
       </div>
 
-      {/* Expandable Comments Drawer */}
+      {/* Expandable Comment Section */}
       {showComments && (
-        <div className="mt-4 pt-4 border-t animate-in fade-in duration-200" style={{ borderColor: 'var(--border-color)' }}>
-          <h4 className="text-xs font-bold theme-text-primary mb-3">
-            Discussion ({post.comments.length})
-          </h4>
-
-          <div className="space-y-3 mb-3">
-            {post.comments.map(comment => (
-              <div key={comment.id} className="flex gap-3 p-3 rounded-xl border" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
-                <img src={comment.avatar} alt={comment.author} className="w-7 h-7 rounded-full object-cover shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-bold theme-text-primary">{comment.author}</span>
-                    <span className="text-[10px] theme-text-muted">{comment.createdAt}</span>
-                  </div>
-                  <p className="text-xs theme-text-secondary leading-relaxed">{comment.content}</p>
-                </div>
-              </div>
-            ))}
-
-            {post.comments.length === 0 && (
-              <p className="text-xs theme-text-muted italic">No comments yet. Start the conversation!</p>
-            )}
-          </div>
-
-          <form onSubmit={handleCommentSubmit} className="flex gap-2">
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <form onSubmit={handleCommentSubmit} className="flex items-center gap-2 mb-4">
             <input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a response..."
-              className="flex-1 border rounded-xl px-3 py-2 text-xs theme-text-primary placeholder:theme-text-muted focus:outline-none"
-              style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
+              placeholder="Write a constructive academic comment..."
+              className="flex-1 px-3 py-1.5 text-xs rounded-xl theme-text-primary placeholder:theme-text-muted outline-none transition-all"
+              style={{
+                backgroundColor: 'var(--input-bg)',
+                border: '1px solid var(--input-border)'
+              }}
             />
             <button
               type="submit"
-              className="btn-primary text-xs"
+              disabled={!commentText.trim()}
+              className="px-3.5 py-1.5 text-xs font-bold text-white rounded-xl transition-all shadow-sm disabled:opacity-50"
+              style={{ backgroundColor: 'var(--primary)' }}
             >
-              Reply
+              Post
             </button>
           </form>
+
+          {post.comments && post.comments.length > 0 ? (
+            <div className="space-y-3">
+              {post.comments.map(c => (
+                <div key={c.id} className="p-2.5 rounded-xl border bg-slate-500/5" style={{ borderColor: 'var(--border-color)' }}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold theme-text-primary">{c.author}</span>
+                    <span className="text-[10px] theme-text-muted">{c.createdAt}</span>
+                  </div>
+                  <p className="text-xs theme-text-secondary">{c.content}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-center py-2 theme-text-muted">No comments yet. Be the first to join the discussion!</p>
+          )}
         </div>
       )}
     </article>
