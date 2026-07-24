@@ -1,74 +1,25 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loginApi, registerApi, getMeApi, logoutApi } from '../api/auth';
+import React, { createContext, useContext } from 'react';
+import { useApp } from './AppContext';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('eduhive_token') || null);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      if (token) {
-        try {
-          const userData = await getMeApi(token);
-          setUser(userData);
-        } catch (err) {
-          console.error('Failed to restore session:', err);
-          localStorage.removeItem('eduhive_token');
-          setToken(null);
-          setUser(null);
-        }
-      }
-      setLoading(false);
-    };
-    initAuth();
-  }, [token]);
-
-  const login = async (credentials) => {
-    setError(null);
-    try {
-      const data = await loginApi(credentials);
-      localStorage.setItem('eduhive_token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      return data.user;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
-
-  const register = async (userData) => {
-    setError(null);
-    try {
-      const data = await registerApi(userData);
-      localStorage.setItem('eduhive_token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      return data.user;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await logoutApi();
-    } catch (err) {
-      console.warn('Logout request failed:', err);
-    } finally {
-      localStorage.removeItem('eduhive_token');
-      setToken(null);
-      setUser(null);
-    }
+  const app = useApp();
+  
+  const value = {
+    token: app?.token || null,
+    user: app?.user || null,
+    loading: app?.loading || false,
+    error: null,
+    login: app?.handleLogin || (async (creds) => authService.login(creds)),
+    register: app?.handleRegister || (async (data) => authService.register(data)),
+    logout: app?.handleLogout || (async () => authService.logout()),
+    setError: () => {}
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, error, login, register, logout, setError }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -76,8 +27,35 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (context) return context;
+  
+  // Safe fallback if AuthProvider is unmounted
+  try {
+    const app = useApp();
+    if (app) {
+      return {
+        token: app.token,
+        user: app.user,
+        loading: app.loading,
+        error: null,
+        login: app.handleLogin,
+        register: app.handleRegister,
+        logout: app.handleLogout,
+        setError: () => {}
+      };
+    }
+  } catch (e) {
+    // AppContext fallback catch
   }
-  return context;
+
+  return {
+    token: localStorage.getItem('eduhive_token') || null,
+    user: null,
+    loading: false,
+    error: null,
+    login: async (creds) => authService.login(creds),
+    register: async (data) => authService.register(data),
+    logout: async () => authService.logout(),
+    setError: () => {}
+  };
 };

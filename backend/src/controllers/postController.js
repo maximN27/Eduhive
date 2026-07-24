@@ -32,7 +32,7 @@ const getPosts = async (req, res, next) => {
     const posts = await Post.find(query)
       .populate('subjectId', 'name description tags')
       .populate('authorId', 'name username avatar profilePic role')
-      .populate('reserouseIds')
+      .populate('resourceIds')
       .populate('resourceIds')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -72,7 +72,7 @@ const getPostById = async (req, res, next) => {
     const post = await Post.findById(req.params.id)
       .populate('subjectId', 'name description tags')
       .populate('authorId', 'name username avatar profilePic bio college role')
-      .populate('reserouseIds')
+      .populate('resourceIds')
       .populate('resourceIds');
 
     if (!post) {

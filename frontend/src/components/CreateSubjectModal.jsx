@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createSubjectApi } from '../api/subjects';
+import { subjectService } from '../services/subjectService';
 
 export const CreateSubjectModal = ({ isOpen, onClose, onSubjectCreated, token }) => {
   const [name, setName] = useState('');
@@ -20,8 +20,9 @@ export const CreateSubjectModal = ({ isOpen, onClose, onSubjectCreated, token })
         .map((t) => t.trim())
         .filter((t) => t.length > 0);
 
-      const subject = await createSubjectApi({ name, description, tags }, token);
-      onSubjectCreated(subject);
+      const res = await subjectService.createSubject({ name, description, tags });
+      const subject = res.subject || res.data || res;
+      if (onSubjectCreated) onSubjectCreated(subject);
       setName('');
       setDescription('');
       setTagsInput('');

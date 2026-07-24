@@ -52,5 +52,10 @@ export const postService = {
   // Attach a resource to a post
   addPostResource: async (id, resourceData) => {
     return await apiRequest(`/posts/${id}/resources`, 'POST', resourceData);
+  },
+
+  // Summarize post with Gemini AI
+  summarizePost: async (id) => {
+    return await apiRequest(`/posts/${id}/summarize`, 'POST');
   }
 };

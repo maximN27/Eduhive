@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { createPostApi } from '../api/posts';
+import { postService } from '../services/postService';
 
 export const CreatePostModal = ({ isOpen, onClose, subjects, onPostCreated, token }) => {
-  const [subjectId, setSubjectId] = useState(subjects[0]?._id || '');
+  const [subjectId, setSubjectId] = useState(subjects[0]?._id || subjects[0]?.id || '');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tagsInput, setTagsInput] = useState('');
@@ -15,7 +15,7 @@ export const CreatePostModal = ({ isOpen, onClose, subjects, onPostCreated, toke
     e.preventDefault();
     setError('');
 
-    const targetSubjectId = subjectId || subjects[0]?._id;
+    const targetSubjectId = subjectId || subjects[0]?._id || subjects[0]?.id;
     if (!targetSubjectId) {
       setError('Please select a subject or create one first');
       return;
@@ -28,11 +28,9 @@ export const CreatePostModal = ({ isOpen, onClose, subjects, onPostCreated, toke
         .map((t) => t.trim())
         .filter((t) => t.length > 0);
 
-      const post = await createPostApi(
-        { subjectId: targetSubjectId, title, content, tags },
-        token
-      );
-      onPostCreated(post);
+      const res = await postService.createPost({ subjectId: targetSubjectId, title, content, tags });
+      const post = res.post || res.data || res;
+      if (onPostCreated) onPostCreated(post);
       setTitle('');
       setContent('');
       setTagsInput('');

@@ -21,5 +21,17 @@ export const subjectService = {
   // Get posts for a specific subject
   getSubjectPosts: async (id) => {
     return await apiRequest(`/subjects/${id}/posts`, 'GET');
+  },
+
+  // Get resources for a subject
+  getSubjectResources: async (id, params = {}) => {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    return await apiRequest(`/subjects/${id}/resources${query ? `?${query}` : ''}`, 'GET');
   }
 };

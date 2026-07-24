@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { postService } from '../services/postService';
 
 export default function PostCard({ post }) {
   const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost, navigateToPost } = useApp();
@@ -48,14 +49,7 @@ export default function PostCard({ post }) {
 
     setIsSummarizing(true);
     try {
-      const response = await fetch(`http://localhost:5000/posts/${post.id}/summarize`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('eduhive_token') || ''}`
-        }
-      });
-      const data = await response.json();
+      const data = await postService.summarizePost(post.id);
       if (data.summary) {
         setSummary(data.summary);
         setIsCached(data.cached || false);

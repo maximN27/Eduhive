@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { getSubjectResourcesApi } from '../api/resources';
+import { subjectService } from '../services/subjectService';
 import { ResourceCard } from './ResourceCard';
 
 export const ResourcesTab = () => {
@@ -17,8 +17,8 @@ export const ResourcesTab = () => {
     setLoading(true);
     setError('');
     try {
-      const data = await getSubjectResourcesApi(selectedSubjectId, searchTag);
-      setResources(data.resources || []);
+      const data = await subjectService.getSubjectResources(selectedSubjectId, { tag: searchTag });
+      setResources(data.resources || data.data || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch resources');
     } finally {
