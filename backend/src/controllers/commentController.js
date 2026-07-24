@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
+const Vote = require('../models/Vote');
 const mongoose = require('mongoose');
 
 // @desc    Get comment by ID
@@ -38,6 +39,10 @@ const replyToComment = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Parent comment not found' });
     }
 
+    if (parent.isDeleted) {
+      return res.status(400).json({ success: false, message: 'Cannot reply to a deleted comment' });
+    }
+
     const userId = req.user._id || req.user.userId || req.user.id;
     const reply = await Comment.create({
       postId: parent.postId,
@@ -74,7 +79,17 @@ const deleteComment = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this comment' });
     }
 
-    await comment.deleteOne();
+    await Vote.deleteMany({ targetType: 'comment', targetId: comment._id });
+
+    const hasReplies = await Comment.exists({ parentComment: comment._id });
+    if (hasReplies) {
+      comment.content = '[deleted]';
+      comment.isDeleted = true;
+      await comment.save();
+    } else {
+      await comment.deleteOne();
+    }
+
     res.status(200).json({ success: true, message: 'Comment removed successfully' });
   } catch (error) {
     if (next) next(error);
@@ -150,12 +165,50 @@ const createComment = async (req, res, next) => {
       });
     }
 
+    let validatedParentId = null;
+    if (parentComment) {
+      if (!mongoose.Types.ObjectId.isValid(parentComment)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Invalid parentComment ID', code: 'BAD_REQUEST' },
+          message: 'Invalid parentComment ID'
+        });
+      }
+
+      const parentDoc = await Comment.findById(parentComment);
+      if (!parentDoc) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Parent comment not found', code: 'NOT_FOUND' },
+          message: 'Parent comment not found'
+        });
+      }
+
+      if (parentDoc.postId.toString() !== postId.toString()) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Parent comment belongs to a different post', code: 'BAD_REQUEST' },
+          message: 'Parent comment belongs to a different post'
+        });
+      }
+
+      if (parentDoc.isDeleted) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Cannot reply to a deleted comment', code: 'BAD_REQUEST' },
+          message: 'Cannot reply to a deleted comment'
+        });
+      }
+
+      validatedParentId = parentDoc._id;
+    }
+
     const userId = req.user._id || req.user.userId || req.user.id;
     const comment = await Comment.create({
       postId,
       authorId: userId,
       content,
-      parentComment: parentComment || null,
+      parentComment: validatedParentId,
       mentions: mentions || []
     });
 

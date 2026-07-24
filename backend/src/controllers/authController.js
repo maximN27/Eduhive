@@ -162,7 +162,7 @@ const getMe = async (req, res, next) => {
       .select('-passwordHash')
       .populate('joinedCommunities', 'name description tags membersCount')
       .populate('savedPosts', 'title voteScore createdAt')
-      .populate('savedResources', 'title type URL');
+      .populate('savedResources', 'title type url');
 
     if (!user) {
       return res.status(404).json({

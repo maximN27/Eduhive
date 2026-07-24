@@ -55,11 +55,11 @@ const castVote = async (req, res, next) => {
     }
 
     const targetDoc = await TargetModel.findById(targetId);
-    if (!targetDoc) {
+    if (!targetDoc || targetDoc.isDeleted) {
       return res.status(404).json({
         success: false,
-        error: { message: 'Target document not found', code: 'NOT_FOUND' },
-        message: 'Target document not found'
+        error: { message: 'Target document not found or deleted', code: 'NOT_FOUND' },
+        message: 'Target document not found or deleted'
       });
     }
 
@@ -73,7 +73,7 @@ const castVote = async (req, res, next) => {
     let userVoteState = null;
 
     if (!existingVote) {
-      await Vote.create({ userId, targetType: normalizedTarget, targetId, voteType });
+      await Vote.create({ userId, targetType: rawTargetType.toLowerCase(), targetId, voteType });
       scoreDelta = voteType === 'up' ? 1 : -1;
       userVoteState = voteType;
     } else if (existingVote.voteType === voteType) {

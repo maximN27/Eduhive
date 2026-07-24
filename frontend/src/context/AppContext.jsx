@@ -68,13 +68,13 @@ function formatApiPost(p, activeUser) {
         createdAt: c.createdAt ? formatRelativeTime(c.createdAt) : 'Just now'
       };
     }),
-    resources: (p.reserouseIds || p.resources || []).map(r => ({
+    resources: (p.resourceIds || p.resources || []).map(r => ({
       id: r._id || r.id,
       title: r.title || 'Resource Document',
       type: r.type || 'PDF',
       size: r.size || 'External',
       icon: r.icon || '📄',
-      url: r.URL || r.url || '#'
+      url: r.url || '#'
     }))
   };
 }

@@ -2,6 +2,7 @@ const Post = require('../models/Post');
 const Subject = require('../models/Subject');
 const Comment = require('../models/Comment');
 const Resource = require('../models/Resource');
+const Vote = require('../models/Vote');
 const mongoose = require('mongoose');
 const geminiService = require('../services/geminiService');
 
@@ -129,11 +130,8 @@ const createPost = async (req, res, next) => {
       title: title.trim(),
       content,
       tags: tags || [],
-      reserouseIds: resourceIds || [],
       resourceIds: resourceIds || []
     });
-
-    await Subject.findByIdAndUpdate(subjectId, { $inc: { membersCount: 1 } });
 
     const populatedPost = await Post.findById(post._id)
       .populate('subjectId', 'name')
@@ -175,7 +173,6 @@ const updatePost = async (req, res, next) => {
     if (content) post.content = content;
     if (tags) post.tags = tags;
     if (resourceIds) {
-      post.reserouseIds = resourceIds;
       post.resourceIds = resourceIds;
     }
 
@@ -216,7 +213,21 @@ const deletePost = async (req, res, next) => {
       });
     }
 
+    const comments = await Comment.find({ postId: post._id }).select('_id');
+    const resources = await Resource.find({ postId: post._id }).select('_id');
+    const commentIds = comments.map(c => c._id);
+    const resourceIds = resources.map(r => r._id);
+
+    await Vote.deleteMany({ targetType: 'post', targetId: post._id });
+    if (commentIds.length > 0) {
+      await Vote.deleteMany({ targetType: 'comment', targetId: { $in: commentIds } });
+    }
+    if (resourceIds.length > 0) {
+      await Vote.deleteMany({ targetType: 'resource', targetId: { $in: resourceIds } });
+    }
+
     await Comment.deleteMany({ postId: post._id });
+    await Resource.deleteMany({ postId: post._id });
     await post.deleteOne();
 
     res.status(200).json({ success: true, message: 'Post removed successfully' });
@@ -297,27 +308,25 @@ const getPostResources = async (req, res, next) => {
 // @access  Private
 const addPostResource = async (req, res, next) => {
   try {
-    const { title, type, URL, tags } = req.body;
-
-    if (!title || !type || !URL) {
-      return res.status(400).json({ success: false, message: 'Please provide title, type, and URL for the resource' });
-    }
-
+    const { title, type, url, tags } = req.body;
     const post = await Post.findById(req.params.id);
+
     if (!post) {
       return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    if (!title || !type || !url) {
+      return res.status(400).json({ success: false, message: 'Please provide title, type, and url for the resource' });
     }
 
     const resource = await Resource.create({
       postId: req.params.id,
       title,
       type,
-      URL,
+      url,
       tags: tags || []
     });
 
-    post.reserouseIds = post.reserouseIds || [];
-    post.reserouseIds.push(resource._id);
     post.resourceIds = post.resourceIds || [];
     post.resourceIds.push(resource._id);
     await post.save();

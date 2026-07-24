@@ -145,7 +145,6 @@ const getSubjectPosts = async (req, res, next) => {
     const total = await Post.countDocuments({ subjectId: req.params.id });
     const posts = await Post.find({ subjectId: req.params.id })
       .populate('authorId', 'name username avatar profilePic role')
-      .populate('reserouseIds')
       .populate('resourceIds')
       .sort({ createdAt: -1 })
       .skip(skip)

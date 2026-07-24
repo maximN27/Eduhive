@@ -24,7 +24,7 @@ const voteResource = async (req, res, next) => {
     const userId = req.user._id || req.user.userId || req.user.id;
     const existingVote = await Vote.findOne({
       userId,
-      targetType: 'Resource',
+      targetType: 'resource',
       targetId: resource._id
     });
 
@@ -40,7 +40,7 @@ const voteResource = async (req, res, next) => {
     } else {
       await Vote.create({
         userId,
-        targetType: 'Resource',
+        targetType: 'resource',
         targetId: resource._id,
         voteType
       });

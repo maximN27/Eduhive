@@ -27,7 +27,11 @@ const commentSchema = new mongoose.Schema({
   mentions: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  isDeleted: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 });
