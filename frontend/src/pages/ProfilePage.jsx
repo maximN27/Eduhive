@@ -16,7 +16,7 @@ export default function ProfilePage() {
   const streakDays = [1, 6, 17, 18, 24];
 
   return (
-    <div className="min-h-screen theme-bg theme-text-primary flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white transition-colors duration-200">
+    <div className="min-h-screen ambient-bg theme-text-primary flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white transition-colors duration-200">
       
       {/* Sticky Top Navigation Bar */}
       <Navbar onMobileMenuToggle={() => {}} />
@@ -33,13 +33,13 @@ export default function ProfilePage() {
       )}
 
       {/* Main Profile Container */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-6 py-6">
+      <main className="flex-1 max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
         
         {/* 3-Column Profile Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-[28px] items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
           
           {/* ==================== COLUMN 1: LEFT SIDEBAR (NAVIGATION) ==================== */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="hidden lg:block lg:col-span-3 sticky top-[84px] space-y-4">
             
             <div className="theme-card p-5">
               <div className="flex items-center gap-2 pb-3 mb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>

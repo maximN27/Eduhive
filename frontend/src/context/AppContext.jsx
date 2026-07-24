@@ -87,29 +87,29 @@ export const AppProvider = ({ children }) => {
 
   // Format active authenticated user for UI components
   const user = useMemo(() => {
-    if (!authUser) return null;
+    const activeObj = authUser || CURRENT_USER;
     const roleMap = {
       student: 'Student',
       teacher: 'Professor',
       professional: 'Professional'
     };
-    const roleKey = String(authUser.role || '').toLowerCase();
-    const displayRole = roleMap[roleKey] || authUser.role || 'Student';
+    const roleKey = String(activeObj.role || '').toLowerCase();
+    const displayRole = roleMap[roleKey] || activeObj.role || 'Student';
 
     return {
-      id: authUser._id || authUser.id,
-      name: authUser.name || authUser.username || 'EduHive Scholar',
-      handle: authUser.handle || (authUser.username ? `@${authUser.username}` : '@scholar'),
-      avatar: authUser.profilePic || authUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+      id: activeObj._id || activeObj.id || 'user-1',
+      name: activeObj.name || activeObj.username || 'Dr. Alice Vance',
+      handle: activeObj.handle || (activeObj.username ? `@${activeObj.username}` : '@alice_vance'),
+      avatar: activeObj.profilePic || activeObj.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
       role: displayRole,
-      reputation: authUser.streak ? authUser.streak * 250 : 1240,
-      college: authUser.college || '',
-      bio: authUser.bio || '',
-      streak: authUser.streak || 0,
-      experienceLevel: authUser.experienceLevel || 'Advanced',
-      interests: authUser.interests || ['Algorithms', 'Python', 'Web Dev'],
-      savedPosts: authUser.savedPosts || [],
-      savedResources: authUser.savedResources || []
+      reputation: activeObj.reputation || (activeObj.streak ? activeObj.streak * 250 : 2500),
+      college: activeObj.college || '',
+      bio: activeObj.bio || '',
+      streak: activeObj.streak || 5,
+      experienceLevel: activeObj.experienceLevel || 'Advanced',
+      interests: activeObj.interests || ['Algorithms', 'Python', 'Web Dev'],
+      savedPosts: activeObj.savedPosts || [],
+      savedResources: activeObj.savedResources || []
     };
   }, [authUser]);
 
@@ -183,10 +183,13 @@ export const AppProvider = ({ children }) => {
       if (searchQuery) params.search = searchQuery;
 
       const res = await postService.getPosts(params);
-      if (res.success && Array.isArray(res.data)) {
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         const formatted = res.data.map(p => formatApiPost(p, user));
         setPosts(formatted);
         setApiOnline(true);
+      } else {
+        // API offline or empty database, maintain 50 populated academic posts
+        setApiOnline(false);
       }
     } catch (err) {
       console.warn('API Posts fetch error, keeping current post list:', err.message);
@@ -431,6 +434,9 @@ export const AppProvider = ({ children }) => {
       setActiveSubject(subjectId);
       setActiveTag(null);
     }
+    setCurrentView('feed');
+    setActivePostId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectTag = (tagId) => {
@@ -439,6 +445,9 @@ export const AppProvider = ({ children }) => {
     } else {
       setActiveTag(tagId);
     }
+    setCurrentView('feed');
+    setActivePostId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const clearFilters = () => {

@@ -11,18 +11,18 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen theme-bg theme-text-primary flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white transition-colors duration-200">
+    <div className="min-h-screen ambient-bg theme-text-primary flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white transition-colors duration-200">
       
       {/* 72px Floating Navbar */}
       <Navbar onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
-      {/* Main Grid Container with Compact Padding & Gaps */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-4">
+      {/* Main Grid Container with Fluid Responsive Padding & Wide Max-Width */}
+      <main className="flex-1 max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
           
           {/* Division 1 (Left Sidebar) */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-20">
+          <div className="hidden lg:block lg:col-span-3 sticky top-[84px]">
             <LeftSidebar />
           </div>
 
@@ -32,7 +32,7 @@ export default function Home() {
           </div>
 
           {/* Division 3 (Right Sidebar) */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-20">
+          <div className="hidden lg:block lg:col-span-3 sticky top-[84px]">
             <RightSidebar />
           </div>
 

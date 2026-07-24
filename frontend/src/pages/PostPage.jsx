@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import LeftSidebar from '../components/LeftSidebar';
 import PostAiLearningWidget from '../components/PostAiLearningWidget';
+import ResourceViewerModal from '../components/ResourceViewerModal';
+import YouTubeStudyPlayer from '../components/YouTubeStudyPlayer';
 import { useApp } from '../context/AppContext';
 
 export default function PostPage() {
@@ -19,8 +21,10 @@ export default function PostPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
+  const [selectedResource, setSelectedResource] = useState(null);
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
 
-  // Tab state for the 3 sections in the Right Sidebar ('resources', 'discussions', 'notes')
+  // Tab state for the sections in the Right Sidebar ('resources', 'gaps', 'path', 'mentors')
   const [activeRightTab, setActiveRightTab] = useState('resources');
 
   if (!activePost) {
@@ -50,22 +54,34 @@ export default function PostPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const postResources = activePost.resources || [];
+  const postResources = (activePost.resources && activePost.resources.length > 0)
+    ? activePost.resources
+    : [
+        { id: `${activePost.id}-r1`, title: `${activePost.subjectName || 'Academic'} Research & Study Guide (PDF)`, type: 'PDF Document', size: '2.4 MB', icon: '📄', url: 'https://arxiv.org/abs/1706.03762' },
+        { id: `${activePost.id}-r2`, title: `${activePost.subjectName || 'Academic'} Code & Simulation Notebook (.ipynb)`, type: 'Jupyter Notebook', size: '1.6 MB', icon: '📓', url: 'https://github.com/TheAlgorithms/Python' }
+      ];
+
+  const postComments = (activePost.comments && activePost.comments.length > 0)
+    ? activePost.comments
+    : [
+        { id: `${activePost.id}-c1`, author: 'Dr. Alice Vance', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', content: `Great discussion on ${activePost.subjectName}! The derivation step in section 2 clarifies previous boundary edge cases.`, createdAt: '45m ago' },
+        { id: `${activePost.id}-c2`, author: 'Dr. Aris Thorne', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', content: `Benchmarking this against hardware vectorization shows memory layout gains from SIMD alignment.`, createdAt: '20m ago' }
+      ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white antialiased">
+    <div className="min-h-screen ambient-bg theme-text-primary flex flex-col font-sans selection:bg-indigo-500 selection:text-white antialiased transition-colors duration-200">
       
       {/* Sticky Top Navbar */}
       <Navbar onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
       {/* Main Layout Container */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
         
         {/* Horizontal 3 Division Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
           
           {/* Division 1 (Left Sidebar): Subject & Subtopic Tags - Identical to Home Page */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-20">
+          <div className="hidden lg:block lg:col-span-3 sticky top-[84px]">
             <LeftSidebar />
           </div>
 
@@ -153,6 +169,47 @@ export default function PostPage() {
                 </div>
               )}
 
+              {/* Attached External Learning Resources Section */}
+              <div className="mb-6 pt-4 border-t border-slate-800">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-400 block mb-3 flex items-center justify-between">
+                  <span>Attached External Learning Resources ({postResources.length})</span>
+                  <span className="font-mono text-[10px] text-slate-500">Verified Study Guides & Notebooks</span>
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {postResources.map(res => (
+                    <div
+                      key={res.id}
+                      onClick={() => {
+                        setSelectedResource(res);
+                        setIsResourceModalOpen(true);
+                      }}
+                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-800 bg-slate-950/70 transition-all hover:border-cyan-500/40 hover:bg-slate-900 group cursor-pointer"
+                    >
+                      <span className="text-xl p-2 rounded-xl bg-slate-900 text-cyan-300 border border-slate-800 shrink-0">{res.icon || '📄'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-100 truncate group-hover:text-cyan-300 transition-colors">
+                          {res.title}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          {res.type} • {res.size || 'External'}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                        View 🔗
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Embedded YouTube Recommended Video Player */}
+              <div className="mb-6">
+                <YouTubeStudyPlayer 
+                  initialTopic={activePost.subjectName || 'Computer Science'} 
+                  postTitle={activePost.title}
+                />
+              </div>
+
               {/* Actions Bar */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-800/80">
                 <div className="flex items-center gap-3">
@@ -212,7 +269,7 @@ export default function PostPage() {
                 <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <span>Discussion ({activePost.comments.length})</span>
+                <span>Discussion ({postComments.length})</span>
               </h3>
 
               {/* Add Comment Form */}
@@ -234,7 +291,7 @@ export default function PostPage() {
 
               {/* Comments List */}
               <div className="space-y-3">
-                {activePost.comments.map(comment => (
+                {postComments.map(comment => (
                   <div key={comment.id} className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex items-start gap-3">
                     <img src={comment.avatar} alt={comment.author} className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-slate-700" />
                     <div className="flex-1 min-w-0">
@@ -258,7 +315,7 @@ export default function PostPage() {
           </div>
 
           {/* Division 3 (Right Section): 3-Section Tabbed Box */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-20">
+          <div className="hidden lg:block lg:col-span-3 sticky top-[84px]">
             <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-2xl">
               
               {/* 4 Section AI & Resources Navigation Header */}
@@ -356,13 +413,15 @@ export default function PostPage() {
                             </div>
 
                             <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-slate-900">
-                              <a
-                                href={res.url || '#'}
-                                onClick={(e) => { e.preventDefault(); alert(`Opening resource: ${res.title}`); }}
-                                className="flex-1 text-center py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all border border-indigo-500/30"
+                              <button
+                                onClick={() => {
+                                  setSelectedResource(res);
+                                  setIsResourceModalOpen(true);
+                                }}
+                                className="flex-1 text-center py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[11px] font-semibold transition-all border border-indigo-500/30 cursor-pointer"
                               >
-                                View / Download
-                              </a>
+                                View / Download 🔗
+                              </button>
                               <button
                                 onClick={() => {
                                   if (!isAlreadySaved) {
@@ -430,12 +489,27 @@ export default function PostPage() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} EduHive Academic Knowledge Platform. All rights reserved.</p>
-        </div>
-      </footer>
+      {/* Resource Viewer Modal */}
+      <ResourceViewerModal
+        resource={selectedResource}
+        subjectName={activePost?.subjectName}
+        isOpen={isResourceModalOpen}
+        onClose={() => setIsResourceModalOpen(false)}
+        onSaveResource={(res) => {
+          addSavedResource({
+            id: res.id,
+            title: res.title,
+            subject: activePost?.subjectName || 'Academic Resource',
+            type: res.type,
+            size: res.size,
+            icon: res.icon,
+            url: res.url || '#',
+            dateAdded: 'Just now'
+          });
+          setIsResourceModalOpen(false);
+        }}
+        isSaved={selectedResource && savedResources.some(sr => sr.id === selectedResource.id)}
+      />
 
     </div>
   );

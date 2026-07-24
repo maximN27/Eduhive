@@ -97,8 +97,7 @@ export const Signup = ({ selectedRole = 'student', onBackToLogin, onChangeRole }
 
   return (
     <div 
-      className="min-h-dvh flex items-center justify-center p-4 sm:p-6 lg:p-8"
-      style={{ backgroundColor: 'var(--bg-main)' }}
+      className="min-h-dvh flex items-center justify-center p-4 sm:p-6 lg:p-8 ambient-bg"
     >
       <div 
         className="w-full max-w-lg rounded-3xl border shadow-xl p-6 sm:p-8 md:p-10 transition-all"

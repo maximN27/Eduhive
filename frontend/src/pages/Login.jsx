@@ -101,8 +101,7 @@ export const Login = ({ onOpenRoleModal }) => {
 
   return (
     <div 
-      className="min-h-dvh flex items-center justify-center p-4 sm:p-6 lg:p-8"
-      style={{ backgroundColor: 'var(--bg-main)' }}
+      className="min-h-dvh flex items-center justify-center p-4 sm:p-6 lg:p-8 ambient-bg"
     >
       {/* Main Centered Auth Container */}
       <div 

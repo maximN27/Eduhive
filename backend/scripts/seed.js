@@ -46,7 +46,7 @@ const seedDB = async () => {
         email: 'alice@university.edu',
         passwordHash,
         role: 'teacher',
-        reputation: 150,
+        reputation: 2500,
         bio: 'Associate Professor of Computer Science & AI Research'
       },
       {
@@ -55,7 +55,7 @@ const seedDB = async () => {
         email: 'bob@university.edu',
         passwordHash,
         role: 'teacher',
-        reputation: 85,
+        reputation: 1850,
         bio: 'Graduate TA for Data Structures & Algorithms'
       },
       {
@@ -64,299 +64,142 @@ const seedDB = async () => {
         email: 'charlie@student.edu',
         passwordHash,
         role: 'student',
-        reputation: 40,
+        reputation: 1400,
         bio: 'Senior CS student interested in Machine Learning & Web Dev'
+      },
+      {
+        username: 'aris_thorne',
+        name: 'Dr. Aris Thorne',
+        email: 'aris@university.edu',
+        passwordHash,
+        role: 'teacher',
+        reputation: 3200,
+        bio: 'Professor of CS & Algorithms Department Chair'
+      },
+      {
+        username: 'sarah_j',
+        name: 'Sarah Jenkins',
+        email: 'sarah@university.edu',
+        passwordHash,
+        role: 'professional',
+        reputation: 2100,
+        bio: 'Senior Frontend Architect & React Specialist'
       }
     ]);
     console.log(`[SEED] ${users.length} Users created.`);
 
-    const [alice, bob, charlie] = users;
+    const [alice, bob, charlie, aris, sarah] = users;
+    const authors = [alice, bob, charlie, aris, sarah];
 
-    // 2. Create Subjects
-    const subjects = await Subject.create([
-      {
-        name: 'Computer Science',
-        code: 'CS',
-        slug: 'computer-science',
-        description: 'Algorithms, Data Structures, Software Engineering, Systems & Artificial Intelligence',
-        icon: '💻',
-        tags: ['algorithms', 'react', 'python', 'ai', 'data-structures'],
-        membersCount: 42
-      },
-      {
-        name: 'Mathematics',
-        code: 'MATH',
-        slug: 'mathematics',
-        description: 'Calculus, Linear Algebra, Discrete Math, Probability & Statistics',
-        icon: '📐',
-        tags: ['calculus', 'linear-algebra', 'statistics', 'discrete-math'],
-        membersCount: 30
-      },
-      {
-        name: 'Physics',
-        code: 'PHYS',
-        slug: 'physics',
-        description: 'Quantum Mechanics, Classical Electrodynamics, Thermodynamics & Optics',
-        icon: '⚛️',
-        tags: ['quantum', 'thermodynamics', 'mechanics', 'relativity'],
-        membersCount: 25
-      },
-      {
-        name: 'Electrical Engineering',
-        code: 'EE',
-        slug: 'electrical-engineering',
-        description: 'Circuits, Signal Processing, Microelectronics & Embedded Systems',
-        icon: '⚡',
-        tags: ['circuits', 'signals', 'vlsi', 'embedded'],
-        membersCount: 18
-      }
-    ]);
+    // 2. Create Subjects (30 Communities)
+    const subjectsData = [
+      { name: 'Computer Science', code: 'CS', slug: 'computer-science', description: 'Algorithms, Data Structures, Software Engineering, Systems & Artificial Intelligence', icon: '💻', tags: ['algorithms', 'dsa', 'sys-design', 'os'], membersCount: 245 },
+      { name: 'Mathematics', code: 'MATH', slug: 'mathematics', description: 'Calculus, Linear Algebra, Analysis, Topology & Discrete Math', icon: '📐', tags: ['calculus', 'linear-alg', 'probability', 'discrete'], membersCount: 198 },
+      { name: 'Data Science & AI', code: 'DS', slug: 'data-science-ai', description: 'Machine Learning, Deep Learning, Datasets & Neural Nets', icon: '🤖', tags: ['ml', 'neural-nets', 'python-ds', 'llm'], membersCount: 312 },
+      { name: 'Web Architecture', code: 'WEB', slug: 'web-architecture', description: 'React, Node, Cloud Infrastructure & Web Protocols', icon: '🌐', tags: ['react', 'tailwind', 'backend-api', 'typescript'], membersCount: 176 },
+      { name: 'Quantum Computing', code: 'QC', slug: 'quantum-computing', description: 'Qubits, Quantum Gates, Qiskit & Superposition Mechanics', icon: '⚛️', tags: ['qiskit', 'superposition', 'entanglement'], membersCount: 124 },
+      { name: 'Signal Processing & EE', code: 'EE', slug: 'signal-processing-ee', description: 'FFT, Digital Signals, Circuits & Electromagnetics', icon: '⚡', tags: ['fft', 'signals', 'circuits'], membersCount: 140 },
+      { name: 'Cyber Security & Crypto', code: 'CYBER', slug: 'cyber-security-crypto', description: 'Cryptography, Zero-Trust, Penetration Testing & Hashes', icon: '🛡️', tags: ['crypto', 'zero-trust', 'hashes'], membersCount: 168 },
+      { name: 'Robotics & Control', code: 'ROB', slug: 'robotics-control', description: 'ROS2, Kinematics, Control Loops & Autonomous Systems', icon: '🦾', tags: ['ros2', 'kinematics', 'control-loop'], membersCount: 115 },
+      { name: 'Operating Systems', code: 'OS', slug: 'operating-systems', description: 'Kernels, Concurrency, Virtual Memory & Linux System Calls', icon: '⚙️', tags: ['kernels', 'linux', 'processes'], membersCount: 135 },
+      { name: 'Database Architecture', code: 'DB', slug: 'database-architecture', description: 'PostgreSQL, NoSQL, B-Trees, Distributed Transactions', icon: '🗄️', tags: ['postgres', 'nosql', 'transactions'], membersCount: 152 },
+      { name: 'Computer Vision', code: 'CV', slug: 'computer-vision', description: 'CNNs, OpenCV, Object Detection, NeRFs & Segmentation', icon: '👁️', tags: ['cnns', 'opencv', 'segmentation'], membersCount: 180 },
+      { name: 'Natural Language Processing', code: 'NLP', slug: 'natural-language-processing', description: 'LLMs, Transformers, Attention Mechanisms, Tokenization', icon: '🗣️', tags: ['transformers', 'llms', 'tokenization'], membersCount: 210 },
+      { name: 'Bioinformatics', code: 'BIO', slug: 'bioinformatics', description: 'Genomics, AlphaFold, Sequence Alignment & DNA Analysis', icon: '🧬', tags: ['genomics', 'alphafold', 'dna'], membersCount: 95 },
+      { name: 'Aerospace Engineering', code: 'AERO', slug: 'aerospace-engineering', description: 'Orbital Mechanics, Aerodynamics & Propulsion Dynamics', icon: '🚀', tags: ['orbit', 'aerodynamics', 'propulsion'], membersCount: 88 },
+      { name: 'Neuroscience', code: 'NEURO', slug: 'neuroscience', description: 'Neural Signals, Brain-Computer Interfaces & Synapses', icon: '🧠', tags: ['bci', 'synapses', 'brain'], membersCount: 104 },
+      { name: 'Materials Science', code: 'MAT', slug: 'materials-science', description: 'Nanomaterials, Semiconductors, Crystallography & Polymer Science', icon: '🔬', tags: ['nano', 'semiconductors', 'polymers'], membersCount: 79 },
+      { name: 'Quantitative Finance', code: 'QUANT', slug: 'quantitative-finance', description: 'Stochastic Calculus, Black-Scholes, High Frequency Trading', icon: '📈', tags: ['options', 'black-scholes', 'trading'], membersCount: 130 },
+      { name: 'Astrophysics', code: 'ASTRO', slug: 'astrophysics', description: 'Cosmology, Stellar Evolution, Black Holes & Gravitational Waves', icon: '🌌', tags: ['black-holes', 'cosmology', 'stars'], membersCount: 110 },
+      { name: 'Computational Chemistry', code: 'CHEM', slug: 'computational-chemistry', description: 'Molecular Dynamics, DFT Simulations & Chemical Kinetics', icon: '🧪', tags: ['dft', 'molecular-dynamics', 'kinetics'], membersCount: 84 },
+      { name: 'VLSI & Microelectronics', code: 'VLSI', slug: 'vlsi-microelectronics', description: 'Verilog, FPGA Synthesis, Transistors & Circuit Design', icon: '🔌', tags: ['verilog', 'fpga', 'transistors'], membersCount: 92 },
+      { name: 'Distributed Consensus', code: 'CONS', slug: 'distributed-consensus', description: 'BFT Protocols, Smart Contracts, Cryptographic Proofs', icon: '⛓️', tags: ['bft', 'blockchain', 'contracts'], membersCount: 108 },
+      { name: 'Game Engine Engineering', code: 'GAME', slug: 'game-engine-engineering', description: 'Render Pipelines, Ray Tracing, Physics Engines & Shaders', icon: '🎮', tags: ['shaders', 'ray-tracing', 'physics-engine'], membersCount: 145 },
+      { name: 'Automation & Control', code: 'CTRL', slug: 'automation-control', description: 'PID Loops, Kalman Filters, State Space Model Optimization', icon: '🎛️', tags: ['pid', 'kalman', 'state-space'], membersCount: 77 },
+      { name: 'Reinforcement Learning', code: 'RL', slug: 'reinforcement-learning', description: 'PPO, Q-Learning, Monte Carlo Tree Search, Policy Gradients', icon: '♟️', tags: ['ppo', 'q-learning', 'policy-gradient'], membersCount: 162 },
+      { name: 'High Performance Computing', code: 'HPC', slug: 'high-performance-computing', description: 'CUDA, OpenMP, MPI, Parallel Algorithms & GPU Clusters', icon: '💻', tags: ['cuda', 'openmp', 'gpus'], membersCount: 118 },
+      { name: 'Compiler Engineering', code: 'COMP', slug: 'compiler-engineering', description: 'LLVM, AST Parsing, Optimization Passes & IR CodeGen', icon: '📝', tags: ['llvm', 'ast', 'ir'], membersCount: 89 },
+      { name: 'Fluid Dynamics', code: 'FLUID', slug: 'fluid-dynamics', description: 'Navier-Stokes Equations, CFD Simulations, Turbulence', icon: '🌊', tags: ['cfd', 'navier-stokes', 'turbulence'], membersCount: 71 },
+      { name: 'Embedded Systems', code: 'EMB', slug: 'embedded-systems', description: 'Microcontrollers, RTOS, STM32, ARM & IoT Protocols', icon: '📟', tags: ['rtos', 'stm32', 'arm'], membersCount: 128 },
+      { name: 'Biomedical AI', code: 'MED', slug: 'biomedical-ai', description: 'Medical Imaging, DICOM Analysis, Clinical Diagnostic AI', icon: '🏥', tags: ['dicom', 'clinical-ai', 'imaging'], membersCount: 96 },
+      { name: 'Statistical Physics', code: 'STAT', slug: 'statistical-physics', description: 'Entropy, Thermodynamics, Monte Carlo Physics Simulations', icon: '⚛️', tags: ['entropy', 'thermodynamics', 'monte-carlo'], membersCount: 83 }
+    ];
+
+    const subjects = await Subject.create(subjectsData);
     console.log(`[SEED] ${subjects.length} Subjects created.`);
 
-    const [csSubj, mathSubj, physSubj, eeSubj] = subjects;
+    // 3. Create 150 Detailed Posts with 4 Comments Each (600 Comments Total!)
+    const createdPosts = [];
 
-    // 3. Create Posts
-    const post1 = await Post.create({
-      subjectId: csSubj._id,
-      authorId: charlie._id,
-      title: 'Difference between L1 and L2 Regularization in Machine Learning',
-      content: `Can someone provide an intuitive mathematical and practical explanation comparing Lasso (L1) and Ridge (L2) regularization? 
+    const topicsList = [
+      'Theoretical Foundations & Boundary Analysis',
+      'Practical Code Implementation & Algorithm Optimization',
+      'Comparative Empirical Benchmarks & Hardware Constraints',
+      'Modern Industry Standards & Best Practices',
+      'Open Research Frontiers & Breakthrough Insights'
+    ];
 
-When should I use L1 vs L2 when training high-dimensional linear models or neural networks? Any code examples or geometric insights would be greatly appreciated!`,
-      tags: ['ai', 'machine-learning', 'python'],
-      voteScore: 18,
-      commentCountAtSummary: 0
-    });
+    for (let i = 0; i < subjects.length; i++) {
+      const subject = subjects[i];
 
-    const comm1 = await Comment.create({
-      postId: post1._id,
-      authorId: alice._id,
-      content: `Here is the geometric intuition: L1 regularization adds an absolute value penalty term (|w|), which creates diamond-shaped constraint boundaries. Because diamond corners align with coordinate axes, the optimization solution frequently hits a corner, driving weights exactly to 0 (sparsity). 
+      for (let pIndex = 1; pIndex <= 5; pIndex++) {
+        const postNumber = (i * 5) + pIndex;
+        const author = authors[postNumber % authors.length];
+        const topic = topicsList[(pIndex - 1) % topicsList.length];
 
-L2 adds a squared penalty (w²), creating circular/spherical boundaries which shrink weights proportionally toward 0 without making them strictly zero. Use L1 for feature selection and L2 for handling feature multicollinearity!`,
-      voteScore: 12
-    });
+        const post = await Post.create({
+          subjectId: subject._id,
+          authorId: author._id,
+          title: `${subject.name}: ${topic} (Paper #${pIndex})`,
+          content: `In this paper and detailed academic discussion #${postNumber}, we examine core theoretical principles and empirical findings in **${subject.name}**.
 
-    const comm2 = await Comment.create({
-      postId: post1._id,
-      authorId: bob._id,
-      content: `In PyTorch or Scikit-Learn:
-- L2 is configured via \`weight_decay\` in Adam/SGD optimizers or \`Ridge()\`.
-- L1 is configured using \`Lasso()\` or custom loss terms: \`loss += lambda_l1 * torch.norm(weights, 1)\`.
+Key highlights include:
+1. Mathematical formulation of convergence boundaries and algorithmic edge cases in ${subject.name}.
+2. Complexity analysis under varying scale factors and hardware constraints.
+3. Code implementation and performance benchmarks across testing environments.`,
+          codeSnippet: `def compute_boundary(data, scale=1.0):\n    # Operational calculation for ${subject.name}\n    return [x * scale for x in data]\n\nprint("Result:", compute_boundary([1, 2, 3]))`,
+          tags: subject.tags || ['academic', 'research'],
+          voteScore: 35 + (postNumber * 9) % 210
+        });
 
-Practically, ElasticNet combines both L1 and L2 penalties when you want a balance of feature sparsity and stable grouping!`,
-      voteScore: 8,
-      parentComment: comm1._id
-    });
+        createdPosts.push(post);
 
-    const comm3 = await Comment.create({
-      postId: post1._id,
-      authorId: charlie._id,
-      content: `Thanks Dr. Vance and Bob! That diamond vs sphere geometric intuition makes it crystal clear why Lasso sets parameters to 0 while Ridge just shrinks them!`,
-      voteScore: 3,
-      parentComment: comm2._id
-    });
+        // Add 4 comments per post
+        const comm1 = await Comment.create({
+          postId: post._id,
+          authorId: alice._id,
+          content: `Excellent exposition on ${subject.name}! The theoretical derivation step in section 2 clarifies boundary edge cases.`,
+          voteScore: 12
+        });
 
-    const comm4 = await Comment.create({
-      postId: post1._id,
-      authorId: alice._id,
-      content: `Glad it helped! Remember that if features are highly correlated, L1 will arbitrarily pick one feature from the group, whereas L2 will distribute the weight evenly across all correlated features.`,
-      voteScore: 5,
-      parentComment: comm3._id
-    });
+        const comm2 = await Comment.create({
+          postId: post._id,
+          authorId: aris._id,
+          content: `Have you considered benchmarking this against modern parallelization techniques? The memory layout would benefit from SIMD vector alignment.`,
+          voteScore: 8,
+          parentComment: comm1._id
+        });
 
-    const post2 = await Post.create({
-      subjectId: csSubj._id,
-      authorId: bob._id,
-      title: 'Implementing QuickSort in Python & JavaScript with O(n log n) average time',
-      content: `Here is a clean implementation of the QuickSort algorithm using modern divide-and-conquer in Python:
+        await Comment.create({
+          postId: post._id,
+          authorId: bob._id,
+          content: `We tested a similar formulation in production for ${subject.name} last week. Reducing allocation overhead boosted throughput by ~18%!`,
+          voteScore: 6,
+          parentComment: comm2._id
+        });
 
-\`\`\`python
-def quicksort(arr):
-    if len(arr) <= 1:
-        return arr
-    pivot = arr[len(arr) // 2]
-    left = [x for x in arr if x < pivot]
-    middle = [x for x in arr if x == pivot]
-    right = [x for x in arr if x > pivot]
-    return quicksort(left) + middle + quicksort(right)
-
-print(quicksort([3, 6, 8, 10, 1, 2, 1]))
-\`\`\`
-
-Notice how choosing the middle element as pivot avoids O(n²) worst-case on already sorted arrays!`,
-      tags: ['algorithms', 'python', 'data-structures'],
-      voteScore: 14
-    });
-
-    const post3 = await Post.create({
-      subjectId: mathSubj._id,
-      authorId: alice._id,
-      title: 'Intuitive explanation of Taylor Series Expansion and Approximation',
-      content: `A Taylor series allows us to represent smooth functions (like sin(x), e^x, or ln(1+x)) as infinite polynomial sums centered at a point a.
-
-Why polynomials? Because polynomials are infinitely differentiable, easy to evaluate computationally, and simple to integrate or differentiate in engineering applications!`,
-      tags: ['calculus', 'mathematics'],
-      voteScore: 9
-    });
-
-    const post4 = await Post.create({
-      subjectId: csSubj._id,
-      authorId: charlie._id,
-      title: 'Best practices for React Context state management in modern web apps',
-      content: `When building React applications with Context API:
-1. Always keep state atomic to avoid unnecessary re-renders.
-2. Separate StateContext from DispatchContext when state changes frequently.
-3. Use custom hooks like \`useApp()\` to throw readable errors if consumed outside provider bounds.`,
-      tags: ['react', 'web-dev', 'javascript'],
-      voteScore: 11
-    });
-
-    const post5 = await Post.create({
-      subjectId: physSubj._id,
-      authorId: bob._id,
-      title: 'Schrodinger Wave Equation vs Heisenberg Matrix Mechanics',
-      content: `In quantum mechanics, Erwin Schrodinger formulated wave mechanics using continuous differential equations, while Werner Heisenberg developed matrix mechanics. Paul Dirac proved both formulations are mathematically equivalent representations of Hilbert space operators!`,
-      tags: ['quantum', 'physics'],
-      voteScore: 7
-    });
-
-    const post6 = await Post.create({
-      subjectId: eeSubj._id,
-      authorId: alice._id,
-      title: 'Fast Fourier Transform (FFT) applications in Digital Signal Processing',
-      content: `The Fast Fourier Transform reduces the computational complexity of Discrete Fourier Transforms from O(N²) to O(N log N) using Cooley-Tukey radix-2 algorithm. It underpins modern audio compression, spectral analysis, and 5G communication systems.`,
-      tags: ['signals', 'circuits', 'algorithms'],
-      voteScore: 15
-    });
-
-    console.log(`[SEED] 6 Posts created.`);
-
-    // 4. Create Resources
-    const resources = await Resource.create([
-      {
-        subjectId: csSubj._id,
-        title: 'MIT 6.006 Intro to Algorithms (Full Course)',
-        url: 'https://www.youtube.com/watch?v=ZA-tUyM_y7s',
-        thumbnail: 'https://img.youtube.com/vi/ZA-tUyM_y7s/hqdefault.jpg',
-        type: 'video',
-        source: 'user',
-        votes: 24,
-        tags: ['algorithms', 'data-structures']
-      },
-      {
-        subjectId: csSubj._id,
-        title: 'The Algorithms - Python Repository',
-        url: 'https://github.com/TheAlgorithms/Python',
-        thumbnail: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-        type: 'github',
-        source: 'user',
-        votes: 38,
-        tags: ['algorithms', 'python']
-      },
-      {
-        subjectId: csSubj._id,
-        title: 'Attention Is All You Need (Transformer Paper)',
-        url: 'https://arxiv.org/abs/1706.03762',
-        thumbnail: '',
-        type: 'research_paper',
-        source: 'auto',
-        votes: 45,
-        tags: ['ai', 'python']
-      },
-      {
-        subjectId: mathSubj._id,
-        title: '3Blue1Brown - Essence of Linear Algebra',
-        url: 'https://www.youtube.com/watch?v=fNk_zzaMoSs',
-        thumbnail: 'https://img.youtube.com/vi/fNk_zzaMoSs/hqdefault.jpg',
-        type: 'video',
-        source: 'user',
-        votes: 50,
-        tags: ['linear-algebra', 'calculus']
-      },
-      {
-        subjectId: mathSubj._id,
-        title: 'Khan Academy Multivariable Calculus Guide',
-        url: 'https://www.khanacademy.org/math/multivariable-calculus',
-        thumbnail: '',
-        type: 'pdf',
-        source: 'user',
-        votes: 19,
-        tags: ['calculus']
-      },
-      {
-        subjectId: physSubj._id,
-        title: 'Feynman Lectures on Physics',
-        url: 'https://www.feynmanlectures.caltech.edu/',
-        thumbnail: '',
-        type: 'pdf',
-        source: 'user',
-        votes: 31,
-        tags: ['quantum', 'mechanics']
-      },
-      {
-        subjectId: physSubj._id,
-        title: 'Quantum Computing for Computer Scientists (ArXiv)',
-        url: 'https://arxiv.org/abs/quant-ph/9809016',
-        thumbnail: '',
-        type: 'research_paper',
-        source: 'auto',
-        votes: 14,
-        tags: ['quantum']
-      },
-      {
-        subjectId: eeSubj._id,
-        title: 'All About Circuits Textbook & Tutorials',
-        url: 'https://www.allaboutcircuits.com/',
-        thumbnail: '',
-        type: 'animation',
-        source: 'user',
-        votes: 22,
-        tags: ['circuits', 'signals']
-      },
-      {
-        subjectId: eeSubj._id,
-        title: 'Digital Signal Processing (DSP) First Principles',
-        url: 'https://github.com/DSP-Team/dsp-guide',
-        thumbnail: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-        type: 'github',
-        source: 'auto',
-        votes: 17,
-        tags: ['signals']
-      },
-      {
-        subjectId: csSubj._id,
-        title: 'React Documentation & Interactive Guide',
-        url: 'https://react.dev/',
-        thumbnail: '',
-        type: 'animation',
-        source: 'user',
-        votes: 29,
-        tags: ['react']
+        await Comment.create({
+          postId: post._id,
+          authorId: charlie._id,
+          content: `Could you share the attached Jupyter notebook link? I want to replicate the parameter sensitivity experiments.`,
+          voteScore: 4
+        });
       }
-    ]);
-    console.log(`[SEED] ${resources.length} Resources created.`);
+    }
 
-    // 5. Create Votes
-    const votes = await Vote.create([
-      { userId: alice._id, targetType: 'post', targetId: post1._id, voteType: 'up' },
-      { userId: bob._id, targetType: 'post', targetId: post1._id, voteType: 'up' },
-      { userId: charlie._id, targetType: 'post', targetId: post2._id, voteType: 'up' },
-      { userId: alice._id, targetType: 'post', targetId: post2._id, voteType: 'up' },
-      { userId: bob._id, targetType: 'comment', targetId: comm1._id, voteType: 'up' },
-      { userId: charlie._id, targetType: 'comment', targetId: comm1._id, voteType: 'up' },
-      { userId: alice._id, targetType: 'comment', targetId: comm2._id, voteType: 'up' },
-      { userId: charlie._id, targetType: 'comment', targetId: comm2._id, voteType: 'up' }
-    ]);
-    console.log(`[SEED] ${votes.length} Votes created.`);
+    console.log(`[SEED] ${createdPosts.length} Posts & 600 Comments created across 30 Communities.`);
 
-    console.log('[SEED] Successfully seeded database in < 5 seconds!');
-    console.log('\n--- DEMO ACCOUNTS CREATED ---');
-    console.log('1. Educator: alice@university.edu / password123');
-    console.log('2. TA:       bob@university.edu / password123');
-    console.log('3. Student:  charlie@student.edu / password123');
-    console.log('-------------------------------\n');
-
+    console.log('[SEED] Successfully seeded database!');
     process.exit(0);
   } catch (error) {
     console.error('[SEED] Error seeding database:', error);

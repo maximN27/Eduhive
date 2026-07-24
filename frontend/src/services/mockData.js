@@ -1,245 +1,165 @@
+// 30 Academic Communities & Departments
 export const INITIAL_SUBJECTS = [
-  { id: 'cs', name: 'Computer Science', icon: '💻', count: 142, description: 'Algorithms, Data Structures & Software Systems' },
-  { id: 'math', name: 'Mathematics', icon: '📐', count: 98, description: 'Calculus, Linear Algebra, Statistics & Discrete Math' },
-  { id: 'ds', name: 'Data Science & AI', icon: '🤖', count: 115, description: 'Machine Learning, Deep Learning, Datasets & Analytics' },
-  { id: 'web', name: 'Web Development', icon: '🌐', count: 86, description: 'React, Node, Frontend, Backend & Web Architecture' },
-  { id: 'physics', name: 'Physics & Engineering', icon: '⚡', count: 64, description: 'Quantum Physics, Mechanics, Circuits & Signal Processing' },
+  { id: 'cs', name: 'Computer Science', icon: '💻', count: 245, description: 'Algorithms, Data Structures, Software Engineering & Systems' },
+  { id: 'math', name: 'Mathematics', icon: '📐', count: 198, description: 'Calculus, Linear Algebra, Analysis, Topology & Discrete Math' },
+  { id: 'ds', name: 'Data Science & AI', icon: '🤖', count: 312, description: 'Machine Learning, Deep Learning, Datasets & Neural Nets' },
+  { id: 'web', name: 'Web Architecture', icon: '🌐', count: 176, description: 'React, Node, Cloud Infrastructure & Web Protocols' },
+  { id: 'quantum', name: 'Quantum Computing', icon: '⚛️', count: 124, description: 'Qubits, Quantum Gates, Qiskit & Superposition Mechanics' },
+  { id: 'dsp', name: 'Signal Processing & EE', icon: '⚡', count: 140, description: 'FFT, Digital Signals, Circuits & Electromagnetics' },
+  { id: 'cyber', name: 'Cyber Security & Crypto', icon: '🛡️', count: 168, description: 'Cryptography, Zero-Trust, Penetration Testing & Hashes' },
+  { id: 'robotics', name: 'Robotics & Control', icon: '🦾', count: 115, description: 'ROS2, Kinematics, Control Loops & Autonomous Systems' },
+  { id: 'os', name: 'Operating Systems', icon: '⚙️', count: 135, description: 'Kernels, Concurrency, Virtual Memory & Linux System Calls' },
+  { id: 'db', name: 'Database Architecture', icon: '🗄️', count: 152, description: 'PostgreSQL, NoSQL, B-Trees, Distributed Transactions' },
+  { id: 'cv', name: 'Computer Vision', icon: '👁️', count: 180, description: 'CNNs, OpenCV, Object Detection, NeRFs & Segmentation' },
+  { id: 'nlp', name: 'Natural Language Processing', icon: '🗣️', count: 210, description: 'LLMs, Transformers, Attention Mechanisms, Tokenization' },
+  { id: 'bioinfo', name: 'Bioinformatics', icon: '🧬', count: 95, description: 'Genomics, AlphaFold, Sequence Alignment & DNA Analysis' },
+  { id: 'aerospace', name: 'Aerospace Engineering', icon: '🚀', count: 88, description: 'Orbital Mechanics, Aerodynamics & Propulsion Dynamics' },
+  { id: 'neuro', name: 'Neuroscience', icon: '🧠', count: 104, description: 'Neural Signals, Brain-Computer Interfaces & Synapses' },
+  { id: 'materials', name: 'Materials Science', icon: '🔬', count: 79, description: 'Nanomaterials, Semiconductors, Crystallography & Polymer Science' },
+  { id: 'quant', name: 'Quantitative Finance', icon: '📈', count: 130, description: 'Stochastic Calculus, Black-Scholes, High Frequency Trading' },
+  { id: 'astronomy', name: 'Astrophysics', icon: '🌌', count: 110, description: 'Cosmology, Stellar Evolution, Black Holes & Gravitational Waves' },
+  { id: 'chem', name: 'Computational Chemistry', icon: '🧪', count: 84, description: 'Molecular Dynamics, DFT Simulations & Chemical Kinetics' },
+  { id: 'vlsi', name: 'VLSI & Microelectronics', icon: '🔌', count: 92, description: 'Verilog, FPGA Synthesis, Transistors & Circuit Design' },
+  { id: 'blockchain', name: 'Distributed Consensus', icon: '⛓️', count: 108, description: 'BFT Protocols, Smart Contracts, Cryptographic Proofs' },
+  { id: 'game', name: 'Game Engine Engineering', icon: '🎮', count: 145, description: 'Render Pipelines, Ray Tracing, Physics Engines & Shaders' },
+  { id: 'control', name: 'Automation & Control', icon: '🎛️', count: 77, description: 'PID Loops, Kalman Filters, State Space Model Optimization' },
+  { id: 'rl', name: 'Reinforcement Learning', icon: '♟️', count: 162, description: 'PPO, Q-Learning, Monte Carlo Tree Search, Policy Gradients' },
+  { id: 'hpc', name: 'High Performance Computing', icon: '💻', count: 118, description: 'CUDA, OpenMP, MPI, Parallel Algorithms & GPU Clusters' },
+  { id: 'compilers', name: 'Compiler Engineering', icon: '📝', count: 89, description: 'LLVM, AST Parsing, Optimization Passes & IR CodeGen' },
+  { id: 'fluid', name: 'Fluid Dynamics', icon: '🌊', count: 71, description: 'Navier-Stokes Equations, CFD Simulations, Turbulence' },
+  { id: 'embedded', name: 'Embedded Systems', icon: '📟', count: 128, description: 'Microcontrollers, RTOS, STM32, ARM & IoT Protocols' },
+  { id: 'med-ai', name: 'Biomedical AI', icon: '🏥', count: 96, description: 'Medical Imaging, DICOM Analysis, Clinical Diagnostic AI' },
+  { id: 'stat', name: 'Statistical Physics', icon: '⚛️', count: 83, description: 'Entropy, Thermodynamics, Monte Carlo Physics Simulations' }
 ];
 
 export const INITIAL_TAGS = {
   cs: [
-    { id: 'algorithms', name: 'Algorithms', count: 45 },
-    { id: 'dsa', name: 'Data Structures', count: 52 },
-    { id: 'sys-design', name: 'System Design', count: 31 },
-    { id: 'os', name: 'Operating Systems', count: 24 },
+    { id: 'algorithms', name: 'Algorithms', count: 85 },
+    { id: 'dsa', name: 'Data Structures', count: 92 },
+    { id: 'sys-design', name: 'System Design', count: 48 },
+    { id: 'os', name: 'Operating Systems', count: 34 }
   ],
   math: [
-    { id: 'calculus', name: 'Calculus III', count: 38 },
-    { id: 'linear-alg', name: 'Linear Algebra', count: 29 },
-    { id: 'probability', name: 'Probability & Stats', count: 22 },
-    { id: 'discrete', name: 'Discrete Math', count: 19 },
+    { id: 'calculus', name: 'Calculus III', count: 68 },
+    { id: 'linear-alg', name: 'Linear Algebra', count: 54 },
+    { id: 'probability', name: 'Probability & Stats', count: 42 },
+    { id: 'discrete', name: 'Discrete Math', count: 39 }
   ],
   ds: [
-    { id: 'ml', name: 'Machine Learning', count: 48 },
-    { id: 'neural-nets', name: 'Neural Networks', count: 34 },
-    { id: 'python-ds', name: 'Pandas & NumPy', count: 26 },
-    { id: 'llm', name: 'LLM Fine-Tuning', count: 18 },
-  ],
-  web: [
-    { id: 'react', name: 'React 19 Hooks', count: 36 },
-    { id: 'tailwind', name: 'Tailwind CSS', count: 28 },
-    { id: 'backend-api', name: 'REST & GraphQL', count: 25 },
-    { id: 'typescript', name: 'TypeScript', count: 21 },
-  ],
-  physics: [
-    { id: 'quantum', name: 'Quantum Mechanics', count: 22 },
-    { id: 'circuits', name: 'Digital Logic', count: 20 },
-    { id: 'electromagnetics', name: 'Electromagnetism', count: 16 },
+    { id: 'ml', name: 'Machine Learning', count: 110 },
+    { id: 'neural-nets', name: 'Neural Networks', count: 78 },
+    { id: 'python-ds', name: 'Pandas & NumPy', count: 64 },
+    { id: 'llm', name: 'LLM Fine-Tuning', count: 58 }
   ]
 };
 
-export const INITIAL_POSTS = [
-  {
-    id: 'post-1',
-    author: {
-      name: 'Dr. Aris Thorne',
-      handle: '@aris_t',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-      role: 'Professor of CS'
-    },
-    subjectId: 'cs',
-    subjectName: 'Computer Science',
-    tags: ['dsa', 'algorithms'],
-    title: 'Visualizing Time Complexity of Graph Search: BFS vs DFS with Code Examples',
-    content: `When dealing with unweighted shortest path problems, Breadth-First Search (BFS) operates in O(V + E) time by exploring nodes level by level using a FIFO queue.
-
-Here is a quick Python snippet demonstrating BFS level traversal with a queue:`,
-    codeSnippet: `from collections import deque
-
-def bfs_shortest_path(graph, start, target):
-    visited = {start}
-    queue = deque([(start, [start])])
-    
-    while queue:
-        node, path = queue.popleft()
-        if node == target:
-            return path
-        for neighbor in graph.get(node, []):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append((neighbor, path + [neighbor]))
-    return None`,
-    upvotes: 142,
-    userVoted: false,
-    saved: true,
-    createdAt: '2 hours ago',
-    comments: [
-      {
-        id: 'c1',
-        author: 'Elena Rostova',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-        content: 'This queue breakdown makes memory footprint comparison with DFS stack recursion so much clearer!',
-        createdAt: '1 hour ago'
-      }
-    ],
-    resources: [
-      {
-        id: 'p1-r1',
-        title: 'BFS & DFS Complexity Cheat Sheet (PDF)',
-        type: 'PDF Document',
-        size: '1.2 MB',
-        icon: '📄',
-        url: '#'
-      },
-      {
-        id: 'p1-r2',
-        title: 'Graph Traversal Python Notebook (.ipynb)',
-        type: 'Jupyter Notebook',
-        size: '850 KB',
-        icon: '📓',
-        url: '#'
-      },
-      {
-        id: 'p1-r3',
-        title: 'Shortest Path Algorithm Visualizer Link',
-        type: 'Web Resource',
-        size: 'External',
-        icon: '🔗',
-        url: '#'
-      }
-    ]
-  },
-  {
-    id: 'post-2',
-    author: {
-      name: 'Marcus Chen',
-      handle: '@marcus_dev',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-      role: 'Senior ML Engineer'
-    },
-    subjectId: 'ds',
-    subjectName: 'Data Science & AI',
-    tags: ['ml', 'neural-nets'],
-    title: 'Intuitive Guide to Matrix Multiplication in Transformer Self-Attention Layers',
-    content: `Self-Attention computes Q, K, V matrices through Query-Key similarity dot products scaled by sqrt(d_k).
-
-Formula: Attention(Q, K, V) = softmax((Q * K^T) / sqrt(d_k)) * V
-
-Why scale by sqrt(d_k)? Without scaling, as d_k increases, the dot product grows large in magnitude, pushing softmax into regions with vanishing gradients!`,
-    codeSnippet: `import torch
-import torch.nn.functional as F
-
-def scaled_dot_product_attention(Q, K, V, mask=None):
-    d_k = Q.size(-1)
-    scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))
-    if mask is not None:
-        scores = scores.masked_fill(mask == 0, -1e9)
-    p_attn = F.softmax(scores, dim=-1)
-    return torch.matmul(p_attn, V), p_attn`,
-    upvotes: 98,
-    userVoted: true,
-    saved: false,
-    createdAt: '4 hours ago',
-    comments: [
-      {
-        id: 'c2',
-        author: 'Siddharth Rao',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
-        content: 'The explanation on vanishing softmax gradients when d_k grows large is spot on.',
-        createdAt: '3 hours ago'
-      }
-    ],
-    resources: [
-      {
-        id: 'p2-r1',
-        title: 'Annotated Attention Is All You Need Paper',
-        type: 'Research Paper',
-        size: '3.4 MB',
-        icon: '📚',
-        url: '#'
-      },
-      {
-        id: 'p2-r2',
-        title: 'PyTorch Transformer Attention Implementation Guide',
-        type: 'Code Repository',
-        size: '2.1 MB',
-        icon: '💻',
-        url: '#'
-      }
-    ]
-  },
-  {
-    id: 'post-3',
-    author: {
-      name: 'Sarah Jenkins',
-      handle: '@sarah_j',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150',
-      role: 'Frontend Architect'
-    },
-    subjectId: 'web',
-    subjectName: 'Web Development',
-    tags: ['react', 'tailwind'],
-    title: 'Mastering React 19 Server Components and Action Hooks in Practice',
-    content: `React 19 introduces native support for useActionState, useFormStatus, and optimistic UI updates without extra third-party state managers.
-
-Combining custom hooks with utility-first Tailwind v4 CSS variables makes building responsive study dashboards smooth and performant!`,
-    upvotes: 76,
-    userVoted: false,
-    saved: true,
-    createdAt: '6 hours ago',
-    comments: [],
-    resources: [
-      {
-        id: 'p3-r1',
-        title: 'React 19 Hooks & Server Actions Cheat Sheet',
-        type: 'PDF Guide',
-        size: '1.9 MB',
-        icon: '📄',
-        url: '#'
-      },
-      {
-        id: 'p3-r2',
-        title: 'Tailwind v4 Setup Starter Kit Zip',
-        type: 'Archive File',
-        size: '4.5 MB',
-        icon: '📦',
-        url: '#'
-      }
-    ]
-  },
-  {
-    id: 'post-4',
-    author: {
-      name: 'Prof. David Vance',
-      handle: '@david_v',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150',
-      role: 'Math Department Chair'
-    },
-    subjectId: 'math',
-    subjectName: 'Mathematics',
-    tags: ['linear-alg', 'calculus'],
-    title: 'Eigenvalues & Singular Value Decomposition (SVD): Geometric Intuition',
-    content: `Think of Matrix transformation as stretching space along principal axes. Eigenvectors are the vectors whose directions do not change during this linear transformation!
-
-SVD generalizes this concept to non-square matrices A = U Σ V^T, decomposing any linear mapping into Rotation -> Scaling -> Rotation.`,
-    upvotes: 112,
-    userVoted: false,
-    saved: false,
-    createdAt: '1 day ago',
-    comments: [],
-    resources: [
-      {
-        id: 'p4-r1',
-        title: 'SVD Matrix Transformation Visual Proofs',
-        type: 'Interactive PDF',
-        size: '2.8 MB',
-        icon: '📐',
-        url: '#'
-      }
-    ]
-  }
+const authorsList = [
+  { name: 'Dr. Aris Thorne', handle: '@aris_t', role: 'Professor of CS', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' },
+  { name: 'Dr. Alice Vance', handle: '@alice_vance', role: 'Senior AI Lecturer', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+  { name: 'Prof. David Vance', handle: '@david_v', role: 'Math Department Chair', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150' },
+  { name: 'Sarah Jenkins', handle: '@sarah_j', role: 'Frontend Architect', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
+  { name: 'Marcus Chen', handle: '@marcus_c', role: 'Senior ML Engineer', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150' },
+  { name: 'Elena Rostova', handle: '@elena_r', role: 'Robotics Researcher', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150' }
 ];
 
+// Generate 150 detailed academic posts with 4 scholarly comments EACH (600+ comments total!)
+export const INITIAL_POSTS = Array.from({ length: 150 }, (_, i) => {
+  const postNum = i + 1;
+  const subjectIndex = Math.floor(i / 5) % INITIAL_SUBJECTS.length;
+  const sub = INITIAL_SUBJECTS[subjectIndex];
+  const author = authorsList[i % authorsList.length];
+  const postInSubIndex = (i % 5) + 1;
+
+  const topicsList = [
+    `Theoretical Foundations & Boundary Analysis of ${sub.name}`,
+    `Practical Code Implementation & Algorithm Optimization in ${sub.name}`,
+    `Comparative Empirical Benchmarks for High-Scale ${sub.name} Systems`,
+    `Modern Industry Standards & Best Practices in ${sub.name}`,
+    `Open Research Frontiers & Breakthrough Insights in ${sub.name}`
+  ];
+
+  const codeSnippets = [
+    `def optimize_algorithm(input_data):\n    # Optimized execution pipeline for ${sub.name}\n    res = [x * 2.5 for x in input_data if x > 0]\n    return sorted(res)`,
+    `import numpy as np\n# Matrix transformation calculation for ${sub.name}\nmatrix = np.eye(4)\nscaled_matrix = np.dot(matrix, 3.14159)`,
+    `async function fetchStreamData(endpoint) {\n  // Asynchronous streaming pipeline for ${sub.name}\n  const response = await fetch(endpoint);\n  return await response.json();\n}`,
+    `# PyTorch Neural Computation Tensor operations\nimport torch\nx = torch.randn(32, 128)\nweights = torch.nn.Linear(128, 64)\noutput = weights(x)`
+  ];
+
+  return {
+    id: `post-${postNum}`,
+    author: {
+      name: author.name,
+      handle: author.handle,
+      avatar: author.avatar,
+      role: author.role
+    },
+    subjectId: sub.id,
+    subjectName: sub.name,
+    tags: [sub.id, `module-${postInSubIndex}`, 'research'],
+    title: `${topicsList[(postInSubIndex - 1) % topicsList.length]} (Paper #${postInSubIndex})`,
+    content: `In this paper and detailed academic discussion #${postNum}, we examine core theoretical principles and empirical findings in **${sub.name}**.
+
+Key highlights include:
+1. Mathematical formulation of convergence boundaries and algorithmic edge cases in ${sub.name}.
+2. Complexity analysis under varying scale factors and hardware constraints.
+3. Code implementation and performance benchmarks across testing environments.`,
+    codeSnippet: codeSnippets[postNum % codeSnippets.length],
+    upvotes: 35 + (postNum * 9) % 210,
+    userVoted: postNum % 3 === 0,
+    saved: postNum % 4 === 0,
+    createdAt: `${(postNum % 18) + 1}h ago`,
+    comments: [
+      {
+        id: `c-${postNum}-1`,
+        author: 'Dr. Alice Vance',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
+        content: `Excellent exposition on ${sub.name}! The theoretical derivation step in section 2 clarifies previous boundary edge cases.`,
+        createdAt: '1h ago'
+      },
+      {
+        id: `c-${postNum}-2`,
+        author: 'Dr. Aris Thorne',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        content: `Have you considered benchmarking this against modern parallelization techniques? The memory layout would benefit from SIMD vector alignment.`,
+        createdAt: '45m ago'
+      },
+      {
+        id: `c-${postNum}-3`,
+        author: 'Marcus Chen',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+        content: `We tested a similar formulation in production for ${sub.name} last week. Reducing allocation overhead boosted throughput by ~18%!`,
+        createdAt: '30m ago'
+      },
+      {
+        id: `c-${postNum}-4`,
+        author: 'Elena Rostova',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
+        content: `Could you share the attached Jupyter notebook link? I want to replicate the parameter sensitivity experiments.`,
+        createdAt: '15m ago'
+      }
+    ],
+    resources: [
+      {
+        id: `r-${postNum}-1`,
+        title: `${sub.name} Study Guide & Reference Notes (PDF)`,
+        type: 'PDF Document',
+        size: `${(postNum % 3 + 1).toFixed(1)} MB`,
+        icon: '📄',
+        url: '#'
+      },
+      {
+        id: `r-${postNum}-2`,
+        title: `${sub.name} Implementation Notebook (.ipynb)`,
+        type: 'Jupyter Notebook',
+        size: '1.6 MB',
+        icon: '📓',
+        url: '#'
+      }
+    ]
+  };
+});
+
+// Initial Saved Resources List
 export const INITIAL_SAVED_RESOURCES = [
   {
     id: 'res-1',
@@ -270,24 +190,14 @@ export const INITIAL_SAVED_RESOURCES = [
     icon: '✏️',
     url: '#',
     dateAdded: '5 days ago'
-  },
-  {
-    id: 'res-4',
-    title: 'System Design Interview Roadmap (PDF)',
-    subject: 'Computer Science',
-    type: 'PDF Guide',
-    size: '3.6 MB',
-    icon: '📄',
-    url: '#',
-    dateAdded: '1 week ago'
   }
 ];
 
 export const CURRENT_USER = {
-  name: 'Alex Rivera',
-  handle: '@alex_rivera',
-  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-  role: 'EduHive Scholar',
-  reputation: 1240,
+  name: 'Dr. Alice Vance',
+  handle: '@alice_vance',
+  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
+  role: 'Instructor | Senior Lecturer',
+  reputation: 2500,
   joinedDate: 'Jan 2025'
 };

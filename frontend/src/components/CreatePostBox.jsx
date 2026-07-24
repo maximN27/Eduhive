@@ -55,34 +55,54 @@ export default function CreatePostBox() {
   };
 
   return (
-    <div className="theme-card p-5 mb-6 transition-all">
+    <div className="theme-card p-4 mb-4 shadow-xl transition-all">
       {!isOpen ? (
-        <div 
-          onClick={() => setIsOpen(true)}
-          className="flex items-center gap-3.5 cursor-pointer group"
-        >
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-10 h-10 rounded-xl object-cover ring-2 transition-all shrink-0"
-            style={{ ringColor: 'var(--primary-border)' }}
-          />
+        <div className="space-y-3">
           <div 
-            className="flex-1 border rounded-xl px-4 py-2.5 text-xs transition-all flex items-center justify-between"
-            style={{
-              backgroundColor: 'var(--input-bg)',
-              borderColor: 'var(--input-border)',
-              color: 'var(--text-muted)'
-            }}
+            onClick={() => setIsOpen(true)}
+            className="flex items-center gap-3 cursor-pointer group"
           >
-            <span>Share an academic concept, theorem, or question...</span>
-            <div className="flex items-center gap-2">
-              <span className="p-1 rounded font-bold" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </svg>
-              </span>
+            <img
+              src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+              alt={user.name || 'User'}
+              className="w-9 h-9 rounded-xl object-cover ring-2 ring-cyan-500/30 shrink-0"
+            />
+            <div 
+              className="flex-1 border theme-border rounded-xl px-4 py-2 text-xs transition-all flex items-center justify-between group-hover:border-cyan-500/40"
+              style={{ backgroundColor: 'var(--input-bg)' }}
+            >
+              <span className="theme-text-muted">Ask a Question / Share a Concept...</span>
+              <div className="flex items-center gap-2 theme-text-muted">
+                <span className="p-1 rounded hover:theme-text-primary">✏️</span>
+                <span className="p-1 rounded hover:theme-text-primary">🖼️</span>
+                <span className="p-1 rounded hover:theme-text-primary">⚙️</span>
+              </div>
             </div>
+          </div>
+
+          {/* Quick Action Tabs matching screenshot */}
+          <div className="flex items-center justify-around pt-2 border-t theme-border text-xs font-semibold theme-text-secondary">
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-1.5 hover:text-cyan-500 transition-colors"
+            >
+              <span className="text-cyan-500 font-bold">⊕</span>
+              <span>Ask a Question</span>
+            </button>
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-1.5 hover:text-cyan-500 transition-colors"
+            >
+              <span className="text-cyan-500">⬆</span>
+              <span>Share a Concept</span>
+            </button>
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-1.5 hover:text-cyan-500 transition-colors"
+            >
+              <span className="text-cyan-500">📁</span>
+              <span>Share a Resource</span>
+            </button>
           </div>
         </div>
       ) : (
