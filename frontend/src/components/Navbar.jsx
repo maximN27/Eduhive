@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function Navbar({ onMobileMenuToggle }) {
-  const { searchQuery, setSearchQuery, user, savedPosts, savedResources, clearFilters } = useApp();
+  const { searchQuery, setSearchQuery, user, savedPosts, savedResources, clearFilters, openProfile } = useApp();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -159,8 +159,11 @@ export default function Navbar({ onMobileMenuToggle }) {
                 </div>
 
                 <div className="border-t border-slate-800/80 pt-1 mt-1">
-                  <button className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button 
+                    onClick={() => { setShowProfileMenu(false); openProfile(); }}
+                    className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     View Full Profile

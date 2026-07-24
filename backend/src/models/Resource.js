@@ -1,13 +1,33 @@
 const mongoose = require('mongoose');
 
 const resourceSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  subject: { type: String, required: true },
-  type: { type: String, required: true },
-  size: { type: String },
-  icon: { type: String, default: '📄' },
-  url: { type: String, default: '#' },
-  saved: { type: Boolean, default: true }
-}, { timestamps: true });
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post'
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  type: {
+    type: String,
+    enum: ['video', 'PDF', 'GitHub', 'Animation', 'Research Paper'],
+    required: true
+  },
+  URL: {
+    type: String,
+    required: true
+  },
+  tags: [{
+    type: String
+  }],
+  votes: {
+    type: Number,
+    default: 0
+  }
+}, {
+  timestamps: true
+});
 
 module.exports = mongoose.model('Resource', resourceSchema);
