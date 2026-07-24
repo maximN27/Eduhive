@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const postRoutes = require('./routes/postRoutes');
+const suggestionRoutes = require('./routes/suggestionRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/posts', postRoutes);
+app.use('/api', suggestionRoutes);
 
 // Health Check Route
 app.get('/health', (req, res) => {
