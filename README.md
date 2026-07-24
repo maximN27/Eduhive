@@ -1,13 +1,23 @@
 # EduHive
 
-EduHive is a modern web application built with a React + Express stack.
+EduHive is a modern academic knowledge sharing web application built with a React + Express stack.
 
 ## Tech Stack
 
-- **Frontend**: React, Vite, Tailwind CSS
+- **Frontend**: React 19, Vite, Tailwind CSS v4
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB (Mongoose)
 - **Authentication**: JWT (JSON Web Tokens), bcrypt
+
+## Features
+
+- **Academic Dashboard & Feed**: Filter posts by subject, subtopic tags, or live search. Sort by latest, trending, or top upvoted content.
+- **Interactive User Profile & Redirection**: 3-column academic profile view (`/profile` or `#profile`) styled with EduHive's signature dark slate aesthetic.
+  - **Profile Navigation**: Quick view switcher, joined academic communities, and Level 12 progress tracker (5800/6000 XP).
+  - **Profile Header & Verified Affiliation**: Display name, handle (`@AlexJ`), verified student badge, and MIT institutional tag.
+  - **5-Day Streak Tracker & Monthly Calendar**: Interactive streak activity calendar highlighting study milestones.
+  - **Level Up Guide & Gamification Hub**: Earned badges (`Top Contributor - Python`, `Scholar Initiate`, `Code Crafter`), leaderboard standings (Rank #4), saved resources, and posts.
+  - **Personal Stats & Professor Connections**: Metrics on questions asked (45), answers given (78), resources shared (12), and faculty connections.
 
 ## Project Structure
 
@@ -15,10 +25,10 @@ EduHive is a modern web application built with a React + Express stack.
 EduHive/
 ├── frontend/             # React + Vite + Tailwind CSS
 │   ├── src/
-│   │   ├── components/   # Reusable UI components
-│   │   ├── pages/        # Page views
-│   │   ├── services/     # API request services
-│   │   ├── context/      # Global state context
+│   │   ├── components/   # Reusable UI components (Navbar, LeftSidebar, RightSidebar, CenterFeed, etc.)
+│   │   ├── pages/        # Page views (Home.jsx, PostPage.jsx, ProfilePage.jsx)
+│   │   ├── services/     # API request services & mockData
+│   │   ├── context/      # Global AppContext (Routing, Profile redirection, State management)
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
@@ -30,7 +40,7 @@ EduHive/
 │   ├── src/
 │   │   ├── config/       # Database configuration (db.js)
 │   │   ├── controllers/  # Controller functions
-│   │   ├── middleware/   # Custom middlewares (Auth, Error)
+      ├── middleware/   # Custom middlewares (Auth, Error)
 │   │   ├── models/       # Mongoose data schemas
 │   │   ├── routes/       # API endpoints definition
 │   │   ├── utils/        # Utility/helper scripts
@@ -87,3 +97,4 @@ EduHive/
    ```bash
    npm run dev
    ```
+5. Access the Profile page directly by clicking the User Profile dropdown / **View Full Profile** or navigating to `#profile`.
