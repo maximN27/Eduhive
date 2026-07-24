@@ -1,8 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import NotificationsModal from './NotificationsModal';
 
 export default function Navbar({ onMobileMenuToggle }) {
-  const { searchQuery, setSearchQuery, user, savedPosts, savedResources, clearFilters, setIsSettingsOpen } = useApp();
+  const { 
+    searchQuery, 
+    setSearchQuery, 
+    user, 
+    savedPosts, 
+    savedResources, 
+    clearFilters, 
+    setIsSettingsOpen,
+    isNotificationsOpen,
+    setIsNotificationsOpen,
+    goHome,
+    openProfile
+  } = useApp();
+  
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -33,7 +47,7 @@ export default function Navbar({ onMobileMenuToggle }) {
           </button>
 
           <div 
-            onClick={clearFilters}
+            onClick={() => { clearFilters(); goHome(); }}
             className="flex items-center gap-2.5 cursor-pointer group"
           >
             <div 
@@ -42,7 +56,7 @@ export default function Navbar({ onMobileMenuToggle }) {
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
               </svg>
             </div>
             <div className="flex items-center gap-2">
@@ -97,6 +111,7 @@ export default function Navbar({ onMobileMenuToggle }) {
           
           {/* Notification Button */}
           <button 
+            onClick={() => setIsNotificationsOpen(true)}
             className="relative p-2.5 rounded-xl border transition-colors hover:bg-slate-500/10"
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
             title="Notifications"
@@ -176,6 +191,18 @@ export default function Navbar({ onMobileMenuToggle }) {
                   <button 
                     onClick={() => {
                       setShowProfileMenu(false);
+                      openProfile();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    View Full Profile
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowProfileMenu(false);
                       setIsSettingsOpen(true);
                     }}
                     className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors"
@@ -199,6 +226,12 @@ export default function Navbar({ onMobileMenuToggle }) {
         </div>
 
       </div>
+
+      {/* Notifications Modal */}
+      <NotificationsModal 
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
     </header>
   );
 }

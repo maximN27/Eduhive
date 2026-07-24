@@ -21,16 +21,35 @@ export const AppProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [feedSort, setFeedSort] = useState('latest'); // 'latest', 'trending', 'top'
 
+  // Routing / View States
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'profile' | 'notifications'
+  const [activePostId, setActivePostId] = useState(null);
+
   // Theme & Appearance Preferences
   const [theme, setTheme] = useState(() => localStorage.getItem('eduhive_theme') || 'system');
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('eduhive_accent') || 'blue');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  // Navigation functions
+  const goHome = () => {
+    setCurrentView('home');
+    setActivePostId(null);
+  };
+
+  const openProfile = () => {
+    setCurrentView('profile');
+    setActivePostId(null);
+  };
+
+  const openPost = (postId) => {
+    setActivePostId(postId);
+  };
 
   // Apply Theme & Accent to HTML Root
   useEffect(() => {
     const root = document.documentElement;
 
-    // Apply Dark Class
     const applyDark = (isDark) => {
       if (isDark) {
         root.classList.add('dark');
@@ -44,7 +63,6 @@ export const AppProvider = ({ children }) => {
     } else if (theme === 'light') {
       applyDark(false);
     } else {
-      // System mode
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       applyDark(mediaQuery.matches);
 
@@ -54,7 +72,6 @@ export const AppProvider = ({ children }) => {
     }
   }, [theme]);
 
-  // Apply Accent Color Class
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('accent-emerald', 'accent-purple', 'accent-orange');
@@ -73,7 +90,6 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('eduhive_accent', newAccent);
   };
 
-  // Toggle saving a post
   const toggleSavePost = (postId) => {
     setPosts(prevPosts =>
       prevPosts.map(p =>
@@ -82,7 +98,6 @@ export const AppProvider = ({ children }) => {
     );
   };
 
-  // Toggle upvoting a post
   const toggleUpvotePost = (postId) => {
     setPosts(prevPosts =>
       prevPosts.map(p => {
@@ -99,7 +114,6 @@ export const AppProvider = ({ children }) => {
     );
   };
 
-  // Add a new post
   const addPost = (newPostData) => {
     const matchedSubject = subjects.find(s => s.id === newPostData.subjectId);
     const newPost = {
@@ -126,7 +140,6 @@ export const AppProvider = ({ children }) => {
     setPosts(prev => [newPost, ...prev]);
   };
 
-  // Add comment to a post
   const addComment = (postId, commentText) => {
     if (!commentText.trim()) return;
     setPosts(prevPosts =>
@@ -149,17 +162,14 @@ export const AppProvider = ({ children }) => {
     );
   };
 
-  // Toggle saving a resource
   const toggleSaveResource = (resourceId) => {
     setSavedResources(prev => prev.filter(r => r.id !== resourceId));
   };
 
-  // Add a new saved resource
   const addSavedResource = (resource) => {
     setSavedResources(prev => [resource, ...prev]);
   };
 
-  // Select Subject helper
   const handleSelectSubject = (subjectId) => {
     if (activeSubject === subjectId) {
       setActiveSubject(null);
@@ -170,7 +180,6 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Select Tag helper
   const handleSelectTag = (tagId) => {
     if (activeTag === tagId) {
       setActiveTag(null);
@@ -179,14 +188,12 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setActiveSubject(null);
     setActiveTag(null);
     setSearchQuery('');
   };
 
-  // Filtered & Sorted Posts
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
       if (searchQuery.trim()) {
@@ -221,7 +228,6 @@ export const AppProvider = ({ children }) => {
     });
   }, [posts, activeSubject, activeTag, searchQuery, feedSort]);
 
-  // Derived Saved Posts List
   const savedPosts = useMemo(() => {
     return posts.filter(p => p.saved);
   }, [posts]);
@@ -243,7 +249,14 @@ export const AppProvider = ({ children }) => {
         theme,
         accentColor,
         isSettingsOpen,
+        isNotificationsOpen,
+        currentView,
+        activePostId,
+        goHome,
+        openProfile,
+        openPost,
         setIsSettingsOpen,
+        setIsNotificationsOpen,
         setThemePreference,
         setAccentColorPreference,
         setFeedSort,
