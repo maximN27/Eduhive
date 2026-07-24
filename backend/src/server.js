@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const postRoutes = require('./routes/postRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -11,6 +12,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// API Routes
+app.use('/api/posts', postRoutes);
 
 // Health Check Route
 app.get('/health', (req, res) => {
