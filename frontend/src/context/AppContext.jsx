@@ -30,6 +30,12 @@ export const AppProvider = ({ children }) => {
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('eduhive_accent') || 'blue');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false);
+
+  const handlePostCreated = (newPost) => {
+    setPosts(prev => [newPost, ...prev]);
+  };
 
   // Navigation functions
   const goHome = () => {
@@ -232,6 +238,11 @@ export const AppProvider = ({ children }) => {
     return posts.filter(p => p.saved);
   }, [posts]);
 
+  const activePost = useMemo(() => {
+    if (!activePostId) return null;
+    return posts.find(p => p.id === activePostId || p._id === activePostId) || null;
+  }, [posts, activePostId]);
+
   return (
     <AppContext.Provider
       value={{
@@ -250,13 +261,19 @@ export const AppProvider = ({ children }) => {
         accentColor,
         isSettingsOpen,
         isNotificationsOpen,
+        isCreatePostOpen,
+        isCreateSubjectOpen,
         currentView,
         activePostId,
+        activePost,
         goHome,
         openProfile,
         openPost,
         setIsSettingsOpen,
         setIsNotificationsOpen,
+        setIsCreatePostOpen,
+        setIsCreateSubjectOpen,
+        handlePostCreated,
         setThemePreference,
         setAccentColorPreference,
         setFeedSort,

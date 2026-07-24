@@ -95,16 +95,16 @@ export default function PostPage() {
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex items-center gap-3.5">
                   <img
-                    src={activePost.author.avatar}
-                    alt={activePost.author.name}
+                    src={activePost.author?.avatar || activePost.author?.profilePic || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                    alt={activePost.author?.name || activePost.author?.username || 'Author'}
                     className="w-12 h-12 rounded-2xl object-cover ring-2 ring-indigo-500/30"
                   />
                   <div>
                     <div className="flex items-center gap-2">
-                      <h1 className="text-sm font-bold text-slate-100">{activePost.author.name}</h1>
-                      <span className="text-xs text-slate-500 font-mono">{activePost.author.handle}</span>
+                      <h1 className="text-sm font-bold text-slate-100">{activePost.author?.name || activePost.author?.username || 'Scholar'}</h1>
+                      <span className="text-xs text-slate-500 font-mono">{activePost.author?.handle || (activePost.author?.username ? `@${activePost.author.username}` : '@scholar')}</span>
                     </div>
-                    <p className="text-xs text-indigo-400 font-medium mt-0.5">{activePost.author.role}</p>
+                    <p className="text-xs text-indigo-400 font-medium mt-0.5">{activePost.author?.role || 'Student'}</p>
                   </div>
                 </div>
 
