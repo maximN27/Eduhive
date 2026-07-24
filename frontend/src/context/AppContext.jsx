@@ -21,16 +21,39 @@ export const AppProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [feedSort, setFeedSort] = useState('latest'); // 'latest', 'trending', 'top'
   const [activePostId, setActivePostId] = useState(null); // postId or null
+  const [currentView, setCurrentView] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#profile') return 'profile';
+    return 'home';
+  });
+
+  // Open profile view
+  const openProfile = () => {
+    setCurrentView('profile');
+    setActivePostId(null);
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#profile';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Open post detail view
   const openPost = (postId) => {
     setActivePostId(postId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentView('post');
+    if (typeof window !== 'undefined') {
+      window.location.hash = `#post-${postId}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Return to home feed view
   const goHome = () => {
     setActivePostId(null);
+    setCurrentView('home');
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#home';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Toggle saving a post
@@ -210,8 +233,9 @@ export const AppProvider = ({ children }) => {
         activeTag,
         searchQuery,
         feedSort,
-        activePostId,
-        activePost,
+        currentView,
+        setCurrentView,
+        openProfile,
         openPost,
         goHome,
         setFeedSort,
