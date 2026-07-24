@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
-const postSchema = new mongoose.Schema({
-  subjectId: {
+const commentSchema = new mongoose.Schema({
+  postId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Subject',
+    ref: 'Post',
     required: true
   },
   authorId: {
@@ -11,28 +11,25 @@ const postSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  title: {
-    type: String,
-    required: true,
-    trim: true
-  },
   content: {
     type: String,
     required: true
   },
-  tags: [{
-    type: String
-  }],
-  reserouseIds: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resource'
-  }],
   voteScore: {
     type: Number,
     default: 0
-  }
+  },
+  parentComment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+    default: null
+  },
+  mentions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Post', postSchema);
+module.exports = mongoose.model('Comment', commentSchema);
