@@ -165,17 +165,39 @@ body {
 /* Common UI Utility Classes */
 .theme-bg { background-color: var(--bg-main); }
 .theme-surface { background-color: var(--surface-main); }
+
+/* Sleek borderless card with thin fading line separators */
 .theme-card {
   background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
-  transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 200ms ease-out;
+  position: relative;
+}
+
+.theme-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--border-color) 30%, var(--border-color) 70%, transparent 100%);
+  opacity: 0.6;
 }
 
 .theme-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.fading-line {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent 0%, var(--border-color) 20%, var(--border-color) 80%, transparent 100%);
+  opacity: 0.5;
+  margin: 0.75rem 0;
 }
 
 .theme-navbar {

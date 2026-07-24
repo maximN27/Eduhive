@@ -1,17 +1,20 @@
 const Post = require('../models/Post');
+const Subject = require('../models/Subject');
 const Comment = require('../models/Comment');
 const Resource = require('../models/Resource');
+const mongoose = require('mongoose');
+const geminiService = require('../services/geminiService');
 
-// @desc    Get all posts with optional filtering
+// @desc    Get all posts with optional filtering and pagination
 // @route   GET /api/posts
 // @access  Public
-exports.getPosts = async (req, res) => {
+const getPosts = async (req, res, next) => {
   try {
-    const { subjectId, tag, search, authorId } = req.query;
+    const { subjectId, tag, search, authorId, page, limit } = req.query;
     let query = {};
 
-    if (subjectId) query.subjectId = subjectId;
-    if (authorId) query.authorId = authorId;
+    if (subjectId && mongoose.Types.ObjectId.isValid(subjectId)) query.subjectId = subjectId;
+    if (authorId && mongoose.Types.ObjectId.isValid(authorId)) query.authorId = authorId;
     if (tag) query.tags = tag;
     if (search) {
       query.$or = [
@@ -21,144 +24,229 @@ exports.getPosts = async (req, res) => {
       ];
     }
 
-    const posts = await Post.find(query)
-      .populate('subjectId', 'name description')
-      .populate('authorId', 'name username avatar profilePic')
-      .populate('reserouseIds')
-      .sort({ createdAt: -1 });
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 50;
+    const skip = (pageNum - 1) * limitNum;
 
-    res.status(200).json({ success: true, count: posts.length, data: posts });
+    const total = await Post.countDocuments(query);
+    const posts = await Post.find(query)
+      .populate('subjectId', 'name description tags')
+      .populate('authorId', 'name username avatar profilePic role')
+      .populate('reserouseIds')
+      .populate('resourceIds')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({
+      success: true,
+      count: posts.length,
+      data: posts,
+      posts,
+      pagination: {
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / limitNum),
+        limit: limitNum
+      }
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Get post by ID
 // @route   GET /api/posts/:id
 // @access  Public
-exports.getPostById = async (req, res) => {
+const getPostById = async (req, res, next) => {
   try {
-    const post = await Post.findById(req.params.id)
-      .populate('subjectId', 'name description tags')
-      .populate('authorId', 'name username avatar profilePic bio college')
-      .populate('reserouseIds');
-
-    if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Post not found', code: 'NOT_FOUND' },
+        message: 'Post not found'
+      });
     }
 
-    res.status(200).json({ success: true, data: post });
+    const post = await Post.findById(req.params.id)
+      .populate('subjectId', 'name description tags')
+      .populate('authorId', 'name username avatar profilePic bio college role')
+      .populate('reserouseIds')
+      .populate('resourceIds');
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Post not found', code: 'NOT_FOUND' },
+        message: 'Post not found'
+      });
+    }
+
+    res.status(200).json({ success: true, data: post, post });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Create a new post
 // @route   POST /api/posts
 // @access  Private
-exports.createPost = async (req, res) => {
+const createPost = async (req, res, next) => {
   try {
     const { subjectId, title, content, tags, resourceIds } = req.body;
 
     if (!subjectId || !title || !content) {
-      return res.status(400).json({ success: false, message: 'Please provide subjectId, title, and content' });
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Please provide subjectId, title, and content', code: 'BAD_REQUEST' },
+        message: 'Please provide subjectId, title, and content'
+      });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid subjectId', code: 'BAD_REQUEST' },
+        message: 'Invalid subjectId'
+      });
+    }
+
+    const subjectExists = await Subject.findById(subjectId);
+    if (!subjectExists) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Subject does not exist', code: 'BAD_REQUEST' },
+        message: 'Subject does not exist'
+      });
+    }
+
+    const userId = req.user._id || req.user.userId || req.user.id;
     const post = await Post.create({
       subjectId,
-      authorId: req.user._id,
-      title,
+      authorId: userId,
+      title: title.trim(),
       content,
       tags: tags || [],
-      reserouseIds: resourceIds || []
+      reserouseIds: resourceIds || [],
+      resourceIds: resourceIds || []
     });
+
+    await Subject.findByIdAndUpdate(subjectId, { $inc: { membersCount: 1 } });
 
     const populatedPost = await Post.findById(post._id)
       .populate('subjectId', 'name')
-      .populate('authorId', 'name username avatar profilePic');
+      .populate('authorId', 'name username avatar profilePic role');
 
-    res.status(201).json({ success: true, data: populatedPost });
+    res.status(201).json({ success: true, data: populatedPost, post: populatedPost });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Update a post
 // @route   PUT /api/posts/:id
 // @access  Private (Author only)
-exports.updatePost = async (req, res) => {
+const updatePost = async (req, res, next) => {
   try {
     let post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Post not found', code: 'NOT_FOUND' },
+        message: 'Post not found'
+      });
     }
 
-    if (post.authorId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to update this post' });
+    const userId = req.user._id || req.user.userId || req.user.id;
+    if (post.authorId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: { message: 'Forbidden: Not authorized to update this post', code: 'FORBIDDEN' },
+        message: 'Not authorized to update this post'
+      });
     }
 
     const { title, content, tags, resourceIds } = req.body;
-
-    if (title) post.title = title;
+    if (title) post.title = title.trim();
     if (content) post.content = content;
     if (tags) post.tags = tags;
-    if (resourceIds) post.reserouseIds = resourceIds;
+    if (resourceIds) {
+      post.reserouseIds = resourceIds;
+      post.resourceIds = resourceIds;
+    }
 
     await post.save();
 
     const updatedPost = await Post.findById(post._id)
       .populate('subjectId', 'name')
-      .populate('authorId', 'name username avatar profilePic');
+      .populate('authorId', 'name username avatar profilePic role');
 
-    res.status(200).json({ success: true, data: updatedPost });
+    res.status(200).json({ success: true, data: updatedPost, post: updatedPost });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Delete a post
 // @route   DELETE /api/posts/:id
 // @access  Private (Author only)
-exports.deletePost = async (req, res) => {
+const deletePost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);
 
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Post not found', code: 'NOT_FOUND' },
+        message: 'Post not found'
+      });
     }
 
-    if (post.authorId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to delete this post' });
+    const userId = req.user._id || req.user.userId || req.user.id;
+    if (post.authorId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: { message: 'Forbidden: Not authorized to delete this post', code: 'FORBIDDEN' },
+        message: 'Not authorized to delete this post'
+      });
     }
 
+    await Comment.deleteMany({ postId: post._id });
     await post.deleteOne();
+
     res.status(200).json({ success: true, message: 'Post removed successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Get comments for a post
 // @route   GET /api/posts/:id/comments
 // @access  Public
-exports.getPostComments = async (req, res) => {
+const getPostComments = async (req, res, next) => {
   try {
     const comments = await Comment.find({ postId: req.params.id })
-      .populate('authorId', 'name username avatar profilePic')
+      .populate('authorId', 'name username avatar profilePic role')
       .populate('mentions', 'name username')
       .sort({ createdAt: 1 });
 
-    res.status(200).json({ success: true, count: comments.length, data: comments });
+    res.status(200).json({ success: true, count: comments.length, data: comments, comments });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Add a top-level comment to a post
 // @route   POST /api/posts/:id/comments
 // @access  Private
-exports.addPostComment = async (req, res) => {
+const addPostComment = async (req, res, next) => {
   try {
     const { content, mentions } = req.body;
 
@@ -171,40 +259,43 @@ exports.addPostComment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Post not found' });
     }
 
+    const userId = req.user._id || req.user.userId || req.user.id;
     const comment = await Comment.create({
       postId: req.params.id,
-      authorId: req.user._id,
+      authorId: userId,
       content,
       parentComment: null,
       mentions: mentions || []
     });
 
     const populatedComment = await Comment.findById(comment._id)
-      .populate('authorId', 'name username avatar profilePic')
+      .populate('authorId', 'name username avatar profilePic role')
       .populate('mentions', 'name username');
 
-    res.status(201).json({ success: true, data: populatedComment });
+    res.status(201).json({ success: true, data: populatedComment, comment: populatedComment });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Get resources attached to a post
 // @route   GET /api/posts/:id/resources
 // @access  Public
-exports.getPostResources = async (req, res) => {
+const getPostResources = async (req, res, next) => {
   try {
     const resources = await Resource.find({ postId: req.params.id }).sort({ votes: -1 });
     res.status(200).json({ success: true, count: resources.length, data: resources });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Attach a resource to a post
 // @route   POST /api/posts/:id/resources
 // @access  Private
-exports.addPostResource = async (req, res) => {
+const addPostResource = async (req, res, next) => {
   try {
     const { title, type, URL, tags } = req.body;
 
@@ -225,12 +316,100 @@ exports.addPostResource = async (req, res) => {
       tags: tags || []
     });
 
-    // Push resource ID to post's reserouseIds array
+    post.reserouseIds = post.reserouseIds || [];
     post.reserouseIds.push(resource._id);
+    post.resourceIds = post.resourceIds || [];
+    post.resourceIds.push(resource._id);
     await post.save();
 
     res.status(201).json({ success: true, data: resource });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// @desc    Summarize post & top comments using Gemini AI
+// @route   POST /api/posts/:id/summarize
+// @access  Private
+const summarizePostHandler = async (req, res, next) => {
+  try {
+    const { id: postId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Post not found', code: 'NOT_FOUND' },
+        message: 'Post not found'
+      });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Post not found', code: 'NOT_FOUND' },
+        message: 'Post not found'
+      });
+    }
+
+    const currentCommentCount = await Comment.countDocuments({ postId });
+
+    if (
+      post.cachedSummary &&
+      Math.abs(currentCommentCount - (post.commentCountAtSummary || 0)) <= 3
+    ) {
+      return res.status(200).json({
+        success: true,
+        summary: post.cachedSummary,
+        cached: true,
+        commentCountAtSummary: post.commentCountAtSummary
+      });
+    }
+
+    const topComments = await Comment.find({ postId })
+      .sort({ voteScore: -1 })
+      .limit(10);
+
+    let summary;
+    try {
+      summary = await geminiService.summarizePost(post.title, post.content, topComments);
+    } catch (err) {
+      return res.status(503).json({
+        success: false,
+        error: {
+          message: err.message || 'Summary temporarily unavailable',
+          code: 'SERVICE_UNAVAILABLE'
+        },
+        message: err.message || 'Summary temporarily unavailable'
+      });
+    }
+
+    post.cachedSummary = summary;
+    post.commentCountAtSummary = currentCommentCount;
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      summary,
+      cached: false,
+      commentCountAtSummary: currentCommentCount
+    });
+  } catch (error) {
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = {
+  getPosts,
+  getPostById,
+  createPost,
+  updatePost,
+  deletePost,
+  getPostComments,
+  addPostComment,
+  getPostResources,
+  addPostResource,
+  summarizePostHandler
 };

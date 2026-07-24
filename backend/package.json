@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node src/utils/seed.js"
+    "seed": "node scripts/seed.js",
+    "test": "jest --runInBand"
   },
   "keywords": [
     "eduhive",
@@ -19,14 +20,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^2.13.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.5"
+    "mongoose": "^8.9.5",
+    "morgan": "^1.11.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.2.2"
   }
 }

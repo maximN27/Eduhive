@@ -6,7 +6,8 @@ const {
   createSubject,
   getSubjectPosts
 } = require('../controllers/subjectController');
-const { protect } = require('../middleware/authMiddleware');
+const { getSubjectResources } = require('../controllers/resourceController');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/')
   .get(getSubjects)
@@ -17,5 +18,8 @@ router.route('/:id')
 
 router.route('/:id/posts')
   .get(getSubjectPosts);
+
+router.route('/:id/resources')
+  .get(getSubjectResources);
 
 module.exports = router;

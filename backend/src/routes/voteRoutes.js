@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { castVote } = require('../controllers/voteController');
-const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware');
 
 router.post('/', protect, castVote);
 

@@ -16,13 +16,13 @@ export default function Home() {
       {/* 72px Floating Navbar */}
       <Navbar onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
-      {/* Main Grid Container with 24px Padding & 28px Column Gaps */}
-      <main className="flex-1 max-w-[1440px] w-full mx-auto px-6 py-6">
+      {/* Main Grid Container with Compact Padding & Gaps */}
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-4">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-[28px] items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
           
           {/* Division 1 (Left Sidebar) */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-24">
+          <div className="hidden lg:block lg:col-span-3 sticky top-20">
             <LeftSidebar />
           </div>
 
@@ -32,7 +32,7 @@ export default function Home() {
           </div>
 
           {/* Division 3 (Right Sidebar) */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-24">
+          <div className="hidden lg:block lg:col-span-3 sticky top-20">
             <RightSidebar />
           </div>
 

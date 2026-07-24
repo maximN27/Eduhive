@@ -10,6 +10,10 @@ export default function CreatePostBox() {
   const [content, setContent] = useState('');
   const [codeSnippet, setCodeSnippet] = useState('');
   const [showCodeInput, setShowCodeInput] = useState(false);
+  const [showResourceInput, setShowResourceInput] = useState(false);
+  const [resourceTitle, setResourceTitle] = useState('');
+  const [resourceType, setResourceType] = useState('PDF Guide');
+  const [resourceUrl, setResourceUrl] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,20 +23,34 @@ export default function CreatePostBox() {
       ? tagInput.split(',').map(t => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean)
       : [];
 
+    const resources = resourceTitle.trim() && resourceUrl.trim()
+      ? [{
+          id: `r-${Date.now()}`,
+          title: resourceTitle.trim(),
+          type: resourceType,
+          url: resourceUrl.trim(),
+          subject: subjects.find(s => s.id === subjectId)?.name || 'General'
+        }]
+      : [];
+
     addPost({
       title: title.trim(),
       subjectId,
       tags: processedTags,
       content: content.trim(),
-      codeSnippet: codeSnippet.trim()
+      codeSnippet: codeSnippet.trim(),
+      resources
     });
 
     // Reset Form
     setTitle('');
     setContent('');
     setCodeSnippet('');
+    setResourceTitle('');
+    setResourceUrl('');
     setTagInput('');
     setShowCodeInput(false);
+    setShowResourceInput(false);
     setIsOpen(false);
   };
 
@@ -139,7 +157,7 @@ export default function CreatePostBox() {
             />
           </div>
 
-          {showCodeInput ? (
+          {showCodeInput && (
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] font-mono font-bold" style={{ color: 'var(--primary)' }}>Code Snippet (Optional)</label>
@@ -164,14 +182,70 @@ export default function CreatePostBox() {
                 }}
               />
             </div>
+          )}
+
+          {showResourceInput ? (
+            <div className="p-3 rounded-xl border space-y-2.5" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-blue-500 uppercase tracking-wider">Attach Study Resource</span>
+                <button
+                  type="button"
+                  onClick={() => setShowResourceInput(false)}
+                  className="text-[10px] text-rose-500 hover:underline"
+                >
+                  Remove resource
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={resourceTitle}
+                  onChange={(e) => setResourceTitle(e.target.value)}
+                  placeholder="Resource Title (e.g. Cheat Sheet PDF)"
+                  className="sm:col-span-2 border rounded-lg px-2.5 py-1.5 text-xs theme-text-primary focus:outline-none"
+                  style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
+                />
+                <select
+                  value={resourceType}
+                  onChange={(e) => setResourceType(e.target.value)}
+                  className="border rounded-lg px-2 py-1.5 text-xs theme-text-primary focus:outline-none"
+                  style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
+                >
+                  <option value="PDF Guide">📄 PDF Guide</option>
+                  <option value="Research Paper">📑 Research Paper</option>
+                  <option value="Video Lecture">🎥 Video Lecture</option>
+                  <option value="GitHub Repo">💻 GitHub Repo</option>
+                  <option value="Interactive Note">✏️ Interactive Note</option>
+                </select>
+              </div>
+              <input
+                type="url"
+                value={resourceUrl}
+                onChange={(e) => setResourceUrl(e.target.value)}
+                placeholder="Resource URL / Link (https://...)"
+                className="w-full border rounded-lg px-2.5 py-1.5 text-xs theme-text-primary focus:outline-none"
+                style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
+              />
+            </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => setShowCodeInput(true)}
-              className="btn-secondary text-xs"
-            >
-              + Add Code Snippet
-            </button>
+            <div className="flex items-center gap-2">
+              {!showCodeInput && (
+                <button
+                  type="button"
+                  onClick={() => setShowCodeInput(true)}
+                  className="btn-secondary text-xs"
+                >
+                  + Add Code Snippet
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowResourceInput(true)}
+                className="btn-secondary text-xs"
+              >
+                + Attach Resource
+              </button>
+            </div>
           )}
 
           <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>

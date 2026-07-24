@@ -1,33 +1,47 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
 const Subject = require('../models/Subject');
+const Resource = require('../models/Resource');
 
 // @desc    Universal search across posts, users, or subjects
 // @route   GET /api/search
 // @access  Public
-exports.search = async (req, res) => {
+const searchAll = async (req, res, next) => {
   try {
-    const { q, type } = req.query;
+    const q = req.query.q ? req.query.q.trim() : '';
+    const type = req.query.type ? req.query.type.toLowerCase() : '';
 
-    if (!q || q.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Query string parameter "q" is required' });
+    if (!q) {
+      return res.status(200).json({ success: true, results: [], data: [], count: 0 });
     }
 
     const regex = new RegExp(q, 'i');
     let results = {};
 
     if (!type || type === 'posts') {
-      results.posts = await Post.find({
-        $or: [
-          { title: regex },
-          { content: regex },
-          { tags: regex }
-        ]
-      })
-      .populate('subjectId', 'name')
-      .populate('authorId', 'name username avatar profilePic')
-      .sort({ createdAt: -1 })
-      .limit(20);
+      try {
+        results.posts = await Post.find({ $text: { $search: q } })
+          .populate('subjectId', 'name description tags')
+          .populate('authorId', 'name username avatar profilePic role')
+          .sort({ createdAt: -1 })
+          .limit(20);
+      } catch (e) {
+        results.posts = [];
+      }
+
+      if (!results.posts || results.posts.length === 0) {
+        results.posts = await Post.find({
+          $or: [
+            { title: regex },
+            { content: regex },
+            { tags: regex }
+          ]
+        })
+          .populate('subjectId', 'name description tags')
+          .populate('authorId', 'name username avatar profilePic role')
+          .sort({ createdAt: -1 })
+          .limit(20);
+      }
     }
 
     if (!type || type === 'users') {
@@ -36,11 +50,12 @@ exports.search = async (req, res) => {
           { username: regex },
           { name: regex },
           { college: regex },
-          { bio: regex }
+          { bio: regex },
+          { email: regex }
         ]
       })
-      .select('-passwordHash')
-      .limit(20);
+        .select('-passwordHash')
+        .limit(20);
     }
 
     if (!type || type === 'subjects') {
@@ -50,15 +65,25 @@ exports.search = async (req, res) => {
           { description: regex },
           { tags: regex }
         ]
-      })
-      .limit(20);
+      }).limit(20);
     }
+
+    const responseData = type ? (results[type] || []) : results;
+    const count = Array.isArray(responseData) ? responseData.length : Object.keys(results).reduce((acc, k) => acc + results[k].length, 0);
 
     res.status(200).json({
       success: true,
-      data: type ? (results[type] || []) : results
+      data: responseData,
+      results: responseData,
+      count
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
+};
+
+module.exports = {
+  searchAll,
+  search: searchAll
 };

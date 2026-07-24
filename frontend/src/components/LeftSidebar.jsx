@@ -46,10 +46,10 @@ export default function LeftSidebar() {
   };
 
   return (
-    <aside className="w-full space-y-6">
+    <aside className="w-full space-y-3.5">
       
       {/* Subject Section */}
-      <div className="theme-card p-5">
+      <div className="theme-card p-3.5">
         <div className="flex items-center justify-between pb-3.5 mb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">

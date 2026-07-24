@@ -6,12 +6,15 @@ const {
   createPost,
   updatePost,
   deletePost,
-  getPostComments,
-  addPostComment,
   getPostResources,
-  addPostResource
+  addPostResource,
+  summarizePostHandler
 } = require('../controllers/postController');
-const { protect } = require('../middleware/authMiddleware');
+const {
+  getPostComments,
+  createComment
+} = require('../controllers/commentController');
+const protect = require('../middleware/authMiddleware');
 
 router.route('/')
   .get(getPosts)
@@ -22,9 +25,11 @@ router.route('/:id')
   .put(protect, updatePost)
   .delete(protect, deletePost);
 
+router.post('/:id/summarize', protect, summarizePostHandler);
+
 router.route('/:id/comments')
   .get(getPostComments)
-  .post(protect, addPostComment);
+  .post(protect, createComment);
 
 router.route('/:id/resources')
   .get(getPostResources)

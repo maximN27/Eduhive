@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'Student'
+    enum: ['student', 'teacher', 'professional'],
+    default: 'student'
   },
   bio: {
     type: String,
@@ -58,11 +59,11 @@ const userSchema = new mongoose.Schema({
   interests: [{
     type: String
   }],
-  preferedLanguage: {
+  preferredLanguage: {
     type: String,
     default: 'English'
   },
-  preferedResourceType: {
+  preferredResourceType: {
     type: String,
     default: 'All'
   },
@@ -76,7 +77,11 @@ const userSchema = new mongoose.Schema({
   savedResources: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Resource'
-  }]
+  }],
+  lastActiveDate: {
+    type: Date,
+    default: Date.now
+  }
 }, {
   timestamps: true
 });

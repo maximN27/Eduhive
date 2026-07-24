@@ -3,7 +3,13 @@ const mongoose = require('mongoose');
 const resourceSchema = new mongoose.Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Post'
+    ref: 'Post',
+    default: null
+  },
+  subjectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject',
+    default: null
   },
   title: {
     type: String,
@@ -12,12 +18,16 @@ const resourceSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['video', 'PDF', 'GitHub', 'Animation', 'Research Paper'],
+    enum: ['video', 'pdf', 'github', 'animation', 'research_paper'],
     required: true
   },
-  URL: {
+  url: {
     type: String,
     required: true
+  },
+  thumbnail: {
+    type: String,
+    default: ''
   },
   tags: [{
     type: String
@@ -25,6 +35,11 @@ const resourceSchema = new mongoose.Schema({
   votes: {
     type: Number,
     default: 0
+  },
+  source: {
+    type: String,
+    enum: ['user', 'auto'],
+    default: 'user'
   }
 }, {
   timestamps: true

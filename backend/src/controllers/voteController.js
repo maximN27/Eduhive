@@ -2,80 +2,114 @@ const Vote = require('../models/Vote');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 const Resource = require('../models/Resource');
+const mongoose = require('mongoose');
 
-// @desc    Unified voting endpoint for Post, Comment, or Resource
+// @desc    Cast, toggle, or flip vote on post, comment, or resource
 // @route   POST /api/votes
 // @access  Private
-exports.castVote = async (req, res) => {
+const castVote = async (req, res, next) => {
   try {
-    const { targetType, targetId, voteType } = req.body;
+    const { targetType: rawTargetType, targetId, voteType } = req.body;
+    const userId = req.user._id || req.user.userId || req.user.id;
 
-    if (!targetType || !targetId || !voteType) {
-      return res.status(400).json({ success: false, message: 'Please provide targetType, targetId, and voteType' });
+    if (!rawTargetType || !targetId || !voteType) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Please provide targetType, targetId, and voteType', code: 'BAD_REQUEST' },
+        message: 'Please provide targetType, targetId, and voteType'
+      });
     }
 
-    if (!['Post', 'Comment', 'Resource'].includes(targetType)) {
-      return res.status(400).json({ success: false, message: 'Invalid targetType. Must be Post, Comment, or Resource' });
+    const normalizedTarget = rawTargetType.charAt(0).toUpperCase() + rawTargetType.slice(1).toLowerCase();
+    if (!['Post', 'Comment', 'Resource'].includes(normalizedTarget)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid targetType. Must be Post, Comment, or Resource', code: 'BAD_REQUEST' },
+        message: 'Invalid targetType. Must be Post, Comment, or Resource'
+      });
     }
 
     if (!['up', 'down'].includes(voteType)) {
-      return res.status(400).json({ success: false, message: 'Invalid voteType. Must be "up" or "down"' });
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid voteType. Must be up or down', code: 'BAD_REQUEST' },
+        message: 'Invalid voteType. Must be up or down'
+      });
     }
 
-    // Find Target Document
+    if (!mongoose.Types.ObjectId.isValid(targetId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid targetId', code: 'BAD_REQUEST' },
+        message: 'Invalid targetId'
+      });
+    }
+
     let TargetModel;
-    if (targetType === 'Post') TargetModel = Post;
-    else if (targetType === 'Comment') TargetModel = Comment;
-    else if (targetType === 'Resource') TargetModel = Resource;
+    let scoreField = 'voteScore';
+    if (normalizedTarget === 'Post') TargetModel = Post;
+    if (normalizedTarget === 'Comment') TargetModel = Comment;
+    if (normalizedTarget === 'Resource') {
+      TargetModel = Resource;
+      scoreField = 'votes';
+    }
 
     const targetDoc = await TargetModel.findById(targetId);
     if (!targetDoc) {
-      return res.status(404).json({ success: false, message: `${targetType} not found` });
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Target document not found', code: 'NOT_FOUND' },
+        message: 'Target document not found'
+      });
     }
 
     const existingVote = await Vote.findOne({
-      userId: req.user._id,
-      targetType,
+      userId,
+      $or: [{ targetType: normalizedTarget }, { targetType: rawTargetType.toLowerCase() }],
       targetId
     });
 
-    let scoreField = targetType === 'Resource' ? 'votes' : 'voteScore';
-    let delta = 0;
+    let scoreDelta = 0;
+    let userVoteState = null;
 
-    if (existingVote) {
-      if (existingVote.voteType === voteType) {
-        // Toggle off existing vote
-        await existingVote.deleteOne();
-        delta = voteType === 'up' ? -1 : 1;
-      } else {
-        // Switch vote direction
-        existingVote.voteType = voteType;
-        await existingVote.save();
-        delta = voteType === 'up' ? 2 : -2;
-      }
+    if (!existingVote) {
+      await Vote.create({ userId, targetType: normalizedTarget, targetId, voteType });
+      scoreDelta = voteType === 'up' ? 1 : -1;
+      userVoteState = voteType;
+    } else if (existingVote.voteType === voteType) {
+      await Vote.findByIdAndDelete(existingVote._id);
+      scoreDelta = voteType === 'up' ? -1 : 1;
+      userVoteState = null;
     } else {
-      // Cast new vote
-      await Vote.create({
-        userId: req.user._id,
-        targetType,
-        targetId,
-        voteType
-      });
-      delta = voteType === 'up' ? 1 : -1;
+      existingVote.voteType = voteType;
+      await existingVote.save();
+      scoreDelta = voteType === 'up' ? 2 : -2;
+      userVoteState = voteType;
     }
 
-    targetDoc[scoreField] = (targetDoc[scoreField] || 0) + delta;
+    targetDoc[scoreField] = (targetDoc[scoreField] || 0) + scoreDelta;
     await targetDoc.save();
 
     res.status(200).json({
       success: true,
+      message: 'Vote processed successfully',
+      targetType: normalizedTarget,
+      targetId,
+      userVoteState,
+      newScore: targetDoc[scoreField],
+      voteScore: targetDoc[scoreField],
       data: {
-        targetType,
+        targetType: normalizedTarget,
         targetId,
         newScore: targetDoc[scoreField]
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
   }
+};
+
+module.exports = {
+  castVote
 };

@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
 import NotificationsModal from './NotificationsModal';
 
-export default function Navbar({ onMobileMenuToggle }) {
+export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }) {
   const {
     searchQuery,
     setSearchQuery,
-    user,
-    token,
-    savedPosts,
-    savedResources,
+    user: appUser,
+    token: appToken,
+    savedPosts = [],
+    savedResources = [],
     clearFilters,
     setIsSettingsOpen,
     isAuthOpen,
@@ -19,11 +20,29 @@ export default function Navbar({ onMobileMenuToggle }) {
     isNotificationsOpen,
     setIsNotificationsOpen,
     handleLogout,
-    notifications,
+    notifications = [],
     navigateToProfile,
     openProfile,
     goHome
   } = useApp();
+
+  let authUser = null;
+  let logout = null;
+  try {
+    const authContext = useAuth();
+    authUser = authContext?.user || null;
+    logout = authContext?.logout || null;
+  } catch (e) {
+    // Graceful fallback if AuthContext is unmounted
+  }
+
+  const user = authUser || appUser || {};
+  const token = appToken || (authUser ? 'token' : null);
+  const userName = user.name || user.username || 'Scholar';
+  const userHandle = user.handle || (user.username ? `@${user.username}` : '@scholar');
+  const userAvatar = user.avatar || user.profilePic || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150';
+  const userRole = user.role || 'Student';
+  const userReputation = user.reputation !== undefined ? user.reputation : (user.streak ? user.streak * 250 : 120);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileRef = useRef(null);
@@ -38,11 +57,33 @@ export default function Navbar({ onMobileMenuToggle }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.isRead || n.unread).length;
+  const unreadCount = notifications.filter(n => !n.isRead && n.unread !== false).length;
+
+  const handleSignOut = () => {
+    setShowProfileMenu(false);
+    if (logout) logout();
+    if (handleLogout) handleLogout();
+  };
+
+  const handleLoginClick = () => {
+    if (onOpenLogin) onOpenLogin();
+    else {
+      setAuthMode('login');
+      setIsAuthOpen(true);
+    }
+  };
+
+  const handleRegisterClick = () => {
+    if (onOpenSignup) onOpenSignup();
+    else {
+      setAuthMode('register');
+      setIsAuthOpen(true);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 theme-navbar transition-all duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-3 shrink-0">
@@ -61,20 +102,20 @@ export default function Navbar({ onMobileMenuToggle }) {
             className="flex items-center gap-2.5 cursor-pointer group"
           >
             <div 
-              className="w-10 h-10 rounded-xl p-0.5 shadow-md flex items-center justify-center transition-transform group-hover:scale-105"
+              className="w-9 h-9 rounded-xl p-0.5 shadow-md flex items-center justify-center transition-transform group-hover:scale-105"
               style={{ backgroundColor: 'var(--primary)', color: '#FFFFFF' }}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
               </svg>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight theme-text-primary">
+              <span className="text-lg font-extrabold tracking-tight theme-text-primary">
                 EduHive
               </span>
               <span 
-                className="hidden sm:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                className="hidden sm:inline-block text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border"
                 style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}
               >
                 Academic API
@@ -84,9 +125,9 @@ export default function Navbar({ onMobileMenuToggle }) {
         </div>
 
         {/* Center: Search Bar */}
-        <div className="flex-1 max-w-xl mx-auto">
+        <div className="flex-1 max-w-lg mx-auto">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none theme-text-muted">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none theme-text-muted">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -96,19 +137,18 @@ export default function Navbar({ onMobileMenuToggle }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search subjects, subtopics, or posts (e.g. algorithms, #react)..."
-              className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl theme-text-primary placeholder:theme-text-muted transition-all outline-none"
+              className="w-full pl-9 pr-8 py-1.5 text-xs rounded-xl theme-text-primary placeholder:theme-text-muted transition-all outline-none"
               style={{
                 backgroundColor: 'var(--input-bg)',
-                border: '1px solid var(--input-border)',
-                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
+                border: '1px solid var(--input-border)'
               }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center theme-text-muted hover:theme-text-primary"
+                className="absolute inset-y-0 right-0 pr-2.5 flex items-center theme-text-muted hover:theme-text-primary"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -117,36 +157,36 @@ export default function Navbar({ onMobileMenuToggle }) {
         </div>
 
         {/* Right: Notifications & User Profile */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           
           {/* Notifications Button */}
           <button 
             onClick={() => setIsNotificationsOpen(true)}
-            className="relative p-2.5 rounded-xl border transition-colors hover:bg-slate-500/10"
+            className="relative p-2 rounded-xl border transition-colors hover:bg-slate-500/10 cursor-pointer"
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
             title="Notifications"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full ring-2" style={{ backgroundColor: 'var(--primary)', ringColor: 'var(--card-bg)' }}></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2" style={{ backgroundColor: 'var(--primary)', ringColor: 'var(--card-bg)' }}></span>
             )}
           </button>
 
           {/* Authentication / Profile Button */}
-          {!token ? (
+          {!token && !user.email ? (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl border transition-all"
+                onClick={handleLoginClick}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer"
                 style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
               >
                 Sign In
               </button>
               <button
-                onClick={() => { setAuthMode('register'); setIsAuthOpen(true); }}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl text-white transition-all shadow-sm"
+                onClick={handleRegisterClick}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl text-white transition-all shadow-sm cursor-pointer"
                 style={{ backgroundColor: 'var(--primary)' }}
               >
                 Register
@@ -156,26 +196,26 @@ export default function Navbar({ onMobileMenuToggle }) {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2.5 p-1 rounded-xl border transition-all hover:bg-slate-500/5 focus:outline-none group"
+                className="flex items-center gap-2 p-1 rounded-xl border transition-all hover:bg-slate-500/5 focus:outline-none group cursor-pointer"
                 style={{ borderColor: 'var(--border-color)' }}
               >
                 <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-9 h-9 rounded-lg object-cover ring-2 transition-all"
+                  src={userAvatar}
+                  alt={userName}
+                  className="w-8 h-8 rounded-lg object-cover ring-2 transition-all"
                   style={{ ringColor: 'var(--primary-border)' }}
                 />
                 
                 <div className="hidden lg:flex flex-col text-left pr-1">
                   <span className="text-xs font-bold theme-text-primary leading-tight">
-                    {user.name}
+                    {userName}
                   </span>
-                  <span className="text-[10px] font-semibold" style={{ color: 'var(--primary)' }}>
-                    ⚡ {user.reputation} XP
+                  <span className="text-[9px] font-semibold" style={{ color: 'var(--primary)' }}>
+                    ⚡ {userReputation} XP
                   </span>
                 </div>
 
-                <svg className={`w-4 h-4 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-3.5 h-3.5 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -184,35 +224,35 @@ export default function Navbar({ onMobileMenuToggle }) {
               {showProfileMenu && (
                 <div 
                   className="absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
-                  style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
+                  style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: 'var(--radius)' }}
                 >
                   <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
                     <div className="flex items-center gap-3">
-                      <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-lg object-cover" />
+                      <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-lg object-cover" />
                       <div>
-                        <p className="text-sm font-bold theme-text-primary">{user.name}</p>
-                        <p className="text-xs theme-text-muted">{user.handle}</p>
+                        <p className="text-sm font-bold theme-text-primary">{userName}</p>
+                        <p className="text-xs theme-text-muted">{userHandle}</p>
                       </div>
                     </div>
                     <div 
-                      className="mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium"
+                      className="mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium uppercase tracking-wider"
                       style={{ backgroundColor: 'var(--primary-light)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}
                     >
-                      <span>{user.role}</span>
-                      <span className="font-bold">⚡ {user.reputation} XP</span>
+                      <span>{userRole}</span>
+                      <span className="font-bold">⚡ {userReputation} XP</span>
                     </div>
                   </div>
 
                   <div className="py-2">
                     <button
-                      onClick={() => { setShowProfileMenu(false); navigateToProfile(); }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors"
+                      onClick={() => { setShowProfileMenu(false); if (openProfile) openProfile(); else navigateToProfile(); }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       👤 View Profile
                     </button>
                     <button 
                       onClick={() => { setShowProfileMenu(false); setIsSettingsOpen(true); }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors"
+                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       ⚙️ Appearance Settings
                     </button>
@@ -220,8 +260,8 @@ export default function Navbar({ onMobileMenuToggle }) {
 
                   <div className="border-t pt-1 mt-1" style={{ borderColor: 'var(--border-color)' }}>
                     <button 
-                      onClick={() => { setShowProfileMenu(false); handleLogout(); }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors"
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       🚪 Sign Out
                     </button>
