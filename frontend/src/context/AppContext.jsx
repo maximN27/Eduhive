@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   INITIAL_SUBJECTS,
   INITIAL_TAGS,
@@ -20,6 +20,58 @@ export const AppProvider = ({ children }) => {
   const [activeTag, setActiveTag] = useState(null); // tagId or null
   const [searchQuery, setSearchQuery] = useState('');
   const [feedSort, setFeedSort] = useState('latest'); // 'latest', 'trending', 'top'
+
+  // Theme & Appearance Preferences
+  const [theme, setTheme] = useState(() => localStorage.getItem('eduhive_theme') || 'system');
+  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('eduhive_accent') || 'blue');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Apply Theme & Accent to HTML Root
+  useEffect(() => {
+    const root = document.documentElement;
+
+    // Apply Dark Class
+    const applyDark = (isDark) => {
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    if (theme === 'dark') {
+      applyDark(true);
+    } else if (theme === 'light') {
+      applyDark(false);
+    } else {
+      // System mode
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyDark(mediaQuery.matches);
+
+      const handleChange = (e) => applyDark(e.matches);
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [theme]);
+
+  // Apply Accent Color Class
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('accent-emerald', 'accent-purple', 'accent-orange');
+    if (accentColor !== 'blue') {
+      root.classList.add(`accent-${accentColor}`);
+    }
+  }, [accentColor]);
+
+  const setThemePreference = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem('eduhive_theme', newTheme);
+  };
+
+  const setAccentColorPreference = (newAccent) => {
+    setAccentColor(newAccent);
+    localStorage.setItem('eduhive_accent', newAccent);
+  };
 
   // Toggle saving a post
   const toggleSavePost = (postId) => {
@@ -137,7 +189,6 @@ export const AppProvider = ({ children }) => {
   // Filtered & Sorted Posts
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
-      // Filter by Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesTitle = post.title.toLowerCase().includes(q);
@@ -150,12 +201,10 @@ export const AppProvider = ({ children }) => {
         }
       }
 
-      // Filter by Active Subject
       if (activeSubject && post.subjectId !== activeSubject) {
         return false;
       }
 
-      // Filter by Active Tag
       if (activeTag && !post.tags.includes(activeTag)) {
         return false;
       }
@@ -168,7 +217,7 @@ export const AppProvider = ({ children }) => {
       if (feedSort === 'top') {
         return b.upvotes - a.upvotes;
       }
-      return 0; // default latest order
+      return 0;
     });
   }, [posts, activeSubject, activeTag, searchQuery, feedSort]);
 
@@ -191,6 +240,12 @@ export const AppProvider = ({ children }) => {
         activeTag,
         searchQuery,
         feedSort,
+        theme,
+        accentColor,
+        isSettingsOpen,
+        setIsSettingsOpen,
+        setThemePreference,
+        setAccentColorPreference,
         setFeedSort,
         handleSelectSubject,
         handleSelectTag,
