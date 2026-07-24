@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function CreatePostBox() {
-  const { user, subjects, tags, addPost, activeSubject } = useApp();
+  const { user, subjects, addPost, activeSubject } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [subjectId, setSubjectId] = useState(activeSubject || 'cs');
@@ -37,21 +37,29 @@ export default function CreatePostBox() {
   };
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-xl transition-all mb-6">
+    <div className="theme-card p-5 mb-6 transition-all">
       {!isOpen ? (
         <div 
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-3.5 cursor-pointer group"
         >
           <img
             src={user.avatar}
             alt={user.name}
-            className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/20 group-hover:ring-indigo-400 transition-all shrink-0"
+            className="w-10 h-10 rounded-xl object-cover ring-2 transition-all shrink-0"
+            style={{ ringColor: 'var(--primary-border)' }}
           />
-          <div className="flex-1 bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-400 group-hover:border-slate-700 group-hover:text-slate-300 transition-all flex items-center justify-between">
-            <span>Share a concept, question, or study resource with EduHive...</span>
+          <div 
+            className="flex-1 border rounded-xl px-4 py-2.5 text-xs transition-all flex items-center justify-between"
+            style={{
+              backgroundColor: 'var(--input-bg)',
+              borderColor: 'var(--input-border)',
+              color: 'var(--text-muted)'
+            }}
+          >
+            <span>Share an academic concept, theorem, or question...</span>
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded bg-slate-800 text-indigo-400">
+              <span className="p-1 rounded font-bold" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -61,15 +69,15 @@ export default function CreatePostBox() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--border-color)' }}>
+            <div className="flex items-center gap-2.5">
               <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-lg object-cover" />
-              <span className="text-xs font-bold text-slate-200">Create New Post</span>
+              <span className="text-xs font-bold theme-text-primary">Create Academic Post</span>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="text-slate-400 hover:text-white text-xs"
+              className="text-xs theme-text-muted hover:theme-text-primary"
             >
               Cancel ✕
             </button>
@@ -77,11 +85,12 @@ export default function CreatePostBox() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">Subject Community</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 theme-text-secondary">Subject Community</label>
               <select
                 value={subjectId}
                 onChange={(e) => setSubjectId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                className="w-full border rounded-xl px-3 py-2 text-xs theme-text-primary focus:outline-none"
+                style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
               >
                 {subjects.map(s => (
                   <option key={s.id} value={s.id}>
@@ -92,87 +101,92 @@ export default function CreatePostBox() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-400 mb-1">Subtopic Tags (comma separated)</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 theme-text-secondary">Subtopic Tags (comma separated)</label>
               <input
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="e.g. algorithms, dsa, react"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full border rounded-xl px-3 py-2 text-xs theme-text-primary placeholder:theme-text-muted focus:outline-none"
+                style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">Post Title</label>
+            <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 theme-text-secondary">Post Title</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Give your topic a clear, concise title..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              placeholder="Give your post a clear, descriptive title..."
+              className="w-full border rounded-xl px-3.5 py-2 text-xs font-semibold theme-text-primary placeholder:theme-text-muted focus:outline-none"
+              style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">Detailed Explanation / Notes</label>
+            <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 theme-text-secondary">Content & Explanation</label>
             <textarea
               rows={4}
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Explain key concepts, theorems, or problem solutions..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 leading-relaxed"
+              placeholder="Explain the concept, theorem proof, or question details..."
+              className="w-full border rounded-xl p-3 text-xs theme-text-primary placeholder:theme-text-muted focus:outline-none leading-relaxed"
+              style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
             />
           </div>
 
           {showCodeInput ? (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-mono text-cyan-400 font-semibold">Code / LaTeX Snippet (Optional)</label>
+                <label className="text-[11px] font-mono font-bold" style={{ color: 'var(--primary)' }}>Code Snippet (Optional)</label>
                 <button
                   type="button"
                   onClick={() => setShowCodeInput(false)}
-                  className="text-[10px] text-slate-400 hover:text-rose-400"
+                  className="text-[10px] text-rose-500 hover:underline"
                 >
-                  Remove snippet
+                  Remove code
                 </button>
               </div>
               <textarea
                 rows={3}
                 value={codeSnippet}
                 onChange={(e) => setCodeSnippet(e.target.value)}
-                placeholder="// Paste python, C++, mathematical equations or pseudocode..."
-                className="w-full bg-slate-950/90 border border-cyan-500/30 rounded-xl p-3 text-xs font-mono text-cyan-200 placeholder-slate-600 focus:outline-none focus:border-cyan-400"
+                placeholder="// Paste code or mathematical pseudocode..."
+                className="w-full border rounded-xl p-3 text-xs font-mono focus:outline-none"
+                style={{
+                  backgroundColor: 'var(--code-bg)',
+                  borderColor: 'var(--code-border)',
+                  color: 'var(--code-text)'
+                }}
               />
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setShowCodeInput(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-colors"
+              className="btn-secondary text-xs"
             >
-              <span>+ Add Code Snippet</span>
+              + Add Code Snippet
             </button>
           )}
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white"
+              className="btn-secondary text-xs"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25 hover:opacity-95 transition-opacity flex items-center gap-1.5"
+              className="btn-primary text-xs"
             >
-              <span>Publish Post</span>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+              Publish Post
             </button>
           </div>
         </form>

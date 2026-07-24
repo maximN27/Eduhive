@@ -2,38 +2,38 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function SavedPostItem({ post }) {
-  const { toggleSavePost, openPost } = useApp();
+  const { toggleSavePost } = useApp();
 
   return (
-    <div className="group relative p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all">
+    <div className="group relative p-3.5 rounded-xl border transition-all hover:-translate-y-0.5" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
       <div className="flex items-start justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        <span 
+          className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+          style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}
+        >
           {post.subjectName}
         </span>
         <button
           onClick={() => toggleSavePost(post.id)}
-          className="text-slate-500 hover:text-rose-400 transition-colors p-0.5"
-          title="Remove from saved posts"
+          className="theme-text-muted hover:text-rose-500 transition-colors p-0.5"
+          title="Remove bookmark"
         >
-          <svg className="w-4 h-4 fill-amber-400 text-amber-400 hover:fill-rose-400 hover:text-rose-400 transition-colors" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 fill-current text-amber-500 hover:text-rose-500 transition-colors" viewBox="0 0 24 24">
             <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
         </button>
       </div>
 
-      <h4 
-        onClick={() => openPost(post.id)}
-        className="text-xs font-semibold text-slate-200 mt-2 line-clamp-2 group-hover:text-indigo-300 leading-snug cursor-pointer transition-colors"
-      >
+      <h4 className="text-xs font-semibold theme-text-primary mt-2 line-clamp-2 leading-snug group-hover:underline">
         {post.title}
       </h4>
 
-      <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2.5 pt-2 border-t border-slate-900">
+      <div className="flex items-center justify-between text-[10px] theme-text-muted mt-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
         <span className="flex items-center gap-1.5 truncate">
           <img src={post.author.avatar} alt={post.author.name} className="w-3.5 h-3.5 rounded-full object-cover" />
           <span className="truncate">{post.author.name}</span>
         </span>
-        <span className="font-mono text-indigo-400 font-medium shrink-0">
+        <span className="font-mono font-bold" style={{ color: 'var(--primary)' }}>
           ▲ {post.upvotes}
         </span>
       </div>

@@ -4,32 +4,242 @@
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: dark;
+
+  /* LIGHT THEME (Default) */
+  --bg-main: #F6F8FB;
+  --surface-main: #FBFCFE;
+  --card-bg: #FFFFFF;
+  --sidebar-bg: #FBFCFE;
+  --navbar-bg: rgba(255, 255, 255, 0.85);
+  --navbar-border: #E5E7EB;
+  --border-color: #E5E7EB;
+  --border-subtle: #F1F5F9;
+
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #94A3B8;
+
+  --input-bg: #FFFFFF;
+  --input-border: #E5E7EB;
+
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  --radius: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+
+  --shadow-soft: 0 4px 18px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-nav: 0 4px 20px rgba(0, 0, 0, 0.04);
+
+  /* Default Blue Accent */
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-light: rgba(37, 99, 235, 0.08);
+  --primary-border: rgba(37, 99, 235, 0.2);
+  --ring-color: rgba(37, 99, 235, 0.3);
+
+  /* Tag Pill Colors - Light Theme */
+  --tag-blue-bg: #EFF6FF;
+  --tag-blue-text: #1D4ED8;
+  --tag-purple-bg: #F5F3FF;
+  --tag-purple-text: #6D28D9;
+  --tag-green-bg: #F0FDF4;
+  --tag-green-text: #15803D;
+  --tag-orange-bg: #FFF7ED;
+  --tag-orange-text: #C2410C;
+  --tag-yellow-bg: #FEFCE8;
+  --tag-yellow-text: #A16207;
+  --tag-cyan-bg: #ECFEFF;
+  --tag-cyan-text: #0E7490;
+  --tag-teal-bg: #F0FDFA;
+  --tag-teal-text: #0F766E;
+
+  /* Code Block Colors */
+  --code-bg: #1E293B;
+  --code-text: #E2E8F0;
+  --code-header-bg: #0F172A;
+  --code-border: #334155;
 }
 
+/* DARK THEME */
+html.dark {
+  --bg-main: #0F172A;
+  --surface-main: #111827;
+  --card-bg: #1E293B;
+  --sidebar-bg: #111827;
+  --navbar-bg: rgba(17, 24, 39, 0.85);
+  --navbar-border: #334155;
+  --border-color: #334155;
+  --border-subtle: #1E293B;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+
+  --input-bg: #0F172A;
+  --input-border: #334155;
+
+  --shadow-soft: 0 4px 18px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-nav: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  /* Dark Theme Accent */
+  --primary: #3B82F6;
+  --primary-hover: #60A5FA;
+  --primary-light: rgba(59, 130, 246, 0.15);
+  --primary-border: rgba(59, 130, 246, 0.3);
+  --ring-color: rgba(59, 130, 246, 0.4);
+
+  /* Tag Pill Colors - Dark Theme */
+  --tag-blue-bg: rgba(59, 130, 246, 0.15);
+  --tag-blue-text: #93C5FD;
+  --tag-purple-bg: rgba(139, 92, 246, 0.15);
+  --tag-purple-text: #C4B5FD;
+  --tag-green-bg: rgba(34, 197, 94, 0.15);
+  --tag-green-text: #86EFAC;
+  --tag-orange-bg: rgba(249, 115, 22, 0.15);
+  --tag-orange-text: #FDBA74;
+  --tag-yellow-bg: rgba(234, 179, 8, 0.15);
+  --tag-yellow-text: #FDE047;
+  --tag-cyan-bg: rgba(6, 182, 212, 0.15);
+  --tag-cyan-text: #67E8F9;
+  --tag-teal-bg: rgba(20, 184, 166, 0.15);
+  --tag-teal-text: #5EEAD4;
+}
+
+/* ACCENT COLOR OVERRIDES */
+html.accent-emerald {
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-light: rgba(16, 185, 129, 0.1);
+  --primary-border: rgba(16, 185, 129, 0.25);
+  --ring-color: rgba(16, 185, 129, 0.35);
+}
+html.dark.accent-emerald {
+  --primary: #10B981;
+  --primary-hover: #34D399;
+  --primary-light: rgba(16, 185, 129, 0.18);
+  --primary-border: rgba(16, 185, 129, 0.35);
+}
+
+html.accent-purple {
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-light: rgba(139, 92, 246, 0.1);
+  --primary-border: rgba(139, 92, 246, 0.25);
+  --ring-color: rgba(139, 92, 246, 0.35);
+}
+html.dark.accent-purple {
+  --primary: #8B5CF6;
+  --primary-hover: #A78BFA;
+  --primary-light: rgba(139, 92, 246, 0.18);
+  --primary-border: rgba(139, 92, 246, 0.35);
+}
+
+html.accent-orange {
+  --primary: #EA580C;
+  --primary-hover: #C2410C;
+  --primary-light: rgba(249, 115, 22, 0.1);
+  --primary-border: rgba(249, 115, 22, 0.25);
+  --ring-color: rgba(249, 115, 22, 0.35);
+}
+html.dark.accent-orange {
+  --primary: #F97316;
+  --primary-hover: #FB923C;
+  --primary-light: rgba(249, 115, 22, 0.18);
+  --primary-border: rgba(249, 115, 22, 0.35);
+}
+
+/* Global Reset & Theme Application */
 body {
   margin: 0;
-  background-color: #020617;
-  color: #f8fafc;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  transition: background-color 200ms ease-out, color 200ms ease-out;
   overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+/* Common UI Utility Classes */
+.theme-bg { background-color: var(--bg-main); }
+.theme-surface { background-color: var(--surface-main); }
+.theme-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 4px;
+.theme-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
-  border-radius: 4px;
+.theme-navbar {
+  background-color: var(--navbar-bg);
+  border-bottom: 1px solid var(--navbar-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-nav);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.6);
+.theme-border { border-color: var(--border-color); }
+.theme-text-primary { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 200ms ease-out;
+  box-shadow: 0 2px 8px var(--primary-light);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 200ms ease-out;
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-main);
+  border-color: var(--primary-border);
+  color: var(--primary);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

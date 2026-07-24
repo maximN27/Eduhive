@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   INITIAL_SUBJECTS,
   INITIAL_TAGS,
@@ -20,40 +20,57 @@ export const AppProvider = ({ children }) => {
   const [activeTag, setActiveTag] = useState(null); // tagId or null
   const [searchQuery, setSearchQuery] = useState('');
   const [feedSort, setFeedSort] = useState('latest'); // 'latest', 'trending', 'top'
-  const [activePostId, setActivePostId] = useState(null); // postId or null
-  const [currentView, setCurrentView] = useState(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#profile') return 'profile';
-    return 'home';
-  });
 
-  // Open profile view
-  const openProfile = () => {
-    setCurrentView('profile');
-    setActivePostId(null);
-    if (typeof window !== 'undefined') {
-      window.location.hash = '#profile';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Theme & Appearance Preferences
+  const [theme, setTheme] = useState(() => localStorage.getItem('eduhive_theme') || 'system');
+  const [accentColor, setAccentColor] = useState(() => localStorage.getItem('eduhive_accent') || 'blue');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Apply Theme & Accent to HTML Root
+  useEffect(() => {
+    const root = document.documentElement;
+
+    // Apply Dark Class
+    const applyDark = (isDark) => {
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    if (theme === 'dark') {
+      applyDark(true);
+    } else if (theme === 'light') {
+      applyDark(false);
+    } else {
+      // System mode
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      applyDark(mediaQuery.matches);
+
+      const handleChange = (e) => applyDark(e.matches);
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
+  }, [theme]);
+
+  // Apply Accent Color Class
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('accent-emerald', 'accent-purple', 'accent-orange');
+    if (accentColor !== 'blue') {
+      root.classList.add(`accent-${accentColor}`);
+    }
+  }, [accentColor]);
+
+  const setThemePreference = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem('eduhive_theme', newTheme);
   };
 
-  // Open post detail view
-  const openPost = (postId) => {
-    setActivePostId(postId);
-    setCurrentView('post');
-    if (typeof window !== 'undefined') {
-      window.location.hash = `#post-${postId}`;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  // Return to home feed view
-  const goHome = () => {
-    setActivePostId(null);
-    setCurrentView('home');
-    if (typeof window !== 'undefined') {
-      window.location.hash = '#home';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  const setAccentColorPreference = (newAccent) => {
+    setAccentColor(newAccent);
+    localStorage.setItem('eduhive_accent', newAccent);
   };
 
   // Toggle saving a post
@@ -162,18 +179,16 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Clear all filters and return home
+  // Clear all filters
   const clearFilters = () => {
     setActiveSubject(null);
     setActiveTag(null);
     setSearchQuery('');
-    setActivePostId(null);
   };
 
   // Filtered & Sorted Posts
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
-      // Filter by Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesTitle = post.title.toLowerCase().includes(q);
@@ -186,12 +201,10 @@ export const AppProvider = ({ children }) => {
         }
       }
 
-      // Filter by Active Subject
       if (activeSubject && post.subjectId !== activeSubject) {
         return false;
       }
 
-      // Filter by Active Tag
       if (activeTag && !post.tags.includes(activeTag)) {
         return false;
       }
@@ -204,15 +217,9 @@ export const AppProvider = ({ children }) => {
       if (feedSort === 'top') {
         return b.upvotes - a.upvotes;
       }
-      return 0; // default latest order
+      return 0;
     });
   }, [posts, activeSubject, activeTag, searchQuery, feedSort]);
-
-  // Currently selected active post object
-  const activePost = useMemo(() => {
-    if (!activePostId) return null;
-    return posts.find(p => p.id === activePostId) || null;
-  }, [posts, activePostId]);
 
   // Derived Saved Posts List
   const savedPosts = useMemo(() => {
@@ -233,11 +240,12 @@ export const AppProvider = ({ children }) => {
         activeTag,
         searchQuery,
         feedSort,
-        currentView,
-        setCurrentView,
-        openProfile,
-        openPost,
-        goHome,
+        theme,
+        accentColor,
+        isSettingsOpen,
+        setIsSettingsOpen,
+        setThemePreference,
+        setAccentColorPreference,
         setFeedSort,
         handleSelectSubject,
         handleSelectTag,

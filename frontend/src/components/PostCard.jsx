@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function PostCard({ post }) {
-  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost } = useApp();
+  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag } = useApp();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -20,99 +21,145 @@ export default function PostCard({ post }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCopyCode = () => {
+    if (post.codeSnippet) {
+      navigator.clipboard?.writeText?.(post.codeSnippet);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
+  };
+
+  // Tag pill styling helper
+  const getTagStyle = (tag) => {
+    const lower = tag.toLowerCase();
+    if (lower.includes('algorithm') || lower.includes('dsa') || lower.includes('sys-design') || lower.includes('os')) {
+      return { backgroundColor: 'var(--tag-blue-bg)', color: 'var(--tag-blue-text)' };
+    }
+    if (lower.includes('ml') || lower.includes('neural') || lower.includes('llm') || lower.includes('python')) {
+      return { backgroundColor: 'var(--tag-purple-bg)', color: 'var(--tag-purple-text)' };
+    }
+    if (lower.includes('calculus') || lower.includes('linear') || lower.includes('probability') || lower.includes('discrete')) {
+      return { backgroundColor: 'var(--tag-orange-bg)', color: 'var(--tag-orange-text)' };
+    }
+    if (lower.includes('react') || lower.includes('tailwind') || lower.includes('backend') || lower.includes('typescript')) {
+      return { backgroundColor: 'var(--tag-cyan-bg)', color: 'var(--tag-cyan-text)' };
+    }
+    if (lower.includes('quantum') || lower.includes('circuit') || lower.includes('electromagnetics')) {
+      return { backgroundColor: 'var(--tag-yellow-bg)', color: 'var(--tag-yellow-text)' };
+    }
+    return { backgroundColor: 'var(--tag-teal-bg)', color: 'var(--tag-teal-text)' };
+  };
+
   return (
-    <article className="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-2xl p-5 shadow-xl transition-all hover:border-slate-700/80 mb-5">
-      {/* Header: Author Info & Meta */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-3">
+    <article className="theme-card theme-card-hover p-6 mb-6">
+      
+      {/* Header: Larger 44px Avatar & Meta */}
+      <div className="flex items-start justify-between gap-3 mb-3.5">
+        <div className="flex items-center gap-3.5">
           <img
             src={post.author.avatar}
             alt={post.author.name}
-            className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/20"
+            className="w-11 h-11 rounded-xl object-cover ring-2 shrink-0"
+            style={{ ringColor: 'var(--primary-border)' }}
           />
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-slate-100">{post.author.name}</h3>
-              <span className="text-[10px] text-slate-500 font-mono">{post.author.handle}</span>
+              <h3 className="text-sm font-bold theme-text-primary">{post.author.name}</h3>
+              <span className="text-xs font-mono theme-text-muted">{post.author.handle}</span>
             </div>
-            <p className="text-[10px] text-indigo-400 font-medium">{post.author.role}</p>
+            <p className="text-xs font-medium" style={{ color: 'var(--primary)' }}>{post.author.role}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] text-slate-400">
-          <span>{post.createdAt}</span>
-        </div>
+        <span className="text-xs font-medium theme-text-muted">{post.createdAt}</span>
       </div>
 
-      {/* Badges: Subject & Tags */}
+      {/* Badges: Subject & Subtopic Pills */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        <span 
+          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+          style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}
+        >
           {post.subjectName}
         </span>
-        {post.tags.map(tag => (
-          <button
-            key={tag}
-            onClick={() => handleSelectTag(tag)}
-            className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 hover:text-cyan-300 hover:bg-slate-800 transition-colors border border-slate-700/40"
-          >
-            #{tag}
-          </button>
-        ))}
+        {post.tags.map(tag => {
+          const pill = getTagStyle(tag);
+          return (
+            <button
+              key={tag}
+              onClick={() => handleSelectTag(tag)}
+              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-opacity hover:opacity-80"
+              style={pill}
+            >
+              #{tag}
+            </button>
+          );
+        })}
       </div>
 
       {/* Title */}
-      <h2 
-        onClick={() => openPost(post.id)}
-        className="text-base font-extrabold text-slate-100 tracking-tight leading-snug mb-2.5 cursor-pointer hover:text-indigo-400 transition-colors"
-      >
+      <h2 className="text-lg font-bold tracking-tight theme-text-primary leading-snug mb-3">
         {post.title}
       </h2>
 
-      {/* Content */}
-      <div className="text-xs text-slate-300 leading-relaxed whitespace-pre-line mb-4">
+      {/* Content Body */}
+      <div className="text-sm theme-text-secondary leading-relaxed whitespace-pre-line mb-4">
         {post.content}
       </div>
 
-      {/* Code Snippet (if available) */}
+      {/* Syntax Code Block (if present) */}
       {post.codeSnippet && (
-        <div className="mb-4 rounded-xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-slate-800/80 text-[10px] font-mono text-cyan-400">
-            <span>Code Example / Syntax</span>
-            <span className="text-slate-500">UTF-8</span>
+        <div 
+          className="mb-4 rounded-xl border overflow-hidden shadow-inner"
+          style={{ backgroundColor: 'var(--code-bg)', borderColor: 'var(--code-border)' }}
+        >
+          <div 
+            className="flex items-center justify-between px-3.5 py-2 border-b text-xs font-mono"
+            style={{ backgroundColor: 'var(--code-header-bg)', borderColor: 'var(--code-border)', color: 'var(--code-text)' }}
+          >
+            <span className="font-semibold text-cyan-400">Code Snippet</span>
+            <button
+              onClick={handleCopyCode}
+              className="px-2 py-0.5 rounded text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+            >
+              {codeCopied ? 'Copied ✓' : 'Copy Code'}
+            </button>
           </div>
-          <pre className="p-3 text-[11px] font-mono text-cyan-300 overflow-x-auto leading-relaxed custom-scrollbar">
+          <pre className="p-4 text-xs font-mono overflow-x-auto leading-relaxed custom-scrollbar" style={{ color: 'var(--code-text)' }}>
             <code>{post.codeSnippet}</code>
           </pre>
         </div>
       )}
 
-      {/* Actions Bar */}
-      <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+      {/* Actions Footer */}
+      <div className="flex items-center justify-between pt-3.5 border-t" style={{ borderColor: 'var(--border-color)' }}>
         
         <div className="flex items-center gap-2">
           {/* Upvote Button */}
           <button
             onClick={() => toggleUpvotePost(post.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs transition-all ${
-              post.userVoted
-                ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 shadow-sm shadow-indigo-500/20 font-bold'
-                : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
-            }`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-semibold border transition-all"
+            style={{
+              backgroundColor: post.userVoted ? 'var(--primary-light)' : 'var(--surface-main)',
+              color: post.userVoted ? 'var(--primary)' : 'var(--text-secondary)',
+              borderColor: post.userVoted ? 'var(--primary)' : 'var(--border-color)'
+            }}
           >
-            <svg className={`w-4 h-4 ${post.userVoted ? 'text-indigo-400 fill-indigo-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 ${post.userVoted ? 'fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
             </svg>
             <span>{post.upvotes}</span>
           </button>
 
-          {/* Comment Toggle */}
+          {/* Comment Button */}
           <button
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all ${
-              showComments
-                ? 'bg-slate-800 text-slate-200 border border-slate-700'
-                : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
-            }`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all"
+            style={{
+              backgroundColor: showComments ? 'var(--primary-light)' : 'var(--surface-main)',
+              color: showComments ? 'var(--primary)' : 'var(--text-secondary)',
+              borderColor: showComments ? 'var(--primary)' : 'var(--border-color)'
+            }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -125,30 +172,32 @@ export default function PostCard({ post }) {
           {/* Share Button */}
           <button
             onClick={handleShare}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800/80 transition-colors relative"
+            className="p-2 rounded-xl border theme-text-muted hover:theme-text-primary transition-colors relative"
+            style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--surface-main)' }}
             title="Share post"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
             {copied && (
-              <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-indigo-500 text-white text-[9px] rounded font-bold whitespace-nowrap shadow-lg">
+              <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 text-white text-[9px] rounded font-bold whitespace-nowrap shadow-lg">
                 Link Copied!
               </span>
             )}
           </button>
 
-          {/* Bookmark / Save Button */}
+          {/* Bookmark Button */}
           <button
             onClick={() => toggleSavePost(post.id)}
-            className={`p-2 rounded-xl border transition-all ${
-              post.saved
-                ? 'bg-amber-400/10 text-amber-400 border-amber-400/30'
-                : 'text-slate-400 hover:text-amber-400 hover:bg-slate-800 border-slate-800/80'
-            }`}
+            className="p-2 rounded-xl border transition-all"
+            style={{
+              backgroundColor: post.saved ? 'var(--primary-light)' : 'var(--surface-main)',
+              color: post.saved ? 'var(--primary)' : 'var(--text-muted)',
+              borderColor: post.saved ? 'var(--primary)' : 'var(--border-color)'
+            }}
             title={post.saved ? 'Remove from Saved' : 'Save Post'}
           >
-            <svg className={`w-4 h-4 ${post.saved ? 'fill-amber-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 ${post.saved ? 'fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
           </button>
@@ -158,43 +207,42 @@ export default function PostCard({ post }) {
 
       {/* Expandable Comments Drawer */}
       {showComments && (
-        <div className="mt-4 pt-4 border-t border-slate-800/80 animate-in fade-in duration-200">
-          <h4 className="text-xs font-bold text-slate-300 mb-3">
+        <div className="mt-4 pt-4 border-t animate-in fade-in duration-200" style={{ borderColor: 'var(--border-color)' }}>
+          <h4 className="text-xs font-bold theme-text-primary mb-3">
             Discussion ({post.comments.length})
           </h4>
 
-          {/* Comments List */}
           <div className="space-y-3 mb-3">
             {post.comments.map(comment => (
-              <div key={comment.id} className="flex gap-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/60">
-                <img src={comment.avatar} alt={comment.author} className="w-6 h-6 rounded-full object-cover shrink-0" />
+              <div key={comment.id} className="flex gap-3 p-3 rounded-xl border" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
+                <img src={comment.avatar} alt={comment.author} className="w-7 h-7 rounded-full object-cover shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between text-[11px] mb-1">
-                    <span className="font-semibold text-slate-200">{comment.author}</span>
-                    <span className="text-[9px] text-slate-400">{comment.createdAt}</span>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold theme-text-primary">{comment.author}</span>
+                    <span className="text-[10px] theme-text-muted">{comment.createdAt}</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-normal">{comment.content}</p>
+                  <p className="text-xs theme-text-secondary leading-relaxed">{comment.content}</p>
                 </div>
               </div>
             ))}
 
             {post.comments.length === 0 && (
-              <p className="text-xs text-slate-400 italic">No comments yet. Start the conversation!</p>
+              <p className="text-xs theme-text-muted italic">No comments yet. Start the conversation!</p>
             )}
           </div>
 
-          {/* Add Comment Input */}
           <form onSubmit={handleCommentSubmit} className="flex gap-2">
             <input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a constructive response..."
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              placeholder="Write a response..."
+              className="flex-1 border rounded-xl px-3 py-2 text-xs theme-text-primary placeholder:theme-text-muted focus:outline-none"
+              style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
             />
             <button
               type="submit"
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+              className="btn-primary text-xs"
             >
               Reply
             </button>
