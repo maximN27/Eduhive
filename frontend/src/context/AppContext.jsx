@@ -14,6 +14,7 @@ import { userService } from '../services/userService';
 import { voteService } from '../services/voteService';
 import { notificationService } from '../services/notificationService';
 import { searchService } from '../services/searchService';
+import { useAuth } from './AuthContext';
 
 const AppContext = createContext();
 
@@ -79,6 +80,39 @@ function formatApiPost(p, activeUser) {
 }
 
 export const AppProvider = ({ children }) => {
+  // Authentication Context Integration
+  const auth = useAuth();
+  const authUser = auth?.user || null;
+  const token = auth?.token || null;
+
+  // Format active authenticated user for UI components
+  const user = useMemo(() => {
+    if (!authUser) return null;
+    const roleMap = {
+      student: 'Student',
+      teacher: 'Professor',
+      professional: 'Professional'
+    };
+    const roleKey = String(authUser.role || '').toLowerCase();
+    const displayRole = roleMap[roleKey] || authUser.role || 'Student';
+
+    return {
+      id: authUser._id || authUser.id,
+      name: authUser.name || authUser.username || 'EduHive Scholar',
+      handle: authUser.handle || (authUser.username ? `@${authUser.username}` : '@scholar'),
+      avatar: authUser.profilePic || authUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+      role: displayRole,
+      reputation: authUser.streak ? authUser.streak * 250 : 1240,
+      college: authUser.college || '',
+      bio: authUser.bio || '',
+      streak: authUser.streak || 0,
+      experienceLevel: authUser.experienceLevel || 'Advanced',
+      interests: authUser.interests || ['Algorithms', 'Python', 'Web Dev'],
+      savedPosts: authUser.savedPosts || [],
+      savedResources: authUser.savedResources || []
+    };
+  }, [authUser]);
+
   // Navigation & Active View State
   const [currentView, setCurrentView] = useState('feed'); // 'feed', 'post', 'profile'
   const [activePostId, setActivePostId] = useState(null);
@@ -88,11 +122,9 @@ export const AppProvider = ({ children }) => {
   const [tags, setTags] = useState(INITIAL_TAGS);
   const [posts, setPosts] = useState(INITIAL_POSTS);
   const [savedResources, setSavedResources] = useState(INITIAL_SAVED_RESOURCES);
-  const [user, setUser] = useState(CURRENT_USER);
   const [notifications, setNotifications] = useState([]);
 
-  // Auth State & Modals
-  const [token, setToken] = useState(() => localStorage.getItem('eduhive_token') || null);
+  // Auth Modals & Layout UI States
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -117,38 +149,6 @@ export const AppProvider = ({ children }) => {
   // Status flags
   const [loading, setLoading] = useState(false);
   const [apiOnline, setApiOnline] = useState(false);
-
-  // Load User Profile from Auth API if Token Exists
-  useEffect(() => {
-    async function loadCurrentUser() {
-      if (!token) return;
-      try {
-        const res = await authService.getMe();
-        if (res.success && res.data) {
-          const u = res.data;
-          setUser({
-            id: u._id,
-            name: u.name,
-            handle: `@${u.username}`,
-            avatar: u.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-            role: u.role || 'EduHive Scholar',
-            reputation: u.streak ? u.streak * 250 : 1240,
-            college: u.college || 'MIT',
-            bio: u.bio || '',
-            streak: u.streak || 5,
-            experienceLevel: u.experienceLevel || 'Advanced',
-            interests: u.interests || ['Algorithms', 'Python', 'Web Dev'],
-            savedPosts: u.savedPosts || [],
-            savedResources: u.savedResources || []
-          });
-          setApiOnline(true);
-        }
-      } catch (err) {
-        console.warn('Failed to load current user from API, keeping local user state');
-      }
-    }
-    loadCurrentUser();
-  }, [token]);
 
   // Load Subjects from API
   const loadSubjects = useCallback(async () => {
@@ -244,29 +244,14 @@ export const AppProvider = ({ children }) => {
     }
   }, [accentColor]);
 
-  // Auth Operations
+  // Auth Operations Delegated to AuthContext
   const handleLogin = async (email, password) => {
     try {
-      const res = await authService.login({ email, password });
-      if (res.success && res.token) {
-        setToken(res.token);
-        const u = res.data;
-        setUser({
-          id: u._id,
-          name: u.name,
-          handle: `@${u.username}`,
-          avatar: u.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-          role: u.role || 'Student',
-          reputation: u.streak ? u.streak * 250 : 1240,
-          college: u.college || '',
-          bio: u.bio || '',
-          streak: u.streak || 0
-        });
-        setIsAuthOpen(false);
-        setApiOnline(true);
-        loadPosts();
-        return { success: true };
-      }
+      await auth.login({ email, password });
+      setIsAuthOpen(false);
+      setApiOnline(true);
+      loadPosts();
+      return { success: true };
     } catch (error) {
       return { success: false, message: error.message };
     }
@@ -274,35 +259,18 @@ export const AppProvider = ({ children }) => {
 
   const handleRegister = async (registerData) => {
     try {
-      const res = await authService.register(registerData);
-      if (res.success && res.token) {
-        setToken(res.token);
-        const u = res.data;
-        setUser({
-          id: u._id,
-          name: u.name,
-          handle: `@${u.username}`,
-          avatar: u.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-          role: u.role || 'Student',
-          reputation: 250,
-          college: u.college || '',
-          bio: u.bio || '',
-          streak: 1
-        });
-        setIsAuthOpen(false);
-        setApiOnline(true);
-        loadPosts();
-        return { success: true };
-      }
+      await auth.register(registerData);
+      setIsAuthOpen(false);
+      setApiOnline(true);
+      loadPosts();
+      return { success: true };
     } catch (error) {
       return { success: false, message: error.message };
     }
   };
 
   const handleLogout = async () => {
-    await authService.logout();
-    setToken(null);
-    setUser(CURRENT_USER);
+    await auth.logout();
   };
 
   // Toggle saving a post

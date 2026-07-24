@@ -1,25 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import AuthModal from './AuthModal';
 import NotificationsModal from './NotificationsModal';
 
-export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }) {
+export default function Navbar({ onMobileMenuToggle }) {
   const {
     searchQuery,
     setSearchQuery,
     user: appUser,
-    token: appToken,
-    savedPosts = [],
-    savedResources = [],
-    clearFilters,
     setIsSettingsOpen,
-    isAuthOpen,
-    setIsAuthOpen,
-    setAuthMode,
     isNotificationsOpen,
     setIsNotificationsOpen,
-    handleLogout,
     notifications = [],
     navigateToProfile,
     openProfile,
@@ -33,11 +24,10 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
     authUser = authContext?.user || null;
     logout = authContext?.logout || null;
   } catch (e) {
-    // Graceful fallback if AuthContext is unmounted
+    // Fallback if rendered outside AuthContext
   }
 
   const user = authUser || appUser || {};
-  const token = appToken || (authUser ? 'token' : null);
   const userName = user.name || user.username || 'Scholar';
   const userHandle = user.handle || (user.username ? `@${user.username}` : '@scholar');
   const userAvatar = user.avatar || user.profilePic || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150';
@@ -59,25 +49,10 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
 
   const unreadCount = notifications.filter(n => !n.isRead && n.unread !== false).length;
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setShowProfileMenu(false);
-    if (logout) logout();
-    if (handleLogout) handleLogout();
-  };
-
-  const handleLoginClick = () => {
-    if (onOpenLogin) onOpenLogin();
-    else {
-      setAuthMode('login');
-      setIsAuthOpen(true);
-    }
-  };
-
-  const handleRegisterClick = () => {
-    if (onOpenSignup) onOpenSignup();
-    else {
-      setAuthMode('register');
-      setIsAuthOpen(true);
+    if (logout) {
+      await logout();
     }
   };
 
@@ -89,7 +64,7 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
         <div className="flex items-center gap-3 shrink-0">
           <button 
             onClick={onMobileMenuToggle}
-            className="md:hidden p-2 rounded-lg theme-text-muted hover:theme-text-primary hover:bg-slate-500/10 focus:outline-none"
+            className="md:hidden p-2 rounded-lg theme-text-muted hover:theme-text-primary hover:bg-slate-500/10 focus:outline-none cursor-pointer"
             aria-label="Toggle Navigation Sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +121,7 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-2.5 flex items-center theme-text-muted hover:theme-text-primary"
+                className="absolute inset-y-0 right-0 pr-2.5 flex items-center theme-text-muted hover:theme-text-primary cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -174,109 +149,88 @@ export default function Navbar({ onMobileMenuToggle, onOpenLogin, onOpenSignup }
             )}
           </button>
 
-          {/* Authentication / Profile Button */}
-          {!token && !user.email ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleLoginClick}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer"
-                style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={handleRegisterClick}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl text-white transition-all shadow-sm cursor-pointer"
-                style={{ backgroundColor: 'var(--primary)' }}
-              >
-                Register
-              </button>
-            </div>
-          ) : (
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 p-1 rounded-xl border transition-all hover:bg-slate-500/5 focus:outline-none group cursor-pointer"
-                style={{ borderColor: 'var(--border-color)' }}
-              >
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="w-8 h-8 rounded-lg object-cover ring-2 transition-all"
-                  style={{ ringColor: 'var(--primary-border)' }}
-                />
-                
-                <div className="hidden lg:flex flex-col text-left pr-1">
-                  <span className="text-xs font-bold theme-text-primary leading-tight">
-                    {userName}
-                  </span>
-                  <span className="text-[9px] font-semibold" style={{ color: 'var(--primary)' }}>
-                    ⚡ {userReputation} XP
-                  </span>
-                </div>
+          {/* User Profile Button & Dropdown */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center gap-2 p-1 rounded-xl border transition-all hover:bg-slate-500/5 focus:outline-none group cursor-pointer"
+              style={{ borderColor: 'var(--border-color)' }}
+            >
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-8 h-8 rounded-lg object-cover ring-2 transition-all"
+                style={{ ringColor: 'var(--primary-border)' }}
+              />
+              
+              <div className="hidden lg:flex flex-col text-left pr-1">
+                <span className="text-xs font-bold theme-text-primary leading-tight">
+                  {userName}
+                </span>
+                <span className="text-[9px] font-semibold" style={{ color: 'var(--primary)' }}>
+                  ⚡ {userReputation} XP
+                </span>
+              </div>
 
-                <svg className={`w-3.5 h-3.5 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              <svg className={`w-3.5 h-3.5 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
 
-              {/* Dropdown Menu */}
-              {showProfileMenu && (
-                <div 
-                  className="absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
-                  style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: 'var(--radius)' }}
-                >
-                  <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                    <div className="flex items-center gap-3">
-                      <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-lg object-cover" />
-                      <div>
-                        <p className="text-sm font-bold theme-text-primary">{userName}</p>
-                        <p className="text-xs theme-text-muted">{userHandle}</p>
-                      </div>
-                    </div>
-                    <div 
-                      className="mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium uppercase tracking-wider"
-                      style={{ backgroundColor: 'var(--primary-light)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}
-                    >
-                      <span>{userRole}</span>
-                      <span className="font-bold">⚡ {userReputation} XP</span>
+            {/* Dropdown Menu */}
+            {showProfileMenu && (
+              <div 
+                className="absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: 'var(--radius)' }}
+              >
+                <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                  <div className="flex items-center gap-3">
+                    <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-lg object-cover" />
+                    <div>
+                      <p className="text-sm font-bold theme-text-primary">{userName}</p>
+                      <p className="text-xs theme-text-muted">{userHandle}</p>
                     </div>
                   </div>
-
-                  <div className="py-2">
-                    <button
-                      onClick={() => { setShowProfileMenu(false); if (openProfile) openProfile(); else navigateToProfile(); }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      👤 View Profile
-                    </button>
-                    <button 
-                      onClick={() => { setShowProfileMenu(false); setIsSettingsOpen(true); }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      ⚙️ Appearance Settings
-                    </button>
-                  </div>
-
-                  <div className="border-t pt-1 mt-1" style={{ borderColor: 'var(--border-color)' }}>
-                    <button 
-                      onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      🚪 Sign Out
-                    </button>
+                  <div 
+                    className="mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium uppercase tracking-wider"
+                    style={{ backgroundColor: 'var(--primary-light)', borderColor: 'var(--primary-border)', color: 'var(--primary)' }}
+                  >
+                    <span>{userRole}</span>
+                    <span className="font-bold">⚡ {userReputation} XP</span>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                <div className="py-2">
+                  <button
+                    onClick={() => { setShowProfileMenu(false); if (openProfile) openProfile(); else navigateToProfile(); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    👤 View Profile
+                  </button>
+                  <button 
+                    onClick={() => { setShowProfileMenu(false); setIsSettingsOpen(true); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold theme-text-secondary hover:theme-text-primary hover:bg-slate-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    ⚙️ Appearance Settings
+                  </button>
+                </div>
+
+                <div className="border-t pt-1 mt-1" style={{ borderColor: 'var(--border-color)' }}>
+                  <button 
+                    onClick={handleSignOut}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    🚪 Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
         </div>
 
       </div>
 
-      {/* Modals */}
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <NotificationsModal isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
     </header>
   );

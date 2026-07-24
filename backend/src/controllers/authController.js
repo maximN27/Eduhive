@@ -43,6 +43,20 @@ const registerUser = async (req, res, next) => {
       });
     }
 
+    const allowedRoles = ['student', 'teacher', 'professional'];
+    const normalizedRole = String(role || 'student').toLowerCase();
+
+    if (!allowedRoles.includes(normalizedRole)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid user role',
+          code: 'BAD_REQUEST'
+        },
+        message: 'Invalid user role'
+      });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
@@ -51,7 +65,7 @@ const registerUser = async (req, res, next) => {
       name,
       email: email.toLowerCase(),
       passwordHash,
-      role: role || 'Student',
+      role: normalizedRole,
       bio: bio || '',
       college: college || '',
       profilePic: profilePic || '',
