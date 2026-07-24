@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   INITIAL_SUBJECTS,
   INITIAL_TAGS,
@@ -7,15 +7,96 @@ import {
   CURRENT_USER
 } from '../services/mockData';
 
+import { authService } from '../services/authService';
+import { postService } from '../services/postService';
+import { subjectService } from '../services/subjectService';
+import { userService } from '../services/userService';
+import { voteService } from '../services/voteService';
+import { notificationService } from '../services/notificationService';
+import { searchService } from '../services/searchService';
+
 const AppContext = createContext();
 
+// Relative time helper
+function formatRelativeTime(dateString) {
+  if (!dateString) return 'Just now';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  return date.toLocaleDateString();
+}
+
+// Format API post data for UI components
+function formatApiPost(p, activeUser) {
+  const authorObj = typeof p.authorId === 'object' && p.authorId !== null ? p.authorId : {};
+  const subjectObj = typeof p.subjectId === 'object' && p.subjectId !== null ? p.subjectId : {};
+
+  return {
+    id: p._id || p.id,
+    author: {
+      id: authorObj._id || p.authorId || '',
+      name: authorObj.name || p.author?.name || 'EduHive Scholar',
+      handle: authorObj.username ? `@${authorObj.username}` : (p.author?.handle || '@scholar'),
+      avatar: authorObj.profilePic || authorObj.avatar || p.author?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+      role: authorObj.role || p.author?.role || 'Student'
+    },
+    subjectId: subjectObj._id || p.subjectId || 'cs',
+    subjectName: subjectObj.name || p.subjectName || 'General',
+    tags: p.tags || [],
+    title: p.title || '',
+    content: p.content || '',
+    codeSnippet: p.codeSnippet || '',
+    upvotes: p.voteScore !== undefined ? p.voteScore : (p.upvotes || 0),
+    userVoted: p.userVoted || false,
+    saved: p.saved || false,
+    createdAt: p.createdAt ? formatRelativeTime(p.createdAt) : 'Just now',
+    comments: (p.comments || []).map(c => {
+      const cAuthor = typeof c.authorId === 'object' && c.authorId !== null ? c.authorId : {};
+      return {
+        id: c._id || c.id,
+        author: cAuthor.name || c.author || 'Scholar',
+        avatar: cAuthor.profilePic || c.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+        content: c.content,
+        createdAt: c.createdAt ? formatRelativeTime(c.createdAt) : 'Just now'
+      };
+    }),
+    resources: (p.reserouseIds || p.resources || []).map(r => ({
+      id: r._id || r.id,
+      title: r.title || 'Resource Document',
+      type: r.type || 'PDF',
+      size: r.size || 'External',
+      icon: r.icon || '📄',
+      url: r.URL || r.url || '#'
+    }))
+  };
+}
+
 export const AppProvider = ({ children }) => {
-  const [subjects] = useState(INITIAL_SUBJECTS);
-  const [tags] = useState(INITIAL_TAGS);
+  // Navigation & Active View State
+  const [currentView, setCurrentView] = useState('feed'); // 'feed', 'post', 'profile'
+  const [activePostId, setActivePostId] = useState(null);
+
+  // Core Data States
+  const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
+  const [tags, setTags] = useState(INITIAL_TAGS);
   const [posts, setPosts] = useState(INITIAL_POSTS);
   const [savedResources, setSavedResources] = useState(INITIAL_SAVED_RESOURCES);
-  const [user] = useState(CURRENT_USER);
+  const [user, setUser] = useState(CURRENT_USER);
+  const [notifications, setNotifications] = useState([]);
 
+  // Auth State & Modals
+  const [token, setToken] = useState(() => localStorage.getItem('eduhive_token') || null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+
+  // Filtering & Sorting
   const [activeSubject, setActiveSubject] = useState(null); // subjectId or null
   const [activeTag, setActiveTag] = useState(null); // tagId or null
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,35 +107,128 @@ export const AppProvider = ({ children }) => {
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('eduhive_accent') || 'blue');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Apply Theme & Accent to HTML Root
+  // Status flags
+  const [loading, setLoading] = useState(false);
+  const [apiOnline, setApiOnline] = useState(false);
+
+  // Load User Profile from Auth API if Token Exists
+  useEffect(() => {
+    async function loadCurrentUser() {
+      if (!token) return;
+      try {
+        const res = await authService.getMe();
+        if (res.success && res.data) {
+          const u = res.data;
+          setUser({
+            id: u._id,
+            name: u.name,
+            handle: `@${u.username}`,
+            avatar: u.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+            role: u.role || 'EduHive Scholar',
+            reputation: u.streak ? u.streak * 250 : 1240,
+            college: u.college || 'MIT',
+            bio: u.bio || '',
+            streak: u.streak || 5,
+            experienceLevel: u.experienceLevel || 'Advanced',
+            interests: u.interests || ['Algorithms', 'Python', 'Web Dev'],
+            savedPosts: u.savedPosts || [],
+            savedResources: u.savedResources || []
+          });
+          setApiOnline(true);
+        }
+      } catch (err) {
+        console.warn('Failed to load current user from API, keeping local user state');
+      }
+    }
+    loadCurrentUser();
+  }, [token]);
+
+  // Load Subjects from API
+  const loadSubjects = useCallback(async () => {
+    try {
+      const res = await subjectService.getSubjects();
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const mappedSubjects = res.data.map(s => ({
+          id: s._id,
+          name: s.name,
+          icon: s.name.toLowerCase().includes('computer') ? '💻' :
+                s.name.toLowerCase().includes('math') ? '📐' :
+                s.name.toLowerCase().includes('data') ? '🤖' :
+                s.name.toLowerCase().includes('web') ? '🌐' : '⚡',
+          count: s.membersCount || 0,
+          description: s.description || ''
+        }));
+        setSubjects(mappedSubjects);
+        setApiOnline(true);
+      }
+    } catch (err) {
+      console.warn('API Subjects offline or unreachable, using local defaults');
+    }
+  }, []);
+
+  // Load Posts from API
+  const loadPosts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (activeSubject) params.subjectId = activeSubject;
+      if (activeTag) params.tag = activeTag;
+      if (searchQuery) params.search = searchQuery;
+
+      const res = await postService.getPosts(params);
+      if (res.success && Array.isArray(res.data)) {
+        const formatted = res.data.map(p => formatApiPost(p, user));
+        setPosts(formatted);
+        setApiOnline(true);
+      }
+    } catch (err) {
+      console.warn('API Posts fetch error, keeping current post list:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeSubject, activeTag, searchQuery, user]);
+
+  // Initial Data Load
+  useEffect(() => {
+    loadSubjects();
+    loadPosts();
+  }, [loadSubjects, loadPosts]);
+
+  // Load Notifications if Authenticated
+  useEffect(() => {
+    async function fetchNotifications() {
+      if (!token) return;
+      try {
+        const res = await notificationService.getNotifications();
+        if (res.success && Array.isArray(res.data)) {
+          setNotifications(res.data);
+        }
+      } catch (err) {
+        // notification fetch silent catch
+      }
+    }
+    fetchNotifications();
+  }, [token]);
+
+  // Apply Theme & Accent
   useEffect(() => {
     const root = document.documentElement;
-
-    // Apply Dark Class
     const applyDark = (isDark) => {
-      if (isDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
+      if (isDark) root.classList.add('dark');
+      else root.classList.remove('dark');
     };
 
-    if (theme === 'dark') {
-      applyDark(true);
-    } else if (theme === 'light') {
-      applyDark(false);
-    } else {
-      // System mode
+    if (theme === 'dark') applyDark(true);
+    else if (theme === 'light') applyDark(false);
+    else {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       applyDark(mediaQuery.matches);
-
       const handleChange = (e) => applyDark(e.matches);
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
   }, [theme]);
 
-  // Apply Accent Color Class
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('accent-emerald', 'accent-purple', 'accent-orange');
@@ -63,14 +237,65 @@ export const AppProvider = ({ children }) => {
     }
   }, [accentColor]);
 
-  const setThemePreference = (newTheme) => {
-    setTheme(newTheme);
-    localStorage.setItem('eduhive_theme', newTheme);
+  // Auth Operations
+  const handleLogin = async (email, password) => {
+    try {
+      const res = await authService.login({ email, password });
+      if (res.success && res.token) {
+        setToken(res.token);
+        const u = res.data;
+        setUser({
+          id: u._id,
+          name: u.name,
+          handle: `@${u.username}`,
+          avatar: u.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+          role: u.role || 'Student',
+          reputation: u.streak ? u.streak * 250 : 1240,
+          college: u.college || '',
+          bio: u.bio || '',
+          streak: u.streak || 0
+        });
+        setIsAuthOpen(false);
+        setApiOnline(true);
+        loadPosts();
+        return { success: true };
+      }
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
   };
 
-  const setAccentColorPreference = (newAccent) => {
-    setAccentColor(newAccent);
-    localStorage.setItem('eduhive_accent', newAccent);
+  const handleRegister = async (registerData) => {
+    try {
+      const res = await authService.register(registerData);
+      if (res.success && res.token) {
+        setToken(res.token);
+        const u = res.data;
+        setUser({
+          id: u._id,
+          name: u.name,
+          handle: `@${u.username}`,
+          avatar: u.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+          role: u.role || 'Student',
+          reputation: 250,
+          college: u.college || '',
+          bio: u.bio || '',
+          streak: 1
+        });
+        setIsAuthOpen(false);
+        setApiOnline(true);
+        loadPosts();
+        return { success: true };
+      }
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const handleLogout = async () => {
+    await authService.logout();
+    setToken(null);
+    setUser(CURRENT_USER);
   };
 
   // Toggle saving a post
@@ -83,7 +308,8 @@ export const AppProvider = ({ children }) => {
   };
 
   // Toggle upvoting a post
-  const toggleUpvotePost = (postId) => {
+  const toggleUpvotePost = async (postId) => {
+    // Optimistic UI update
     setPosts(prevPosts =>
       prevPosts.map(p => {
         if (p.id === postId) {
@@ -97,11 +323,45 @@ export const AppProvider = ({ children }) => {
         return p;
       })
     );
+
+    // Call API if token is present
+    if (token) {
+      try {
+        await voteService.castVote('Post', postId, 'up');
+      } catch (err) {
+        console.warn('Vote API error:', err.message);
+      }
+    }
   };
 
   // Add a new post
-  const addPost = (newPostData) => {
-    const matchedSubject = subjects.find(s => s.id === newPostData.subjectId);
+  const addPost = async (newPostData) => {
+    let matchedSubject = subjects.find(s => s.id === newPostData.subjectId);
+    if (!matchedSubject && subjects.length > 0) {
+      matchedSubject = subjects[0];
+    }
+
+    // Call Backend API if online / token present
+    if (token) {
+      try {
+        const apiPayload = {
+          subjectId: matchedSubject ? matchedSubject.id : newPostData.subjectId,
+          title: newPostData.title,
+          content: newPostData.content,
+          tags: newPostData.tags || []
+        };
+        const res = await postService.createPost(apiPayload);
+        if (res.success && res.data) {
+          const formatted = formatApiPost(res.data, user);
+          setPosts(prev => [formatted, ...prev]);
+          return;
+        }
+      } catch (err) {
+        console.warn('API post creation failed, adding locally:', err.message);
+      }
+    }
+
+    // Fallback local post addition
     const newPost = {
       id: `post-${Date.now()}`,
       author: {
@@ -127,39 +387,67 @@ export const AppProvider = ({ children }) => {
   };
 
   // Add comment to a post
-  const addComment = (postId, commentText) => {
+  const addComment = async (postId, commentText) => {
     if (!commentText.trim()) return;
+
+    // Optimistic local update
+    const newCommentObj = {
+      id: `c-${Date.now()}`,
+      author: user.name,
+      avatar: user.avatar,
+      content: commentText,
+      createdAt: 'Just now'
+    };
+
     setPosts(prevPosts =>
       prevPosts.map(p => {
         if (p.id === postId) {
-          const newComment = {
-            id: `c-${Date.now()}`,
-            author: user.name,
-            avatar: user.avatar,
-            content: commentText,
-            createdAt: 'Just now'
-          };
           return {
             ...p,
-            comments: [...p.comments, newComment]
+            comments: [...p.comments, newCommentObj]
           };
         }
         return p;
       })
     );
+
+    // Call API if authenticated
+    if (token) {
+      try {
+        await postService.addPostComment(postId, { content: commentText });
+      } catch (err) {
+        console.warn('Comment API error:', err.message);
+      }
+    }
   };
 
-  // Toggle saving a resource
+  // Saved resources helpers
   const toggleSaveResource = (resourceId) => {
     setSavedResources(prev => prev.filter(r => r.id !== resourceId));
   };
 
-  // Add a new saved resource
   const addSavedResource = (resource) => {
     setSavedResources(prev => [resource, ...prev]);
   };
 
-  // Select Subject helper
+  // Navigation helpers
+  const navigateToPost = (postId) => {
+    setActivePostId(postId);
+    setCurrentView('post');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToProfile = () => {
+    setCurrentView('profile');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goHome = () => {
+    setCurrentView('feed');
+    setActivePostId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSelectSubject = (subjectId) => {
     if (activeSubject === subjectId) {
       setActiveSubject(null);
@@ -170,7 +458,6 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Select Tag helper
   const handleSelectTag = (tagId) => {
     if (activeTag === tagId) {
       setActiveTag(null);
@@ -179,12 +466,16 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setActiveSubject(null);
     setActiveTag(null);
     setSearchQuery('');
   };
+
+  // Derived Active Post
+  const activePost = useMemo(() => {
+    return posts.find(p => p.id === activePostId) || null;
+  }, [posts, activePostId]);
 
   // Filtered & Sorted Posts
   const filteredPosts = useMemo(() => {
@@ -229,6 +520,13 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
+        currentView,
+        setCurrentView,
+        activePostId,
+        activePost,
+        navigateToPost,
+        navigateToProfile,
+        goHome,
         subjects,
         tags,
         posts: filteredPosts,
@@ -236,6 +534,17 @@ export const AppProvider = ({ children }) => {
         savedPosts,
         savedResources,
         user,
+        token,
+        isAuthOpen,
+        setIsAuthOpen,
+        authMode,
+        setAuthMode,
+        handleLogin,
+        handleRegister,
+        handleLogout,
+        notifications,
+        loading,
+        apiOnline,
         activeSubject,
         activeTag,
         searchQuery,
@@ -244,8 +553,8 @@ export const AppProvider = ({ children }) => {
         accentColor,
         isSettingsOpen,
         setIsSettingsOpen,
-        setThemePreference,
-        setAccentColorPreference,
+        setThemePreference: (t) => { setTheme(t); localStorage.setItem('eduhive_theme', t); },
+        setAccentColorPreference: (a) => { setAccentColor(a); localStorage.setItem('eduhive_accent', a); },
         setFeedSort,
         handleSelectSubject,
         handleSelectTag,
@@ -256,7 +565,9 @@ export const AppProvider = ({ children }) => {
         addPost,
         addComment,
         toggleSaveResource,
-        addSavedResource
+        addSavedResource,
+        refetchPosts: loadPosts,
+        refetchSubjects: loadSubjects
       }}
     >
       {children}

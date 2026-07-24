@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function PostCard({ post }) {
-  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag } = useApp();
+  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, navigateToPost } = useApp();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -98,7 +98,10 @@ export default function PostCard({ post }) {
       </div>
 
       {/* Title */}
-      <h2 className="text-lg font-bold tracking-tight theme-text-primary leading-snug mb-3">
+      <h2 
+        onClick={() => navigateToPost(post.id)}
+        className="text-lg font-bold tracking-tight theme-text-primary leading-snug mb-3 cursor-pointer hover:opacity-80 transition-opacity"
+      >
         {post.title}
       </h2>
 
