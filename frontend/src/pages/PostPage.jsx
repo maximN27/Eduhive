@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import LeftSidebar from '../components/LeftSidebar';
+import PostAiLearningWidget from '../components/PostAiLearningWidget';
 import { useApp } from '../context/AppContext';
 
 export default function PostPage() {
@@ -260,43 +261,58 @@ export default function PostPage() {
           <div className="hidden lg:block lg:col-span-3 sticky top-20">
             <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 shadow-2xl">
               
-              {/* 3 Section Title Tabs Navigation Header */}
+              {/* 4 Section AI & Resources Navigation Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4 gap-1">
                 <button
                   onClick={() => setActiveRightTab('resources')}
-                  className={`flex-1 text-center py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all ${
+                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'resources'
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
+                  title="Posted Resources"
                 >
-                  Resources
+                  📁 Files
                 </button>
                 
                 <button
-                  onClick={() => setActiveRightTab('discussions')}
-                  className={`flex-1 text-center py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all ${
-                    activeRightTab === 'discussions'
+                  onClick={() => setActiveRightTab('gaps')}
+                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                    activeRightTab === 'gaps'
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
+                  title="AI Knowledge Gaps"
                 >
-                  Discussions
+                  🧠 Gaps
                 </button>
 
                 <button
-                  onClick={() => setActiveRightTab('notes')}
-                  className={`flex-1 text-center py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all ${
-                    activeRightTab === 'notes'
+                  onClick={() => setActiveRightTab('path')}
+                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                    activeRightTab === 'path'
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
+                  title="Adaptive Learning Path"
                 >
-                  Notes
+                  🗺️ Path
+                </button>
+
+                <button
+                  onClick={() => setActiveRightTab('mentors')}
+                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                    activeRightTab === 'mentors'
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                  title="AI Peer Mentors"
+                >
+                  🤝 Mentors
                 </button>
               </div>
 
-              {/* SECTION 1: Resources Posted for this Post */}
+              {/* SECTION 1: Posted Resources */}
               {activeRightTab === 'resources' && (
                 <div className="animate-in fade-in duration-200">
                   <div className="flex items-center justify-between mb-3">
@@ -381,30 +397,13 @@ export default function PostPage() {
                 </div>
               )}
 
-              {/* SECTION 2: Related Discussions (Placeholder Section) */}
-              {activeRightTab === 'discussions' && (
-                <div className="animate-in fade-in duration-200 py-6 text-center">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto mb-3">
-                    💬
-                  </div>
-                  <h3 className="text-xs font-bold text-slate-200 mb-1">Related Discussions</h3>
-                  <p className="text-[11px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">
-                    This section is reserved for related thread discussions. Coming soon in future updates.
-                  </p>
-                </div>
-              )}
-
-              {/* SECTION 3: Notes & References (Placeholder Section) */}
-              {activeRightTab === 'notes' && (
-                <div className="animate-in fade-in duration-200 py-6 text-center">
-                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center mx-auto mb-3">
-                    📝
-                  </div>
-                  <h3 className="text-xs font-bold text-slate-200 mb-1">Notes & References</h3>
-                  <p className="text-[11px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">
-                    This section is reserved for shared author notes and reference links. Coming soon in future updates.
-                  </p>
-                </div>
+              {/* SECTIONS 2, 3 & 4: AI Powered Knowledge Gaps, Adaptive Path, Peer Mentors */}
+              {activeRightTab !== 'resources' && (
+                <PostAiLearningWidget 
+                  activePost={activePost}
+                  activeTab={activeRightTab}
+                  onSwitchTab={(tab) => setActiveRightTab(tab)}
+                />
               )}
 
             </div>
