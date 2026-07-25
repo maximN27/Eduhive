@@ -484,15 +484,17 @@ export const AppProvider = ({ children }) => {
       author: user.name,
       avatar: user.avatar,
       content: commentText,
+      voteScore: 0,
+      userVoted: null,
       createdAt: 'Just now'
     };
 
     setPosts(prevPosts =>
       prevPosts.map(p => {
-        if (p.id === postId) {
+        if (p.id === postId || p._id === postId) {
           return {
             ...p,
-            comments: [...p.comments, newCommentObj]
+            comments: [...(p.comments || []), newCommentObj]
           };
         }
         return p;
@@ -505,6 +507,88 @@ export const AppProvider = ({ children }) => {
         await postService.addPostComment(postId, { content: commentText });
       } catch (err) {
         console.warn('Comment API error:', err.message);
+      }
+    }
+  };
+
+  // Add nested reply to a parent comment
+  const addCommentReply = async (postId, parentCommentId, replyText) => {
+    if (!replyText.trim()) return;
+
+    const newReplyObj = {
+      id: `c-${Date.now()}`,
+      parentComment: parentCommentId,
+      parentCommentId: parentCommentId,
+      author: user.name,
+      avatar: user.avatar,
+      content: replyText,
+      voteScore: 0,
+      userVoted: null,
+      createdAt: 'Just now'
+    };
+
+    setPosts(prevPosts =>
+      prevPosts.map(p => {
+        if (p.id === postId || p._id === postId) {
+          return {
+            ...p,
+            comments: [...(p.comments || []), newReplyObj]
+          };
+        }
+        return p;
+      })
+    );
+
+    if (token) {
+      try {
+        await postService.addPostComment(postId, { content: replyText, parentComment: parentCommentId });
+      } catch (err) {
+        console.warn('Comment reply API error:', err.message);
+      }
+    }
+  };
+
+  // Like or Dislike a comment
+  const voteComment = async (postId, commentId, voteType) => {
+    setPosts(prevPosts =>
+      prevPosts.map(p => {
+        if (p.id === postId || p._id === postId) {
+          const updatedComments = (p.comments || []).map(c => {
+            const cId = c.id || c._id;
+            if (String(cId) === String(commentId)) {
+              const currentVote = c.userVoted;
+              let scoreDelta = 0;
+              let newVoteState = voteType;
+
+              if (currentVote === voteType) {
+                scoreDelta = voteType === 'up' ? -1 : 1;
+                newVoteState = null;
+              } else if (!currentVote) {
+                scoreDelta = voteType === 'up' ? 1 : -1;
+              } else {
+                scoreDelta = voteType === 'up' ? 2 : -2;
+              }
+
+              return {
+                ...c,
+                userVoted: newVoteState,
+                voteScore: (c.voteScore !== undefined ? c.voteScore : (c.upvotes || 0)) + scoreDelta
+              };
+            }
+            return c;
+          });
+
+          return { ...p, comments: updatedComments };
+        }
+        return p;
+      })
+    );
+
+    if (token) {
+      try {
+        await voteService.castVote('Comment', commentId, voteType);
+      } catch (err) {
+        console.warn('Comment vote API error:', err.message);
       }
     }
   };
@@ -672,6 +756,8 @@ export const AppProvider = ({ children }) => {
         toggleUpvotePost,
         addPost,
         addComment,
+        addCommentReply,
+        voteComment,
         toggleSaveResource,
         addSavedResource,
         refetchPosts: loadPosts,

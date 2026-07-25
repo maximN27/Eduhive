@@ -3,9 +3,10 @@ import { useApp } from '../context/AppContext';
 import { postService } from '../services/postService';
 import { generatePostAlignedResources } from '../services/resourceSearchService';
 import ResourceViewerModal from './ResourceViewerModal';
+import CommentItem from './CommentItem';
 
 export default function PostCard({ post }) {
-  const { user, toggleUpvotePost, toggleSavePost, deletePost, addComment, handleSelectTag, openPost, navigateToPost, navigateToProfile, addSavedResource, savedResources } = useApp();
+  const { user, toggleUpvotePost, toggleSavePost, deletePost, addComment, addCommentReply, voteComment, handleSelectTag, openPost, navigateToPost, navigateToProfile, addSavedResource, savedResources } = useApp();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -48,18 +49,18 @@ export default function PostCard({ post }) {
 
   const [selectedModalImage, setSelectedModalImage] = useState(null);
 
-  const isCurrentUser = Boolean(
-    user && (
-      post.author?.name === user.name ||
-      post.author?.handle === user.handle ||
-      post.author?.id === user.id ||
-      String(post.id).startsWith('post-')
+  const isAuthor = Boolean(
+    user && post && (
+      (user.id && (String(user.id) === String(post.author?.id) || String(user.id) === String(post.authorId) || String(user.id) === String(post.author?._id))) ||
+      (user._id && (String(user._id) === String(post.author?.id) || String(user._id) === String(post.authorId) || String(user._id) === String(post.author?._id))) ||
+      (user.username && post.author?.handle === `@${user.username}`) ||
+      (user.name && post.author?.name === user.name)
     )
   );
 
-  const displayAvatar = isCurrentUser && user?.avatar ? user.avatar : (post.author?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150');
-  const displayName = isCurrentUser && user?.name ? user.name : (post.author?.name || 'EduHive Scholar');
-  const displayRole = isCurrentUser && user?.role ? user.role : (post.author?.role || 'AI Research Fellow');
+  const displayAvatar = isAuthor && user?.avatar ? user.avatar : (post.author?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150');
+  const displayName = isAuthor && user?.name ? user.name : (post.author?.name || 'EduHive Scholar');
+  const displayRole = isAuthor && user?.role ? user.role : (post.author?.role || 'AI Research Fellow');
 
   const navigateHandler = openPost || navigateToPost;
 
@@ -99,7 +100,7 @@ export default function PostCard({ post }) {
           <span className="text-[11px] font-bold px-3 py-1 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
             {post.subjectName}
           </span>
-          {isCurrentUser && (
+          {isAuthor && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -298,21 +299,29 @@ export default function PostCard({ post }) {
             </button>
           </form>
 
-          {post.comments && post.comments.length > 0 ? (
-            <div className="space-y-3">
-              {post.comments.map(c => (
-                <div key={c.id} className="p-2.5 rounded-xl border theme-surface theme-border">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold theme-text-primary">{c.author}</span>
-                    <span className="text-[10px] theme-text-muted">{c.createdAt}</span>
-                  </div>
-                  <p className="text-xs theme-text-secondary">{c.content}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-center py-2 theme-text-muted">No comments yet. Be the first to join the discussion!</p>
-          )}
+          {(() => {
+            const allComments = post.comments || [];
+            const rootComments = allComments.filter(c => !c.parentComment && !c.parentCommentId);
+
+            if (rootComments.length === 0) {
+              return <p className="text-xs text-center py-2 theme-text-muted">No comments yet. Be the first to join the discussion!</p>;
+            }
+
+            return (
+              <div className="space-y-1">
+                {rootComments.map(comment => (
+                  <CommentItem
+                    key={comment.id || comment._id}
+                    comment={comment}
+                    allComments={allComments}
+                    postId={post.id}
+                    onReply={(pId, cId, text) => addCommentReply(pId, cId, text)}
+                    onVoteComment={(pId, cId, type) => voteComment(pId, cId, type)}
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 

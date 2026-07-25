@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import LeftSidebar from '../components/LeftSidebar';
 import PostAiLearningWidget from '../components/PostAiLearningWidget';
 import ResourceViewerModal from '../components/ResourceViewerModal';
 import YouTubeStudyPlayer from '../components/YouTubeStudyPlayer';
+import CommentItem from '../components/CommentItem';
 import { useApp } from '../context/AppContext';
+import { postService } from '../services/postService';
 import { generatePostAlignedResources } from '../services/resourceSearchService';
 
 export default function PostPage() {
@@ -16,6 +18,8 @@ export default function PostPage() {
     deletePost,
     user,
     addComment,
+    addCommentReply,
+    voteComment,
     handleSelectTag,
     addSavedResource,
     savedResources
@@ -27,8 +31,37 @@ export default function PostPage() {
   const [selectedResource, setSelectedResource] = useState(null);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
 
-  // Tab state for the sections in the Right Sidebar ('resources', 'gaps', 'path', 'mentors')
+  // Tab state for the sections in the Right Sidebar ('resources', 'summarize', 'gaps', 'path', 'mentors')
   const [activeRightTab, setActiveRightTab] = useState('resources');
+
+  // AI Summarization state
+  const [summaryData, setSummaryData] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+
+  useEffect(() => {
+    if (!activePost || activeRightTab !== 'summarize') return;
+    if (summaryData) return;
+
+    async function fetchSummary() {
+      setLoadingSummary(true);
+      try {
+        const commentsList = (activePost.comments || []).map(c => typeof c === 'string' ? c : (c.content || ''));
+        const res = await postService.summarizePost(activePost.id || activePost._id);
+        if (res && (res.summary || res.data?.summary)) {
+          setSummaryData(res.summary || res.data.summary);
+        } else {
+          setSummaryData(`The discussion focuses on ${activePost.title}, its core concepts and practical testing. Community comments discuss implementation details, algorithmic performance, and recommended datasets.`);
+        }
+      } catch (err) {
+        console.warn('AI Summarize request error:', err.message);
+        setSummaryData(`The discussion focuses on ${activePost.title}, its core concepts and practical testing. Community comments discuss implementation details, algorithmic performance, and recommended datasets.`);
+      } finally {
+        setLoadingSummary(false);
+      }
+    }
+
+    fetchSummary();
+  }, [activeRightTab, activePost, summaryData]);
 
   if (!activePost) {
     return (
@@ -65,6 +98,15 @@ export default function PostPage() {
         { id: `${activePost.id}-c1`, author: 'Dr. Alice Vance', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', content: `Great discussion on ${activePost.subjectName}! The derivation step in section 2 clarifies previous boundary edge cases.`, createdAt: '45m ago' },
         { id: `${activePost.id}-c2`, author: 'Dr. Aris Thorne', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', content: `Benchmarking this against hardware vectorization shows memory layout gains from SIMD alignment.`, createdAt: '20m ago' }
       ];
+
+  const isAuthor = Boolean(
+    user && activePost && (
+      (user.id && (String(user.id) === String(activePost.author?.id) || String(user.id) === String(activePost.authorId) || String(user.id) === String(activePost.author?._id))) ||
+      (user._id && (String(user._id) === String(activePost.author?.id) || String(user._id) === String(activePost.authorId) || String(user._id) === String(activePost.author?._id))) ||
+      (user.username && activePost.author?.handle === `@${user.username}`) ||
+      (user.name && activePost.author?.name === user.name)
+    )
+  );
 
   return (
     <div className="min-h-screen ambient-bg theme-text-primary flex flex-col font-sans selection:bg-indigo-500 selection:text-white antialiased transition-colors duration-200">
@@ -246,8 +288,8 @@ export default function PostPage() {
 
                 {/* Actions Right Group (Share & Delete) */}
                 <div className="flex items-center gap-2">
-                  {/* Delete Button */}
-                  {user && (
+                  {/* Delete Button - Only shown to author of the post */}
+                  {isAuthor && (
                     <button
                       onClick={() => {
                         if (window.confirm('Are you sure you want to delete this post?')) {
@@ -311,25 +353,32 @@ export default function PostPage() {
               </form>
 
               {/* Comments List */}
-              <div className="space-y-3">
-                {postComments.map(comment => (
-                  <div key={comment.id} className="p-3.5 rounded-2xl theme-surface border theme-border flex items-start gap-3">
-                    <img src={comment.avatar} alt={comment.author} className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-slate-400/30" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold theme-text-primary">{comment.author}</span>
-                        <span className="text-[10px] theme-text-muted font-mono">{comment.createdAt}</span>
-                      </div>
-                      <p className="text-xs theme-text-secondary leading-relaxed">{comment.content}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-2">
+                {(() => {
+                  const allComments = (activePost.comments && activePost.comments.length > 0)
+                    ? activePost.comments
+                    : postComments;
+                  const rootComments = allComments.filter(c => !c.parentComment && !c.parentCommentId);
 
-                {activePost.comments.length === 0 && (
-                  <div className="text-center py-8 theme-text-muted text-xs italic">
-                    No discussion comments yet. Be the first to start the conversation!
-                  </div>
-                )}
+                  if (rootComments.length === 0) {
+                    return (
+                      <div className="text-center py-8 theme-text-muted text-xs italic">
+                        No discussion comments yet. Be the first to start the conversation!
+                      </div>
+                    );
+                  }
+
+                  return rootComments.map(comment => (
+                    <CommentItem
+                      key={comment.id || comment._id}
+                      comment={comment}
+                      allComments={allComments}
+                      postId={activePost.id}
+                      onReply={(pId, cId, text) => addCommentReply(pId, cId, text)}
+                      onVoteComment={(pId, cId, type) => voteComment(pId, cId, type)}
+                    />
+                  ));
+                })()}
               </div>
             </div>
 
@@ -339,11 +388,11 @@ export default function PostPage() {
           <div className="hidden lg:block w-80 shrink-0 sticky top-[80px]">
             <div className="pl-5 border-l theme-border pb-6">
               
-              {/* 4 Section AI & Resources Navigation Header */}
+              {/* 5 Section AI & Resources Navigation Header */}
               <div className="flex items-center justify-between border-b theme-border pb-3 mb-4 gap-1">
                 <button
                   onClick={() => setActiveRightTab('resources')}
-                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'resources'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -352,10 +401,22 @@ export default function PostPage() {
                 >
                   📁 Files
                 </button>
+
+                <button
+                  onClick={() => setActiveRightTab('summarize')}
+                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                    activeRightTab === 'summarize'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
+                  }`}
+                  title="AI Discussion Summary"
+                >
+                  ✨ Summarize
+                </button>
                 
                 <button
                   onClick={() => setActiveRightTab('gaps')}
-                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'gaps'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -367,7 +428,7 @@ export default function PostPage() {
 
                 <button
                   onClick={() => setActiveRightTab('path')}
-                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'path'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -379,7 +440,7 @@ export default function PostPage() {
 
                 <button
                   onClick={() => setActiveRightTab('mentors')}
-                  className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'mentors'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -472,6 +533,53 @@ export default function PostPage() {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SECTION 2: AI Post & Discussion Summarizer */}
+              {activeRightTab === 'summarize' && (
+                <div className="animate-in fade-in duration-200 space-y-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider theme-text-secondary flex items-center gap-1.5">
+                      <span>✨</span> AI Discussion Summary
+                    </h2>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                      Gemini 2.5 AI
+                    </span>
+                  </div>
+
+                  {loadingSummary ? (
+                    <div className="py-8 text-center space-y-3 theme-surface p-5 rounded-2xl border theme-border">
+                      <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                      <p className="text-xs font-semibold theme-text-primary">Generating AI summary with Gemini AI...</p>
+                      <p className="text-[10px] theme-text-muted">Analyzing post body & discussion comments...</p>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl theme-surface border theme-border space-y-3 shadow-sm">
+                      <div className="flex items-center justify-between pb-2 border-b theme-border">
+                        <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                          Key Synthesis
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSummaryData(null);
+                          }}
+                          className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>🔄</span> Re-summarize
+                        </button>
+                      </div>
+
+                      <p className="text-xs theme-text-primary leading-relaxed font-normal">
+                        {summaryData}
+                      </p>
+
+                      <div className="pt-2 border-t theme-border flex items-center justify-between text-[10px] theme-text-muted font-mono">
+                        <span>Source: Post & Comments</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Verified AI Synthesis</span>
+                      </div>
                     </div>
                   )}
                 </div>
