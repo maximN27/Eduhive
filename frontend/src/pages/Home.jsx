@@ -1,38 +1,35 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
 import Navbar from '../components/Navbar';
 import LeftSidebar from '../components/LeftSidebar';
 import CenterFeed from '../components/CenterFeed';
 import RightSidebar from '../components/RightSidebar';
-import SettingsModal from '../components/SettingsModal';
 
 export default function Home() {
-  const { isSettingsOpen, setIsSettingsOpen } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen ambient-bg theme-text-primary flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white transition-colors duration-200">
-      
+
       {/* 72px Floating Navbar */}
       <Navbar onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
-      {/* Main Grid Container with Fluid Responsive Padding & Wide Max-Width */}
-      <main className="flex-1 max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
-          
-          {/* Division 1 (Left Sidebar) */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-[84px]">
+      {/* Main Grid Container spanning full display width with ~20px screen margins */}
+      <main className="flex-1 w-full px-5 sm:px-6 lg:px-8 py-5">
+
+        <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
+
+          {/* Division 1 (Left Sidebar: Academic Subjects) */}
+          <div className="hidden lg:block w-70 shrink-0 sticky top-[80px]">
             <LeftSidebar />
           </div>
 
-          {/* Division 2 (Center Feed - Main Focus) */}
-          <div className="lg:col-span-6 min-w-0">
+          {/* Division 2 (Center Feed - Automatically Expands to Fill Gap) */}
+          <div className="flex-1 min-w-0">
             <CenterFeed />
           </div>
 
           {/* Division 3 (Right Sidebar) */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-[84px]">
+          <div className="hidden lg:block w-72 shrink-0 sticky top-[80px]">
             <RightSidebar />
           </div>
 
@@ -58,12 +55,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* Settings Modal (Appearance & Theme Settings) */}
-      <SettingsModal 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
 
       {/* Footer */}
       <footer className="border-t py-8 mt-12 transition-colors" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>

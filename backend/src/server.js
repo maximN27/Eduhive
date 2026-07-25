@@ -15,7 +15,11 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const voteRoutes = require('./routes/voteRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const aiLearningRoutes = require('./routes/aiLearningRoutes');
+<<<<<<< HEAD
 const aiRoutes = require('./routes/aiRoutes');
+=======
+const suggestionRoutes = require('./routes/suggestionRoutes');
+>>>>>>> d752cdba909d5797a255efc4be0fcff08e4df843
 
 const notFoundMiddleware = require('./middleware/notFoundMiddleware');
 const errorMiddleware = require('./middleware/errorMiddleware');
@@ -26,7 +30,24 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'https://eduhive-lac.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5000'
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -61,11 +82,15 @@ app.use('/api/search', searchRoutes);
 app.use('/ai-learning', aiLearningRoutes);
 app.use('/api/ai-learning', aiLearningRoutes);
 
+<<<<<<< HEAD
 app.use('/api/ai', aiRoutes);
+=======
+app.use('/api', suggestionRoutes);
+>>>>>>> d752cdba909d5797a255efc4be0fcff08e4df843
 
 // Health Check Route
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'EduHive API Server is running' });
+  res.status(200).json({ status: 'ok' });
 });
 
 // Root Route

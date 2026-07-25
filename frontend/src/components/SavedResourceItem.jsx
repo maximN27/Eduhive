@@ -5,9 +5,9 @@ export default function SavedResourceItem({ resource }) {
   const { toggleSaveResource } = useApp();
 
   return (
-    <div className="group relative p-3.5 rounded-xl border transition-all flex items-start gap-3 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
+    <div className="group relative p-2.5 rounded-xl border transition-all flex items-center gap-2.5 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
       <div 
-        className="w-8 h-8 rounded-lg border flex items-center justify-center text-base shrink-0 transition-transform group-hover:scale-105"
+        className="w-7 h-7 rounded-lg border flex items-center justify-center text-sm shrink-0 transition-transform group-hover:scale-105"
         style={{ backgroundColor: 'var(--primary-light)', borderColor: 'var(--primary-border)' }}
       >
         {resource.icon}

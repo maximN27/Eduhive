@@ -120,7 +120,21 @@ export const AppProvider = ({ children }) => {
   // Core Data States
   const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
   const [tags, setTags] = useState(INITIAL_TAGS);
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [posts, setPosts] = useState(() => {
+    try {
+      const uKey = user?.id || user?.username || 'user';
+      const custom = localStorage.getItem(`eduhive_custom_posts_${uKey}`) || localStorage.getItem('eduhive_custom_posts');
+      if (custom) {
+        const parsed = JSON.parse(custom);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return [...parsed, ...INITIAL_POSTS];
+        }
+      }
+    } catch (e) {
+      // JSON parse fallback
+    }
+    return INITIAL_POSTS;
+  });
   const [savedResources, setSavedResources] = useState(INITIAL_SAVED_RESOURCES);
   const [notifications, setNotifications] = useState([]);
 
@@ -354,6 +368,7 @@ export const AppProvider = ({ children }) => {
       title: newPostData.title,
       content: newPostData.content,
       codeSnippet: newPostData.codeSnippet || '',
+      images: newPostData.images || [],
       upvotes: 1,
       userVoted: true,
       saved: false,
@@ -361,7 +376,18 @@ export const AppProvider = ({ children }) => {
       comments: []
     };
 
-    setPosts(prev => [newPost, ...prev]);
+    setPosts(prev => {
+      const updated = [newPost, ...prev];
+      try {
+        const uKey = user?.id || user?.username || 'user';
+        const customOnly = updated.filter(p => String(p.id).startsWith('post-'));
+        localStorage.setItem('eduhive_custom_posts', JSON.stringify(customOnly));
+        localStorage.setItem(`eduhive_custom_posts_${uKey}`, JSON.stringify(customOnly));
+      } catch (e) {
+        // storage quota fallback
+      }
+      return updated;
+    });
   };
 
   // Add comment to a post
@@ -537,6 +563,7 @@ export const AppProvider = ({ children }) => {
         handleLogin,
         handleRegister,
         handleLogout,
+        updateUser: auth?.updateUser,
         notifications,
         loading,
         apiOnline,

@@ -7,13 +7,25 @@ import ProfilePage from './pages/ProfilePage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import RoleSelectionModal from './components/RoleSelectionModal';
+import SettingsModal from './components/SettingsModal';
 import EduHiveLogo from './components/EduHiveLogo';
 
 function MainRouter() {
-  const { activePostId, currentView } = useApp();
-  if (currentView === 'profile') return <ProfilePage />;
-  if (activePostId) return <PostPage />;
-  return <Home />;
+  const { activePostId, currentView, isSettingsOpen, setIsSettingsOpen } = useApp();
+  
+  let pageContent = <Home />;
+  if (currentView === 'profile') {
+    pageContent = <ProfilePage />;
+  } else if (activePostId) {
+    pageContent = <PostPage />;
+  }
+
+  return (
+    <>
+      {pageContent}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+    </>
+  );
 }
 
 function AppGate() {
