@@ -431,23 +431,30 @@ export const AppProvider = ({ children }) => {
 
   // Add a new post
   const addPost = async (newPostData) => {
-    let matchedSubject = subjects.find(s => s.id === newPostData.subjectId);
+    let matchedSubject = subjects.find(s => s.id === newPostData.subjectId || s._id === newPostData.subjectId);
     if (!matchedSubject && subjects.length > 0) {
       matchedSubject = subjects[0];
     }
 
-    // Call Backend API if online / token present
+    const targetSubjectId = matchedSubject ? (matchedSubject._id || matchedSubject.id) : newPostData.subjectId;
+
+    // Call Backend API if token present
     if (token) {
       try {
         const apiPayload = {
-          subjectId: matchedSubject ? matchedSubject.id : newPostData.subjectId,
+          subjectId: targetSubjectId,
           title: newPostData.title,
           content: newPostData.content,
           tags: newPostData.tags || []
         };
         const res = await postService.createPost(apiPayload);
-        if (res.success && res.data) {
-          const formatted = formatApiPost(res.data, user);
+        if (res && res.success && (res.data || res.post)) {
+          const createdPostObj = res.data || res.post;
+          const formatted = formatApiPost(createdPostObj, user);
+          if (newPostData.codeSnippet) formatted.codeSnippet = newPostData.codeSnippet;
+          if (newPostData.images) formatted.images = newPostData.images;
+          if (newPostData.resources) formatted.resources = newPostData.resources;
+
           setPosts(prev => [formatted, ...prev]);
           return;
         }

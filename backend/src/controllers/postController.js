@@ -127,26 +127,23 @@ const createPost = async (req, res, next) => {
       });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Invalid subjectId', code: 'BAD_REQUEST' },
-        message: 'Invalid subjectId'
+    let resolvedSubjectId = subjectId;
+    if (mongoose.Types.ObjectId.isValid(subjectId)) {
+      const subjectDoc = await Subject.findById(subjectId);
+      if (subjectDoc) resolvedSubjectId = subjectDoc._id;
+    } else {
+      const subjectByName = await Subject.findOne({
+        $or: [
+          { name: { $regex: new RegExp(`^${subjectId}$`, 'i') } },
+          { _id: subjectId }
+        ]
       });
-    }
-
-    const subjectExists = await Subject.findById(subjectId);
-    if (!subjectExists) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Subject does not exist', code: 'BAD_REQUEST' },
-        message: 'Subject does not exist'
-      });
+      if (subjectByName) resolvedSubjectId = subjectByName._id;
     }
 
     const userId = req.user._id || req.user.userId || req.user.id;
     const post = await Post.create({
-      subjectId,
+      subjectId: resolvedSubjectId,
       authorId: userId,
       title: title.trim(),
       content,
@@ -155,10 +152,13 @@ const createPost = async (req, res, next) => {
     });
 
     const populatedPost = await Post.findById(post._id)
-      .populate('subjectId', 'name')
+      .populate('subjectId', 'name description tags')
       .populate('authorId', 'name username avatar profilePic role');
 
-    res.status(201).json({ success: true, data: populatedPost, post: populatedPost });
+    const postObj = populatedPost ? populatedPost.toObject() : post.toObject();
+    postObj.comments = [];
+
+    res.status(201).json({ success: true, data: postObj, post: postObj });
   } catch (error) {
     if (next) next(error);
     else res.status(500).json({ success: false, message: error.message });

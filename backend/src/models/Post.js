@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema({
   subjectId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Subject',
+    type: mongoose.Schema.Types.Mixed,
     required: true
   },
   authorId: {
