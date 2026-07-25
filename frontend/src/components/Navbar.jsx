@@ -57,14 +57,14 @@ export default function Navbar({ onMobileMenuToggle }) {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0B1120]/95 backdrop-blur-xl border-b border-cyan-500/20 shadow-2xl transition-all duration-200">
-      <div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 theme-navbar transition-all duration-200">
+      <div className="w-full px-3 sm:px-4 lg:px-5 h-16 sm:h-18 flex items-center justify-between gap-4">
         
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-3 shrink-0">
           <button 
             onClick={onMobileMenuToggle}
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none cursor-pointer"
+            className="md:hidden p-2 rounded-lg theme-text-muted hover:theme-text-primary hover:bg-slate-500/10 focus:outline-none cursor-pointer"
             aria-label="Toggle Navigation Sidebar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,21 +83,21 @@ export default function Navbar({ onMobileMenuToggle }) {
               </svg>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-extrabold tracking-tight text-white">
+              <span className="text-xl font-extrabold tracking-tight theme-text-primary">
                 EduHive
               </span>
-              <span className="hidden sm:inline-block text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+              <span className="hidden sm:inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
                 Academic API
               </span>
             </div>
           </div>
         </div>
 
-        {/* Center: Search Bar with Quick Search Tags */}
-        <div className="flex-1 max-w-xl mx-auto flex flex-col items-center">
+        {/* Center: Enlarged Search Bar */}
+        <div className="flex-1 max-w-2xl mx-auto flex items-center">
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-cyan-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-cyan-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -106,32 +106,18 @@ export default function Navbar({ onMobileMenuToggle }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search subjects, subtopics, people, or posts..."
-              className="w-full pl-10 pr-8 py-2 text-xs rounded-2xl bg-[#111A2E] text-white placeholder-slate-400 transition-all outline-none border border-cyan-500/20 focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+              className="w-full pl-11 pr-9 py-2.5 text-sm rounded-2xl theme-surface theme-text-primary placeholder:text-slate-400 transition-all outline-none border theme-border focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center theme-text-muted hover:theme-text-primary cursor-pointer"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             )}
-          </div>
-
-          {/* Quick Search Tag Pills */}
-          <div className="hidden sm:flex items-center gap-1.5 mt-1 text-[10px] theme-text-muted">
-            <span className="opacity-70">Quick search:</span>
-            {['FFT', 'React', 'Quantum', 'Discrete Math'].map(tag => (
-              <button
-                key={tag}
-                onClick={() => setSearchQuery(tag)}
-                className="px-2 py-0.5 rounded-md bg-slate-800/60 hover:bg-cyan-950 hover:text-cyan-300 text-slate-300 transition-colors border border-slate-700/50"
-              >
-                {tag}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -141,7 +127,7 @@ export default function Navbar({ onMobileMenuToggle }) {
           {/* Notifications Button */}
           <button 
             onClick={() => setIsNotificationsOpen(true)}
-            className="relative p-2 rounded-xl border transition-colors hover:bg-slate-500/10 cursor-pointer text-slate-300 border-slate-800"
+            className="relative p-2 rounded-xl border theme-border transition-colors hover:bg-slate-500/10 cursor-pointer theme-text-secondary"
             title="Notifications"
           >
             <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +144,7 @@ export default function Navbar({ onMobileMenuToggle }) {
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2.5 p-1.5 rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-cyan-500/30 transition-all focus:outline-none group cursor-pointer"
+              className="flex items-center gap-2.5 p-1.5 rounded-2xl border theme-border theme-surface hover:border-cyan-500/30 transition-all focus:outline-none group cursor-pointer"
             >
               <img
                 src={userAvatar}
@@ -167,18 +153,18 @@ export default function Navbar({ onMobileMenuToggle }) {
               />
               
               <div className="hidden lg:flex flex-col text-left pr-1">
-                <span className="text-xs font-bold text-slate-100 leading-tight">
+                <span className="text-xs font-bold theme-text-primary leading-tight">
                   Dr. Alice Vance
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">
+                <span className="text-[10px] theme-text-muted font-medium">
                   Instructor | Senior Lecturer
                 </span>
-                <span className="text-[10px] font-bold text-amber-400 mt-0.5 flex items-center gap-1">
+                <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 mt-0.5 flex items-center gap-1">
                   ⭐ 2500 SP
                 </span>
               </div>
 
-              <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-3.5 h-3.5 theme-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>

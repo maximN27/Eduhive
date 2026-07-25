@@ -35,72 +35,61 @@ export default function RightSidebar() {
     }
   ];
 
+  const allResources = [...savedResources, ...sampleResources.filter(s => !savedResources.some(r => r.id === s.id))];
+
   return (
-    <aside className="w-full space-y-4 no-scrollbar max-h-[calc(100vh-100px)] overflow-y-auto pr-0.5">
+    <aside className="w-full no-scrollbar min-h-[calc(100vh-100px)] overflow-y-auto pl-5 border-l theme-border pb-6 space-y-4">
       
-      {/* 1. LIBRARY Card (Tabbed Saved Posts & Saved Resources) */}
-      <div className="theme-card p-4 shadow-xl space-y-3">
-        <div className="flex items-center justify-between pb-2.5 border-b theme-border">
+      {/* 1. SAVED RESOURCES SECTION (ON TOP) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between pb-2 border-b theme-border">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-cyan-500">📚</span>
-            <h2 className="text-[11px] font-extrabold tracking-wider uppercase theme-text-secondary">
-              LIBRARY
+            <span className="text-sm text-cyan-500">📁</span>
+            <h2 className="text-xs font-extrabold tracking-wider uppercase theme-text-secondary">
+              Saved Resources
             </h2>
           </div>
+          <span className="text-xs font-mono font-bold theme-text-muted px-2 py-0.5 rounded bg-slate-500/10">
+            {allResources.length}
+          </span>
         </div>
 
-        {/* Dual Tab Switcher */}
-        <div className="flex items-center p-1 rounded-xl bg-slate-500/10 border theme-border">
-          <button
-            onClick={() => setLibraryTab('posts')}
-            className={`flex-1 text-center py-1.5 rounded-lg text-xs font-bold transition-all ${
-              libraryTab === 'posts'
-                ? 'bg-cyan-500/20 text-cyan-600 border border-cyan-500/30'
-                : 'theme-text-muted hover:theme-text-primary'
-            }`}
-          >
-            Saved Posts
-          </button>
-          <button
-            onClick={() => setLibraryTab('resources')}
-            className={`flex-1 text-center py-1.5 rounded-lg text-xs font-bold transition-all ${
-              libraryTab === 'resources'
-                ? 'bg-cyan-500/20 text-cyan-600 border border-cyan-500/30'
-                : 'theme-text-muted hover:theme-text-primary'
-            }`}
-          >
-            Saved Resources
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {libraryTab === 'posts' ? (
-          <div>
-            {savedPosts.length === 0 ? (
-              <div className="text-center py-6 theme-text-muted text-xs italic">
-                No saved posts yet.<br />Click bookmark on any post to save it here!
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
-                {savedPosts.map(post => (
-                  <SavedPostItem key={post.id} post={post} />
-                ))}
-              </div>
-            )}
+        {allResources.length === 0 ? (
+          <div className="text-center py-4 theme-text-muted text-xs italic">
+            No study resources saved.
           </div>
         ) : (
-          <div>
-            {savedResources.length === 0 && sampleResources.length === 0 ? (
-              <div className="text-center py-6 theme-text-muted text-xs italic">
-                No study resources saved.
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
-                {[...savedResources, ...sampleResources.filter(s => !savedResources.some(r => r.id === s.id))].map(resource => (
-                  <SavedResourceItem key={resource.id} resource={resource} />
-                ))}
-              </div>
-            )}
+          <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1 no-scrollbar">
+            {allResources.map(resource => (
+              <SavedResourceItem key={resource.id} resource={resource} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 2. SAVED POSTS SECTION (BELOW) */}
+      <div className="space-y-2 pt-1">
+        <div className="flex items-center justify-between pb-2 border-b theme-border">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-cyan-500">🔖</span>
+            <h2 className="text-xs font-extrabold tracking-wider uppercase theme-text-secondary">
+              Saved Posts
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-bold theme-text-muted px-2 py-0.5 rounded bg-slate-500/10">
+            {savedPosts.length}
+          </span>
+        </div>
+
+        {savedPosts.length === 0 ? (
+          <div className="text-center py-4 theme-text-muted text-xs italic">
+            No saved posts yet. Click bookmark on any post to save it here!
+          </div>
+        ) : (
+          <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1 no-scrollbar">
+            {savedPosts.map(post => (
+              <SavedPostItem key={post.id} post={post} />
+            ))}
           </div>
         )}
       </div>

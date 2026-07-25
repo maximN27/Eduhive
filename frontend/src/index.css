@@ -6,11 +6,11 @@
   font-weight: 400;
 
   /* LIGHT THEME (Clean & Bright Academic UI) */
-  --bg-main: #F8FAFC;
+  --bg-main: #FFFFFF;
   --surface-main: #FFFFFF;
   --card-bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
-  --navbar-bg: rgba(255, 255, 255, 0.94);
+  --navbar-bg: #FFFFFF;
   --navbar-border: #E2E8F0;
   --border-color: #E2E8F0;
   --border-subtle: #F1F5F9;
@@ -34,16 +34,16 @@
   --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.08);
   --shadow-nav: 0 4px 20px rgba(0, 0, 0, 0.04);
 
-  /* Default Cyan Accent */
-  --primary: #0284C7;
-  --primary-hover: #0369A1;
-  --primary-light: rgba(2, 132, 199, 0.08);
-  --primary-border: rgba(2, 132, 199, 0.25);
-  --ring-color: rgba(2, 132, 199, 0.3);
+  /* High-Contrast Vibrant Primary Accent */
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-light: rgba(37, 99, 235, 0.08);
+  --primary-border: rgba(37, 99, 235, 0.3);
+  --ring-color: rgba(37, 99, 235, 0.35);
 
   /* Tag Pill Colors - Light Theme */
-  --tag-blue-bg: #E0F2FE;
-  --tag-blue-text: #0369A1;
+  --tag-blue-bg: #EFF6FF;
+  --tag-blue-text: #1D4ED8;
   --tag-purple-bg: #F3E8FF;
   --tag-purple-text: #7E22CE;
   --tag-green-bg: #DCFCE7;
@@ -62,6 +62,31 @@
   --code-text: #F8FAFC;
   --code-header-bg: #1E293B;
   --code-border: #334155;
+}
+
+/* Accent Color Scheme Overrides (Light Theme) */
+html.accent-emerald {
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-light: rgba(5, 150, 105, 0.1);
+  --primary-border: rgba(5, 150, 105, 0.3);
+  --ring-color: rgba(5, 150, 105, 0.35);
+}
+
+html.accent-purple {
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-light: rgba(124, 58, 237, 0.1);
+  --primary-border: rgba(124, 58, 237, 0.3);
+  --ring-color: rgba(124, 58, 237, 0.35);
+}
+
+html.accent-orange {
+  --primary: #EA580C;
+  --primary-hover: #C2410C;
+  --primary-light: rgba(234, 88, 12, 0.1);
+  --primary-border: rgba(234, 88, 12, 0.3);
+  --ring-color: rgba(234, 88, 12, 0.35);
 }
 
 /* DARK THEME (Sleek Ambient Dark Glass UI) */
@@ -86,7 +111,7 @@ html.dark {
   --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.45);
   --shadow-nav: 0 4px 20px rgba(0, 0, 0, 0.4);
 
-  /* Dark Theme Accent */
+  /* Dark Theme Default Accent */
   --primary: #06B6D4;
   --primary-hover: #22D3EE;
   --primary-light: rgba(6, 182, 212, 0.15);
@@ -94,9 +119,38 @@ html.dark {
   --ring-color: rgba(6, 182, 212, 0.4);
 }
 
+/* Accent Color Scheme Overrides (Dark Theme) */
+html.dark.accent-emerald {
+  --primary: #10B981;
+  --primary-hover: #34D399;
+  --primary-light: rgba(16, 185, 129, 0.15);
+  --primary-border: rgba(16, 185, 129, 0.35);
+  --ring-color: rgba(16, 185, 129, 0.4);
+}
+
+html.dark.accent-purple {
+  --primary: #8B5CF6;
+  --primary-hover: #A78BFA;
+  --primary-light: rgba(139, 92, 246, 0.15);
+  --primary-border: rgba(139, 92, 246, 0.35);
+  --ring-color: rgba(139, 92, 246, 0.4);
+}
+
+html.dark.accent-orange {
+  --primary: #F59E0B;
+  --primary-hover: #FBBF24;
+  --primary-light: rgba(245, 158, 11, 0.15);
+  --primary-border: rgba(245, 158, 11, 0.35);
+  --ring-color: rgba(245, 158, 11, 0.4);
+}
+
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   letter-spacing: -0.015em;
+}
+
+html {
+  font-size: 17px;
 }
 
 /* Global Reset & Theme Application */
@@ -105,6 +159,7 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.02rem;
   transition: background-color 200ms ease-out, color 200ms ease-out;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -129,24 +184,14 @@ body {
 
 /* Ambient Background */
 .ambient-bg {
-  background-color: #F8FAFC;
-  background-image: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #F1F5F9 100%);
+  background-color: #FFFFFF;
+  background-image: none;
   transition: background-color 200ms ease-out;
 }
 
 html.dark .ambient-bg {
-  background-color: #0B1120;
-  background-image: 
-    radial-gradient(at 10% 20%, rgba(14, 165, 233, 0.15) 0px, transparent 45%),
-    radial-gradient(at 90% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 45%),
-    radial-gradient(at 50% 80%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
-    radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.8), rgba(0,0,0,0));
-  background-repeat: repeat;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 200px 200px, 250px 250px, 150px 150px, 300px 300px;
-  background-attachment: fixed;
+  background-color: #0D121D;
+  background-image: none;
 }
 
 /* Theme Navbar */
@@ -155,14 +200,14 @@ html.dark .ambient-bg {
   border-bottom: 1px solid #E2E8F0;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition: all 200ms ease-out;
 }
 
 html.dark .theme-navbar {
-  background-color: rgba(11, 17, 32, 0.95);
-  border-bottom: 1px solid rgba(6, 182, 212, 0.2);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+  background-color: rgba(13, 18, 29, 0.95);
+  border-bottom: 1px solid #1E293B;
+  box-shadow: none;
 }
 
 /* Sleek Theme Card */

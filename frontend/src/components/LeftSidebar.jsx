@@ -43,23 +43,23 @@ export default function LeftSidebar() {
   ];
 
   return (
-    <aside className="w-full space-y-4 no-scrollbar max-h-[calc(100vh-100px)] overflow-y-auto pr-0.5">
+    <aside className="w-full no-scrollbar min-h-[calc(100vh-100px)] overflow-y-auto pr-4 border-r theme-border pb-6">
       
       {/* Subject Tree Section */}
-      <div className="theme-card p-4 shadow-xl">
+      <div className="space-y-4">
         <div className="flex items-center justify-between pb-3 mb-3 border-b theme-border">
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <h2 className="text-[11px] font-extrabold tracking-wider uppercase theme-text-secondary">
+            <h2 className="text-xs font-extrabold tracking-wider uppercase theme-text-secondary">
               Academic Subjects
             </h2>
           </div>
           {activeSubject && (
             <button
               onClick={() => handleSelectSubject(null)}
-              className="text-[10px] font-semibold text-cyan-500 hover:underline"
+              className="text-[11px] font-semibold text-cyan-500 hover:underline"
             >
               Reset
             </button>

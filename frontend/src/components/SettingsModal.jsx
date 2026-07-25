@@ -20,24 +20,24 @@ export default function SettingsModal({ isOpen, onClose }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-lg bg-[#0F172A]/95 border border-cyan-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-cyan-950/50 animate-in zoom-in-95 duration-150 space-y-6 text-white"
+        className="w-full max-w-lg theme-surface border theme-border rounded-3xl p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 space-y-6 theme-text-primary"
       >
         {/* Modal Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-slate-800">
+        <div className="flex items-start justify-between pb-4 border-b theme-border">
           <div className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center justify-center text-xl font-bold">
+            <span className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 flex items-center justify-center text-xl font-bold">
               🎨
             </span>
             <div>
-              <h3 className="text-base font-extrabold text-white tracking-tight">Appearance Preferences</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Customize EduHive interface theme and glowing accent scheme</p>
+              <h3 className="text-base font-extrabold theme-text-primary tracking-tight">Appearance Preferences</h3>
+              <p className="text-xs theme-text-muted mt-0.5">Customize EduHive interface theme and glowing accent scheme</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl border theme-border theme-text-muted hover:theme-text-primary hover:bg-slate-500/10 transition-colors"
           >
             ✕
           </button>
@@ -47,7 +47,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           
           {/* Theme Selection */}
           <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 mb-3">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-3">
               Interface Theme
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -59,13 +59,13 @@ export default function SettingsModal({ isOpen, onClose }) {
                     onClick={() => setThemePreference(t.id)}
                     className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-cyan-500/15 border-cyan-400 text-white shadow-lg shadow-cyan-500/20 font-bold scale-[1.03]'
-                        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900'
+                        ? 'bg-cyan-500/15 border-cyan-500 text-cyan-600 dark:text-cyan-300 shadow-md font-bold scale-[1.03]'
+                        : 'theme-surface border theme-border theme-text-secondary hover:theme-text-primary hover:border-cyan-500/30'
                     }`}
                   >
                     <span className="text-2xl mb-2">{t.icon}</span>
-                    <span className="text-xs font-bold text-slate-100">{t.name}</span>
-                    <span className="text-[10px] text-slate-500 mt-1 font-mono">{t.desc}</span>
+                    <span className="text-xs font-bold theme-text-primary">{t.name}</span>
+                    <span className="text-[10px] theme-text-muted mt-1 font-mono">{t.desc}</span>
                   </button>
                 );
               })}
@@ -74,7 +74,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
           {/* Accent Color Selection */}
           <div>
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 mb-3">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-3">
               Glowing Accent Scheme
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -86,8 +86,8 @@ export default function SettingsModal({ isOpen, onClose }) {
                     onClick={() => setAccentColorPreference(a.id)}
                     className={`flex items-center gap-3 p-3 rounded-2xl border transition-all text-xs font-semibold cursor-pointer ${
                       isActive
-                        ? 'bg-slate-900 border-cyan-400 text-white shadow-lg shadow-cyan-500/20 font-bold scale-[1.02]'
-                        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        ? 'bg-cyan-500/10 border-cyan-500 theme-text-primary shadow-md font-bold scale-[1.02]'
+                        : 'theme-surface border theme-border theme-text-secondary hover:theme-text-primary hover:border-cyan-500/30'
                     }`}
                   >
                     <span
@@ -107,7 +107,7 @@ export default function SettingsModal({ isOpen, onClose }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="pt-4 border-t border-slate-800 flex justify-end">
+        <div className="pt-4 border-t theme-border flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-600/30 transition-all cursor-pointer"

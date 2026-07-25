@@ -161,35 +161,35 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
   const embedUrl = `https://www.youtube.com/embed/${displayVideoId}?autoplay=0&rel=0&modestbranding=1&enablejsapi=1`;
 
   return (
-    <div className="bg-[#111A2E]/95 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+    <div className="theme-surface border theme-border rounded-3xl p-5 sm:p-6 space-y-4">
       
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
+      <div className="flex items-center justify-between border-b theme-border pb-3.5">
         <div className="flex items-center gap-3">
-          <span className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-xl font-bold">
+          <span className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center justify-center text-xl font-bold">
             🎥
           </span>
           <div>
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+            <h3 className="text-sm font-extrabold theme-text-primary flex items-center gap-2">
               <span>Live YouTube Data API Study Player</span>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-500/30">
+              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
                 {subject}
               </span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Powered by official YouTube Data API v3 key</p>
+            <p className="text-xs theme-text-muted mt-0.5">Powered by official YouTube Data API v3 key</p>
           </div>
         </div>
 
-        <span className="text-[11px] font-mono text-cyan-400 font-bold hidden sm:inline-block px-3 py-1 rounded-xl bg-cyan-950/80 border border-cyan-500/30">
+        <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-bold hidden sm:inline-block px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
           5 Aligned Study Tags
         </span>
       </div>
 
       {/* 5 Dynamic Post-Aligned Topic Tags */}
       <div className="space-y-1.5">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-wider theme-text-muted block flex items-center justify-between">
           <span>Aligned Lecture Tags for this Post:</span>
-          {loadingLive && <span className="text-cyan-400 animate-pulse font-mono">Fetching YouTube API...</span>}
+          {loadingLive && <span className="text-cyan-500 animate-pulse font-mono">Fetching YouTube API...</span>}
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {postTagsList.map((tag) => {
@@ -200,15 +200,15 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
                 onClick={() => setSelectedTagId(tag.id)}
                 className={`p-2.5 rounded-2xl text-left transition-all border cursor-pointer flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-gradient-to-br from-indigo-600/30 to-rose-600/30 text-white border-cyan-400 shadow-lg shadow-cyan-500/20 scale-[1.02]'
-                    : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                    ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border-cyan-500/50 shadow-md font-bold'
+                    : 'theme-surface theme-text-secondary border theme-border hover:border-cyan-500/30'
                 }`}
               >
                 <span className="text-xs font-bold leading-tight block mb-1">
                   {tag.label}
                 </span>
                 <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded w-fit ${
-                  isSelected ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                  isSelected ? 'bg-cyan-600 text-white' : 'bg-slate-500/10 theme-text-muted'
                 }`}>
                   {tag.badge}
                 </span>
@@ -219,7 +219,7 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
       </div>
 
       {/* Embedded YouTube IFrame Player */}
-      <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl bg-black">
+      <div className="relative w-full aspect-video rounded-2xl overflow-hidden border theme-border shadow-md bg-black">
         <iframe
           key={embedUrl}
           className="w-full h-full"
@@ -231,16 +231,16 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
       </div>
 
       {/* Video Details Metadata Box */}
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-start justify-between gap-4">
+      <div className="p-4 rounded-2xl theme-surface border theme-border flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
               {displayBadge}
             </span>
-            <span className="text-xs font-bold text-slate-300">{displayChannel}</span>
+            <span className="text-xs font-bold theme-text-secondary">{displayChannel}</span>
           </div>
-          <h4 className="text-xs font-black text-white leading-snug">{displayTitle}</h4>
-          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{displayDescription}</p>
+          <h4 className="text-xs font-black theme-text-primary leading-snug">{displayTitle}</h4>
+          <p className="text-[11px] theme-text-muted mt-1 leading-relaxed">{displayDescription}</p>
         </div>
 
         <a

@@ -48,8 +48,8 @@ export default function PostCard({ post }) {
   const navigateHandler = openPost || navigateToPost;
 
   return (
-    <article className="theme-card theme-card-hover p-5 mb-4 shadow-xl transition-all duration-200 relative overflow-hidden">
-      
+    <article className="p-4 rounded-2xl mb-4 border-b theme-border hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors duration-200 relative group">
+
       {/* Top Header: Author & Subject Badge */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
@@ -80,28 +80,28 @@ export default function PostCard({ post }) {
       </div>
 
       {/* Title */}
-      <h2 
+      <h2
         onClick={() => navigateHandler && navigateHandler(post.id)}
-        className="text-base font-extrabold tracking-tight theme-text-primary leading-snug mb-2 cursor-pointer hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors"
+        className="text-lg sm:text-xl font-extrabold tracking-tight theme-text-primary leading-snug mb-2.5 cursor-pointer hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors"
       >
         {post.title}
       </h2>
 
       {/* Content Body */}
-      <div className="text-xs theme-text-secondary leading-relaxed whitespace-pre-line mb-3 font-normal">
+      <div className="text-sm sm:text-base theme-text-secondary leading-relaxed whitespace-pre-line mb-3.5 font-normal">
         {post.content}
       </div>
 
       {/* Syntax Code Block (if present) */}
       {post.codeSnippet && (
-        <div className="mb-3 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-inner">
+        <div className="mb-3.5 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-inner">
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-800 text-[10px] font-mono text-cyan-400">
             <span>Code Snippet</span>
             <button onClick={handleCopyCode} className="hover:text-white transition-colors">
               {codeCopied ? 'Copied!' : 'Copy Code'}
             </button>
           </div>
-          <pre className="p-3 text-[11px] font-mono overflow-x-auto text-cyan-300 leading-relaxed custom-scrollbar">
+          <pre className="p-3 text-xs font-mono overflow-x-auto text-cyan-300 leading-relaxed custom-scrollbar">
             <code>{post.codeSnippet}</code>
           </pre>
         </div>
@@ -115,17 +115,17 @@ export default function PostCard({ post }) {
         ];
 
         return (
-          <div className="mb-3 pt-2.5 border-t theme-border">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block mb-2 flex items-center justify-between">
+          <div className="mb-3.5 pt-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block mb-2 flex items-center justify-between">
               <span>Attached External Learning Resources ({displayResources.length})</span>
-              <span className="font-mono text-[9px] theme-text-muted">Verified Study Guides</span>
+              <span className="font-mono text-[10px] theme-text-muted">Verified Study Guides</span>
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {displayResources.map(res => (
                 <div
                   key={res.id}
                   onClick={() => handleViewResource(res)}
-                  className="flex items-center gap-2.5 p-2 rounded-xl border theme-border theme-surface transition-all hover:border-cyan-500/40 group cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 rounded-xl border theme-border theme-surface transition-all hover:border-cyan-500/40 group cursor-pointer"
                 >
                   <span className="text-lg p-1.5 rounded-lg bg-slate-500/10 shrink-0 text-cyan-600 dark:text-cyan-300 border theme-border">{res.icon || '📄'}</span>
                   <div className="flex-1 min-w-0">
@@ -147,8 +147,8 @@ export default function PostCard({ post }) {
       })()}
 
       {/* Bottom Row: Tags on Left, Actions on Right */}
-      <div className="pt-3 border-t theme-border flex flex-wrap items-center justify-between gap-3">
-        
+      <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+
         {/* Tags */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {post.tags.map((tag) => (
@@ -164,15 +164,14 @@ export default function PostCard({ post }) {
 
         {/* Action Buttons Toolbar */}
         <div className="flex items-center gap-2">
-          
+
           {/* Upvote Button */}
           <button
             onClick={() => toggleUpvotePost(post.id)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
-              post.userVoted
-                ? 'bg-cyan-500 text-white border-cyan-400 shadow-md'
-                : 'theme-surface theme-text-secondary theme-border hover:border-slate-400'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border ${post.userVoted
+              ? 'bg-cyan-500 text-white border-cyan-400 shadow-md'
+              : 'theme-surface theme-text-secondary theme-border hover:border-slate-400'
+              }`}
           >
             <svg className="w-3.5 h-3.5" fill={post.userVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 15l7-7 7 7" />
@@ -194,11 +193,10 @@ export default function PostCard({ post }) {
           {/* Save / Bookmark Button */}
           <button
             onClick={() => toggleSavePost(post.id)}
-            className={`p-1.5 rounded-xl border transition-all ${
-              post.saved
-                ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-                : 'theme-surface theme-text-muted hover:theme-text-primary theme-border'
-            }`}
+            className={`p-1.5 rounded-xl border transition-all ${post.saved
+              ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+              : 'theme-surface theme-text-muted hover:theme-text-primary theme-border'
+              }`}
             title={post.saved ? 'Unsave Post' : 'Save Post'}
           >
             <svg className={`w-3.5 h-3.5 ${post.saved ? 'fill-amber-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
