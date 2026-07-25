@@ -5,6 +5,7 @@ import PostAiLearningWidget from '../components/PostAiLearningWidget';
 import ResourceViewerModal from '../components/ResourceViewerModal';
 import YouTubeStudyPlayer from '../components/YouTubeStudyPlayer';
 import { useApp } from '../context/AppContext';
+import { generatePostAlignedResources } from '../services/resourceSearchService';
 
 export default function PostPage() {
   const {
@@ -54,12 +55,7 @@ export default function PostPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const postResources = (activePost.resources && activePost.resources.length > 0)
-    ? activePost.resources
-    : [
-        { id: `${activePost.id}-r1`, title: `${activePost.subjectName || 'Academic'} Research & Study Guide (PDF)`, type: 'PDF Document', size: '2.4 MB', icon: '📄', url: 'https://arxiv.org/abs/1706.03762' },
-        { id: `${activePost.id}-r2`, title: `${activePost.subjectName || 'Academic'} Code & Simulation Notebook (.ipynb)`, type: 'Jupyter Notebook', size: '1.6 MB', icon: '📓', url: 'https://github.com/TheAlgorithms/Python' }
-      ];
+  const postResources = generatePostAlignedResources(activePost);
 
   const postComments = (activePost.comments && activePost.comments.length > 0)
     ? activePost.comments

@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { authService } from '../services/authService';
 import { CURRENT_USER } from '../services/mockData';
 
+const getUserKey = (u) => {
+  if (!u) return 'default_user';
+  const raw = u._id || u.id || u.email || u.username || u.handle || u.name || 'default_user';
+  return String(raw).toLowerCase().replace(/[^a-z0-9_]/g, '_');
+};
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -11,7 +17,13 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('eduhive_user');
     if (storedUser) {
       try {
-        return JSON.parse(storedUser);
+        const parsed = JSON.parse(storedUser);
+        const uKey = getUserKey(parsed);
+        const userSpecific = localStorage.getItem(`eduhive_user_${uKey}`);
+        if (userSpecific) {
+          return { ...parsed, ...JSON.parse(userSpecific) };
+        }
+        return parsed;
       } catch (e) {
         // Fallback
       }
@@ -29,7 +41,6 @@ export const AuthProvider = ({ children }) => {
     async function checkAuthSession() {
       const storedToken = localStorage.getItem('eduhive_token');
       if (!storedToken) {
-        // Keep current session active in demo mode or set stored user
         return;
       }
 
@@ -37,12 +48,16 @@ export const AuthProvider = ({ children }) => {
         const res = await authService.getMe();
         if (isMounted && res && (res.user || res.data)) {
           const freshUser = res.user || res.data;
-          setUser(freshUser);
-          localStorage.setItem('eduhive_user', JSON.stringify(freshUser));
+          const uKey = getUserKey(freshUser);
+          const userSpecific = localStorage.getItem(`eduhive_user_${uKey}`);
+          const merged = userSpecific ? { ...freshUser, ...JSON.parse(userSpecific) } : freshUser;
+          
+          setUser(merged);
+          localStorage.setItem('eduhive_user', JSON.stringify(merged));
+          localStorage.setItem(`eduhive_user_${uKey}`, JSON.stringify(merged));
         }
       } catch (err) {
         console.warn('Backend getMe API unreachable, maintaining active session from localStorage');
-        // DO NOT log user out or delete token on network error!
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -149,6 +164,17 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Update active user profile fields and persist to localStorage
+  const updateUser = useCallback((updatedFields) => {
+    setUser(prevUser => {
+      const updatedUser = { ...(prevUser || {}), ...updatedFields };
+      const uKey = getUserKey(updatedUser);
+      localStorage.setItem('eduhive_user', JSON.stringify(updatedUser));
+      localStorage.setItem(`eduhive_user_${uKey}`, JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  }, []);
+
   const value = {
     token,
     user,
@@ -158,6 +184,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: Boolean(user)
   };
 

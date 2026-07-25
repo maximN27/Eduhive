@@ -76,7 +76,7 @@ export default function Navbar({ onMobileMenuToggle }) {
             onClick={goHome}
             className="flex items-center gap-2.5 cursor-pointer group"
           >
-            <div className="w-9 h-9 rounded-xl bg-cyan-600 shadow-lg shadow-cyan-600/30 flex items-center justify-center text-white transition-transform group-hover:scale-105">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/25 flex items-center justify-center text-white transition-transform group-hover:scale-105">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
@@ -86,17 +86,17 @@ export default function Navbar({ onMobileMenuToggle }) {
               <span className="text-xl font-extrabold tracking-tight theme-text-primary">
                 EduHive
               </span>
-              <span className="hidden sm:inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
+              <span className="hidden sm:inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                 Academic API
               </span>
             </div>
           </div>
         </div>
 
-        {/* Center: Enlarged Search Bar */}
+        {/* Center: Search Bar */}
         <div className="flex-1 max-w-2xl mx-auto flex items-center">
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-cyan-500">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-indigo-500">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -106,7 +106,7 @@ export default function Navbar({ onMobileMenuToggle }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search subjects, subtopics, people, or posts..."
-              className="w-full pl-11 pr-9 py-2.5 text-sm rounded-2xl theme-surface theme-text-primary placeholder:text-slate-400 transition-all outline-none border theme-border focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+              className="w-full pl-11 pr-9 py-2.5 text-sm rounded-2xl theme-surface theme-text-primary placeholder:text-slate-400 transition-all outline-none border theme-border focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"
             />
             {searchQuery && (
               <button
@@ -144,23 +144,23 @@ export default function Navbar({ onMobileMenuToggle }) {
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2.5 p-1.5 rounded-2xl border theme-border theme-surface hover:border-cyan-500/30 transition-all focus:outline-none group cursor-pointer"
+              className="flex items-center gap-2.5 p-1.5 rounded-2xl border theme-border theme-surface hover:border-indigo-500/30 transition-all focus:outline-none group cursor-pointer"
             >
               <img
                 src={userAvatar}
                 alt={userName}
-                className="w-9 h-9 rounded-xl object-cover ring-2 ring-cyan-500/30"
+                className="w-9 h-9 rounded-xl object-cover ring-2 ring-indigo-500/30"
               />
               
               <div className="hidden lg:flex flex-col text-left pr-1">
-                <span className="text-xs font-bold theme-text-primary leading-tight">
-                  Dr. Alice Vance
+                <span className="text-xs font-bold theme-text-primary leading-tight truncate">
+                  {userName}
                 </span>
                 <span className="text-[10px] theme-text-muted font-medium">
-                  Instructor | Senior Lecturer
+                  {userRole}
                 </span>
                 <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 mt-0.5 flex items-center gap-1">
-                  ⭐ 2500 SP
+                  ⚡ {userReputation} XP
                 </span>
               </div>
 

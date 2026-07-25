@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function CreatePostBox() {
@@ -14,6 +14,31 @@ export default function CreatePostBox() {
   const [resourceTitle, setResourceTitle] = useState('');
   const [resourceType, setResourceType] = useState('PDF Guide');
   const [resourceUrl, setResourceUrl] = useState('');
+  
+  // Local image file insertion state & ref
+  const [localImages, setLocalImages] = useState([]);
+  const fileInputRef = useRef(null);
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (ev.target?.result) {
+            setLocalImages(prev => [...prev, ev.target.result]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    // Reset file input so user can pick same file again if needed
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeLocalImage = (indexToRemove) => {
+    setLocalImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -39,6 +64,7 @@ export default function CreatePostBox() {
       tags: processedTags,
       content: content.trim(),
       codeSnippet: codeSnippet.trim(),
+      images: localImages,
       resources
     });
 
@@ -49,6 +75,7 @@ export default function CreatePostBox() {
     setResourceTitle('');
     setResourceUrl('');
     setTagInput('');
+    setLocalImages([]);
     setShowCodeInput(false);
     setShowResourceInput(false);
     setIsOpen(false);
@@ -59,16 +86,26 @@ export default function CreatePostBox() {
       {!isOpen ? (
         <div 
           onClick={() => setIsOpen(true)}
-          className="w-full border theme-border theme-surface rounded-2xl px-5 py-3.5 text-sm theme-text-muted transition-all cursor-pointer hover:border-cyan-500/50 flex items-center justify-between"
+          className="w-full border theme-border theme-surface rounded-2xl px-5 py-3.5 text-sm theme-text-muted transition-all cursor-pointer hover:border-indigo-500/40 flex items-center justify-between"
         >
           <span>Share an academic insight, question, or research paper...</span>
-          <span className="text-xs font-bold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
+          <span className="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
             + Create Post
           </span>
         </div>
       ) : (
         <div className="border theme-border theme-surface rounded-2xl p-5">
           <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in duration-150">
+            {/* Hidden File Input */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept="image/*" 
+              multiple 
+              onChange={handleImageUpload} 
+              className="hidden" 
+            />
+
             <div className="flex items-center justify-between border-b pb-3 theme-border">
               <span className="text-sm font-bold theme-text-primary">Create Academic Post</span>
               <button
@@ -135,6 +172,30 @@ export default function CreatePostBox() {
                 style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
               />
             </div>
+
+            {/* Local Image Thumbnail Preview Grid */}
+            {localImages.length > 0 && (
+              <div className="p-3 rounded-xl border space-y-2 theme-border" style={{ backgroundColor: 'var(--input-bg)' }}>
+                <span className="text-[11px] font-bold theme-text-primary block">
+                  Attached Local Images ({localImages.length})
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  {localImages.map((imgSrc, idx) => (
+                    <div key={idx} className="relative group w-20 h-20 rounded-xl overflow-hidden border theme-border shrink-0 shadow-sm">
+                      <img src={imgSrc} alt={`upload-${idx}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeLocalImage(idx)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-rose-600 transition-colors"
+                        title="Remove Image"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {showCodeInput && (
               <div>
@@ -206,8 +267,19 @@ export default function CreatePostBox() {
                   style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
                 />
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
+            ) : null}
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t theme-border">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="btn-secondary text-xs flex items-center gap-1.5"
+                >
+                  <span>📷</span>
+                  <span>Add Local Image</span>
+                </button>
+
                 {!showCodeInput && (
                   <button
                     type="button"
@@ -217,30 +289,33 @@ export default function CreatePostBox() {
                     + Add Code Snippet
                   </button>
                 )}
+
+                {!showResourceInput && (
+                  <button
+                    type="button"
+                    onClick={() => setShowResourceInput(true)}
+                    className="btn-secondary text-xs"
+                  >
+                    + Attach Resource
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowResourceInput(true)}
+                  onClick={() => setIsOpen(false)}
                   className="btn-secondary text-xs"
                 >
-                  + Attach Resource
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs"
+                >
+                  Publish Post
                 </button>
               </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t theme-border">
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="btn-secondary text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary text-xs"
-              >
-                Publish Post
-              </button>
             </div>
           </form>
         </div>

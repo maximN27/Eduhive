@@ -78,6 +78,43 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Resource'
   }],
+  customUrl: {
+    type: String,
+    default: ''
+  },
+  privacySettings: {
+    profileVisibility: { type: String, enum: ['public', 'friends', 'private'], default: 'public' },
+    activityVisible: { type: Boolean, default: true },
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  },
+  notificationSettings: {
+    emailLikes: { type: Boolean, default: true },
+    emailComments: { type: Boolean, default: true },
+    pushNotifications: { type: Boolean, default: true },
+    marketingEmails: { type: Boolean, default: false }
+  },
+  appearanceSettings: {
+    themeColor: { type: String, default: 'blue' },
+    darkMode: { type: Boolean, default: true },
+    language: { type: String, default: 'en' }
+  },
+  gamification: {
+    xp: { type: Number, default: 2500 },
+    level: { type: Number, default: 5 },
+    badges: [{ name: String, icon: String, description: String, dateEarned: Date }],
+    certificates: [{ title: String, issuer: String, date: Date, credentialUrl: String }],
+    milestones: [{ name: String, target: Number, current: Number, completed: Boolean }]
+  },
+  savedCollections: [{
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    postIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+    resourceIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Resource' }]
+  }],
+  connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  twoFactorEnabled: { type: Boolean, default: false },
   lastActiveDate: {
     type: Date,
     default: Date.now

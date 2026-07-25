@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { postService } from '../services/postService';
+import { generatePostAlignedResources } from '../services/resourceSearchService';
 import ResourceViewerModal from './ResourceViewerModal';
 
 export default function PostCard({ post }) {
-  const { toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost, navigateToPost, addSavedResource, savedResources } = useApp();
+  const { user, toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost, navigateToPost, navigateToProfile, addSavedResource, savedResources } = useApp();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -45,36 +46,56 @@ export default function PostCard({ post }) {
     }
   };
 
+  const [selectedModalImage, setSelectedModalImage] = useState(null);
+
+  const isCurrentUser = Boolean(
+    user && (
+      post.author?.name === user.name ||
+      post.author?.handle === user.handle ||
+      post.author?.id === user.id ||
+      String(post.id).startsWith('post-')
+    )
+  );
+
+  const displayAvatar = isCurrentUser && user?.avatar ? user.avatar : (post.author?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150');
+  const displayName = isCurrentUser && user?.name ? user.name : (post.author?.name || 'EduHive Scholar');
+  const displayRole = isCurrentUser && user?.role ? user.role : (post.author?.role || 'AI Research Fellow');
+
   const navigateHandler = openPost || navigateToPost;
 
   return (
-    <article className="p-4 rounded-2xl mb-4 border-b theme-border hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors duration-200 relative group">
+    <article className="theme-card p-5 rounded-2xl mb-4 border theme-border hover:shadow-md transition-all duration-200 relative group">
 
       {/* Top Header: Author & Subject Badge */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative cursor-pointer" onClick={() => navigateToProfile && navigateToProfile()}>
             <img
-              src={post.author?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
-              alt={post.author?.name}
-              className="w-10 h-10 rounded-xl object-cover ring-2 ring-cyan-500/30"
+              src={displayAvatar}
+              alt={displayName}
+              className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/30 hover:scale-105 transition-transform"
             />
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-slate-950" title="Online" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold theme-text-primary">{post.author?.name}</h3>
+              <h3 
+                onClick={() => navigateToProfile && navigateToProfile()}
+                className="text-xs font-bold theme-text-primary hover:underline cursor-pointer"
+              >
+                {displayName}
+              </h3>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 Online
               </span>
             </div>
             <p className="text-[10px] theme-text-muted font-medium mt-0.5">
-              {post.author?.role || 'AI Research Fellow'} • {post.createdAt}
+              {displayRole} • {post.createdAt}
             </p>
           </div>
         </div>
 
-        <span className="text-[11px] font-bold px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/20">
+        <span className="text-[11px] font-bold px-3 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
           {post.subjectName}
         </span>
       </div>
@@ -82,7 +103,7 @@ export default function PostCard({ post }) {
       {/* Title */}
       <h2
         onClick={() => navigateHandler && navigateHandler(post.id)}
-        className="text-lg sm:text-xl font-extrabold tracking-tight theme-text-primary leading-snug mb-2.5 cursor-pointer hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors"
+        className="text-lg sm:text-xl font-extrabold tracking-tight theme-text-primary leading-snug mb-2.5 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
       >
         {post.title}
       </h2>
@@ -91,6 +112,28 @@ export default function PostCard({ post }) {
       <div className="text-sm sm:text-base theme-text-secondary leading-relaxed whitespace-pre-line mb-3.5 font-normal">
         {post.content}
       </div>
+
+      {/* Attached Local Images Gallery */}
+      {post.images && post.images.length > 0 && (
+        <div className={`mb-3.5 grid gap-2 ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
+          {post.images.map((imgSrc, idx) => (
+            <div 
+              key={idx} 
+              onClick={() => setSelectedModalImage(imgSrc)}
+              className="relative group rounded-xl overflow-hidden border theme-border cursor-pointer aspect-video bg-black/5"
+            >
+              <img 
+                src={imgSrc} 
+                alt={`attachment-${idx}`} 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+              />
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-xs font-bold bg-black/60 px-2.5 py-1 rounded-lg">🔍 View Image</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Syntax Code Block (if present) */}
       {post.codeSnippet && (
@@ -109,34 +152,31 @@ export default function PostCard({ post }) {
 
       {/* Attachments / Resources Section */}
       {(() => {
-        const displayResources = (post.resources && post.resources.length > 0) ? post.resources : [
-          { id: `${post.id}-r1`, title: `${post.subjectName || 'Academic'} Reference Guide (PDF)`, type: 'PDF Document', size: '2.1 MB', icon: '📄', url: 'https://arxiv.org/abs/1706.03762' },
-          { id: `${post.id}-r2`, title: `${post.subjectName || 'Academic'} Code Implementation (.ipynb)`, type: 'Jupyter Notebook', size: '1.4 MB', icon: '📓', url: 'https://github.com/TheAlgorithms/Python' }
-        ];
+        const displayResources = generatePostAlignedResources(post);
 
         return (
           <div className="mb-3.5 pt-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block mb-2 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block mb-2 flex items-center justify-between">
               <span>Attached External Learning Resources ({displayResources.length})</span>
               <span className="font-mono text-[10px] theme-text-muted">Verified Study Guides</span>
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {displayResources.map(res => (
                 <div
                   key={res.id}
                   onClick={() => handleViewResource(res)}
-                  className="flex items-center gap-2 p-1.5 rounded-xl border theme-border theme-surface transition-all hover:border-cyan-500/40 group cursor-pointer"
+                  className="flex items-center gap-2.5 p-2 rounded-xl border theme-border theme-surface transition-all hover:border-indigo-500/40 group cursor-pointer shadow-2xs"
                 >
-                  <span className="text-lg p-1.5 rounded-lg bg-slate-500/10 shrink-0 text-cyan-600 dark:text-cyan-300 border theme-border">{res.icon || '📄'}</span>
+                  <span className="text-lg p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 dark:bg-slate-800 dark:text-indigo-300 dark:border-slate-700 shrink-0">{res.icon || '📄'}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold theme-text-primary truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                    <p className="text-xs font-bold theme-text-primary truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
                       {res.title}
                     </p>
                     <p className="text-[10px] theme-text-muted font-mono">
                       {res.type} • {res.size || 'External'}
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
                     View 🔗
                   </span>
                 </div>
@@ -155,7 +195,7 @@ export default function PostCard({ post }) {
             <button
               key={tag}
               onClick={() => handleSelectTag(tag)}
-              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-500/10 theme-text-secondary border theme-border hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors"
+              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
             >
               #{tag}
             </button>
@@ -169,8 +209,8 @@ export default function PostCard({ post }) {
           <button
             onClick={() => toggleUpvotePost(post.id)}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border ${post.userVoted
-              ? 'bg-cyan-500 text-white border-cyan-400 shadow-md'
-              : 'theme-surface theme-text-secondary theme-border hover:border-slate-400'
+              ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+              : 'theme-surface theme-text-secondary theme-border hover:border-indigo-400'
               }`}
           >
             <svg className="w-3.5 h-3.5" fill={post.userVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -283,6 +323,24 @@ export default function PostCard({ post }) {
         }}
         isSaved={selectedResource && savedResources.some(sr => sr.id === selectedResource.id)}
       />
+
+      {/* Lightbox Modal for Full-Size Image Preview */}
+      {selectedModalImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setSelectedModalImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
+            <img src={selectedModalImage} alt="Fullscreen Attachment" className="max-w-full max-h-[85vh] object-contain rounded-2xl" />
+            <button
+              onClick={() => setSelectedModalImage(null)}
+              className="absolute top-3 right-3 bg-black/60 text-white w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs hover:bg-rose-600 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
     </article>
   );

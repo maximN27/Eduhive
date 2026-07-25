@@ -13,21 +13,17 @@ import EduHiveLogo from './components/EduHiveLogo';
 function MainRouter() {
   const { activePostId, currentView, isSettingsOpen, setIsSettingsOpen } = useApp();
   
+  let pageContent = <Home />;
+  if (currentView === 'profile') {
+    pageContent = <ProfilePage />;
+  } else if (activePostId) {
+    pageContent = <PostPage />;
+  }
+
   return (
     <>
-      {currentView === 'profile' ? (
-        <ProfilePage />
-      ) : activePostId ? (
-        <PostPage />
-      ) : (
-        <Home />
-      )}
-
-      {/* Global Settings & Appearance Modal */}
-      <SettingsModal 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      {pageContent}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </>
   );
 }

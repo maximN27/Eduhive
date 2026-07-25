@@ -79,7 +79,7 @@ app.use('/api/ai-learning', aiLearningRoutes);
 
 // Health Check Route
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'EduHive API Server is running' });
+  res.status(200).json({ status: 'ok' });
 });
 
 // Root Route

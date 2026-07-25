@@ -44,7 +44,7 @@ export default function RightSidebar() {
       <div className="space-y-2">
         <div className="flex items-center justify-between pb-2 border-b theme-border">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-cyan-500">📁</span>
+            <span className="text-sm text-indigo-500">📁</span>
             <h2 className="text-xs font-extrabold tracking-wider uppercase theme-text-secondary">
               Saved Resources
             </h2>
