@@ -15,6 +15,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const voteRoutes = require('./routes/voteRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const aiLearningRoutes = require('./routes/aiLearningRoutes');
+const suggestionRoutes = require('./routes/suggestionRoutes');
 
 const notFoundMiddleware = require('./middleware/notFoundMiddleware');
 const errorMiddleware = require('./middleware/errorMiddleware');
@@ -76,6 +77,8 @@ app.use('/api/search', searchRoutes);
 
 app.use('/ai-learning', aiLearningRoutes);
 app.use('/api/ai-learning', aiLearningRoutes);
+
+app.use('/api', suggestionRoutes);
 
 // Health Check Route
 app.get('/health', (req, res) => {
