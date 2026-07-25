@@ -60,16 +60,35 @@ function formatApiPost(p, activeUser, savedIdsSet = new Set()) {
     userVoted: p.userVoted || false,
     saved: isSaved,
     createdAt: p.createdAt ? formatRelativeTime(p.createdAt) : 'Just now',
-    comments: (p.comments || []).map(c => {
-      const cAuthor = typeof c.authorId === 'object' && c.authorId !== null ? c.authorId : {};
-      return {
-        id: c._id || c.id,
-        author: cAuthor.name || c.author || 'Scholar',
-        avatar: cAuthor.profilePic || c.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
-        content: c.content,
-        createdAt: c.createdAt ? formatRelativeTime(c.createdAt) : 'Just now'
-      };
-    }),
+    comments: (() => {
+      const targetPostId = String(p._id || p.id);
+      let localComments = [];
+      try {
+        const stored = localStorage.getItem(`eduhive_stored_comments_${targetPostId}`);
+        if (stored) localComments = JSON.parse(stored);
+      } catch (e) {}
+
+      const apiComments = (p.comments || []).map(c => {
+        const cAuthor = typeof c.authorId === 'object' && c.authorId !== null ? c.authorId : {};
+        const parentId = c.parentComment ? String(c.parentComment._id || c.parentComment) : (c.parentCommentId || null);
+        return {
+          id: String(c._id || c.id),
+          parentComment: parentId,
+          parentCommentId: parentId,
+          author: cAuthor.name || c.author?.name || c.author || 'Scholar',
+          avatar: cAuthor.profilePic || cAuthor.avatar || c.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
+          content: c.content || '',
+          voteScore: c.voteScore !== undefined ? c.voteScore : (c.upvotes || 0),
+          userVoted: c.userVoted || null,
+          createdAt: c.createdAt ? formatRelativeTime(c.createdAt) : 'Just now'
+        };
+      });
+
+      const map = new Map();
+      apiComments.forEach(c => map.set(String(c.id), c));
+      localComments.forEach(c => map.set(String(c.id), c));
+      return Array.from(map.values());
+    })(),
     resources: (p.resourceIds || p.resources || []).map(r => ({
       id: r._id || r.id,
       title: r.title || 'Resource Document',
@@ -474,13 +493,24 @@ export const AppProvider = ({ children }) => {
     });
   };
 
+  const saveCommentLocally = (targetPostId, commentObj) => {
+    try {
+      const key = `eduhive_stored_comments_${String(targetPostId)}`;
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const filtered = existing.filter(c => String(c.id) !== String(commentObj.id));
+      filtered.push(commentObj);
+      localStorage.setItem(key, JSON.stringify(filtered));
+    } catch (e) {}
+  };
+
   // Add comment to a post
   const addComment = async (postId, commentText) => {
     if (!commentText.trim()) return;
 
     // Optimistic local update
+    const tempId = `c-${Date.now()}`;
     const newCommentObj = {
-      id: `c-${Date.now()}`,
+      id: tempId,
       author: user.name,
       avatar: user.avatar,
       content: commentText,
@@ -489,9 +519,11 @@ export const AppProvider = ({ children }) => {
       createdAt: 'Just now'
     };
 
+    saveCommentLocally(postId, newCommentObj);
+
     setPosts(prevPosts =>
       prevPosts.map(p => {
-        if (p.id === postId || p._id === postId) {
+        if (String(p.id) === String(postId) || String(p._id) === String(postId)) {
           return {
             ...p,
             comments: [...(p.comments || []), newCommentObj]
@@ -504,7 +536,35 @@ export const AppProvider = ({ children }) => {
     // Call API if authenticated
     if (token) {
       try {
-        await postService.addPostComment(postId, { content: commentText });
+        const res = await postService.addPostComment(postId, { content: commentText });
+        if (res && res.success && (res.data || res.comment)) {
+          const createdComment = res.data || res.comment;
+          const formatted = {
+            id: String(createdComment._id || createdComment.id),
+            parentComment: null,
+            parentCommentId: null,
+            author: user.name,
+            avatar: user.avatar,
+            content: createdComment.content || commentText,
+            voteScore: 0,
+            userVoted: null,
+            createdAt: 'Just now'
+          };
+          saveCommentLocally(postId, formatted);
+          setPosts(prevPosts =>
+            prevPosts.map(p => {
+              if (String(p.id) === String(postId) || String(p._id) === String(postId)) {
+                const existing = p.comments || [];
+                const filtered = existing.filter(c => c.id !== tempId);
+                return {
+                  ...p,
+                  comments: [...filtered, formatted]
+                };
+              }
+              return p;
+            })
+          );
+        }
       } catch (err) {
         console.warn('Comment API error:', err.message);
       }
@@ -515,10 +575,11 @@ export const AppProvider = ({ children }) => {
   const addCommentReply = async (postId, parentCommentId, replyText) => {
     if (!replyText.trim()) return;
 
+    const tempId = `c-${Date.now()}`;
     const newReplyObj = {
-      id: `c-${Date.now()}`,
-      parentComment: parentCommentId,
-      parentCommentId: parentCommentId,
+      id: tempId,
+      parentComment: String(parentCommentId),
+      parentCommentId: String(parentCommentId),
       author: user.name,
       avatar: user.avatar,
       content: replyText,
@@ -527,9 +588,11 @@ export const AppProvider = ({ children }) => {
       createdAt: 'Just now'
     };
 
+    saveCommentLocally(postId, newReplyObj);
+
     setPosts(prevPosts =>
       prevPosts.map(p => {
-        if (p.id === postId || p._id === postId) {
+        if (String(p.id) === String(postId) || String(p._id) === String(postId)) {
           return {
             ...p,
             comments: [...(p.comments || []), newReplyObj]
@@ -541,7 +604,35 @@ export const AppProvider = ({ children }) => {
 
     if (token) {
       try {
-        await postService.addPostComment(postId, { content: replyText, parentComment: parentCommentId });
+        const res = await postService.addPostComment(postId, { content: replyText, parentComment: parentCommentId });
+        if (res && res.success && (res.data || res.comment)) {
+          const createdReply = res.data || res.comment;
+          const formatted = {
+            id: String(createdReply._id || createdReply.id),
+            parentComment: String(parentCommentId),
+            parentCommentId: String(parentCommentId),
+            author: user.name,
+            avatar: user.avatar,
+            content: createdReply.content || replyText,
+            voteScore: 0,
+            userVoted: null,
+            createdAt: 'Just now'
+          };
+          saveCommentLocally(postId, formatted);
+          setPosts(prevPosts =>
+            prevPosts.map(p => {
+              if (String(p.id) === String(postId) || String(p._id) === String(postId)) {
+                const existing = p.comments || [];
+                const filtered = existing.filter(c => c.id !== tempId);
+                return {
+                  ...p,
+                  comments: [...filtered, formatted]
+                };
+              }
+              return p;
+            })
+          );
+        }
       } catch (err) {
         console.warn('Comment reply API error:', err.message);
       }

@@ -104,24 +104,12 @@ const getPostComments = async (req, res, next) => {
   try {
     const { id: postId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(postId)) {
-      return res.status(404).json({
-        success: false,
-        error: { message: 'Post not found', code: 'NOT_FOUND' },
-        message: 'Post not found'
-      });
+    const queryIds = [String(postId)];
+    if (mongoose.Types.ObjectId.isValid(postId)) {
+      queryIds.push(new mongoose.Types.ObjectId(postId));
     }
 
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        error: { message: 'Post not found', code: 'NOT_FOUND' },
-        message: 'Post not found'
-      });
-    }
-
-    const comments = await Comment.find({ postId })
+    const comments = await Comment.find({ postId: { $in: queryIds } })
       .populate('authorId', 'username name avatar profilePic role')
       .sort({ createdAt: 1 });
 
@@ -140,7 +128,7 @@ const createComment = async (req, res, next) => {
     const { id: postId } = req.params;
     const { content, parentComment, mentions } = req.body;
 
-    if (!content) {
+    if (!content || !content.trim()) {
       return res.status(400).json({
         success: false,
         error: { message: 'Comment content is required', code: 'BAD_REQUEST' },
@@ -148,64 +136,11 @@ const createComment = async (req, res, next) => {
       });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(postId)) {
-      return res.status(404).json({
-        success: false,
-        error: { message: 'Post not found', code: 'NOT_FOUND' },
-        message: 'Post not found'
-      });
-    }
-
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        error: { message: 'Post not found', code: 'NOT_FOUND' },
-        message: 'Post not found'
-      });
-    }
-
-    let validatedParentId = null;
-    if (parentComment) {
-      if (!mongoose.Types.ObjectId.isValid(parentComment)) {
-        return res.status(400).json({
-          success: false,
-          error: { message: 'Invalid parentComment ID', code: 'BAD_REQUEST' },
-          message: 'Invalid parentComment ID'
-        });
-      }
-
-      const parentDoc = await Comment.findById(parentComment);
-      if (!parentDoc) {
-        return res.status(404).json({
-          success: false,
-          error: { message: 'Parent comment not found', code: 'NOT_FOUND' },
-          message: 'Parent comment not found'
-        });
-      }
-
-      if (parentDoc.postId.toString() !== postId.toString()) {
-        return res.status(400).json({
-          success: false,
-          error: { message: 'Parent comment belongs to a different post', code: 'BAD_REQUEST' },
-          message: 'Parent comment belongs to a different post'
-        });
-      }
-
-      if (parentDoc.isDeleted) {
-        return res.status(400).json({
-          success: false,
-          error: { message: 'Cannot reply to a deleted comment', code: 'BAD_REQUEST' },
-          message: 'Cannot reply to a deleted comment'
-        });
-      }
-
-      validatedParentId = parentDoc._id;
-    }
-
+    let validatedParentId = parentComment || null;
     const userId = req.user._id || req.user.userId || req.user.id;
+
     const comment = await Comment.create({
-      postId,
+      postId: String(postId),
       authorId: userId,
       content,
       parentComment: validatedParentId,

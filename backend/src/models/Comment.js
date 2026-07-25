@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema({
   postId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Post',
+    type: mongoose.Schema.Types.Mixed,
     required: true
   },
   authorId: {
@@ -20,8 +19,7 @@ const commentSchema = new mongoose.Schema({
     default: 0
   },
   parentComment: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Comment',
+    type: mongoose.Schema.Types.Mixed,
     default: null
   },
   mentions: [{

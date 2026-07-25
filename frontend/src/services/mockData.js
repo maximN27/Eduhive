@@ -108,36 +108,7 @@ Key highlights include:
     userVoted: postNum % 3 === 0,
     saved: postNum % 4 === 0,
     createdAt: `${(postNum % 18) + 1}h ago`,
-    comments: [
-      {
-        id: `c-${postNum}-1`,
-        author: 'Dr. Alice Vance',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-        content: `Excellent exposition on ${sub.name}! The theoretical derivation step in section 2 clarifies previous boundary edge cases.`,
-        createdAt: '1h ago'
-      },
-      {
-        id: `c-${postNum}-2`,
-        author: 'Dr. Aris Thorne',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-        content: `Have you considered benchmarking this against modern parallelization techniques? The memory layout would benefit from SIMD vector alignment.`,
-        createdAt: '45m ago'
-      },
-      {
-        id: `c-${postNum}-3`,
-        author: 'Marcus Chen',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        content: `We tested a similar formulation in production for ${sub.name} last week. Reducing allocation overhead boosted throughput by ~18%!`,
-        createdAt: '30m ago'
-      },
-      {
-        id: `c-${postNum}-4`,
-        author: 'Elena Rostova',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150',
-        content: `Could you share the attached Jupyter notebook link? I want to replicate the parameter sensitivity experiments.`,
-        createdAt: '15m ago'
-      }
-    ],
+    comments: [],
     resources: [
       {
         id: `r-${postNum}-1`,

@@ -92,12 +92,7 @@ export default function PostPage() {
 
   const postResources = generatePostAlignedResources(activePost);
 
-  const postComments = (activePost.comments && activePost.comments.length > 0)
-    ? activePost.comments
-    : [
-        { id: `${activePost.id}-c1`, author: 'Dr. Alice Vance', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150', content: `Great discussion on ${activePost.subjectName}! The derivation step in section 2 clarifies previous boundary edge cases.`, createdAt: '45m ago' },
-        { id: `${activePost.id}-c2`, author: 'Dr. Aris Thorne', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', content: `Benchmarking this against hardware vectorization shows memory layout gains from SIMD alignment.`, createdAt: '20m ago' }
-      ];
+  const postComments = activePost?.comments || [];
 
   const isAuthor = Boolean(
     user && activePost && (
@@ -355,9 +350,7 @@ export default function PostPage() {
               {/* Comments List */}
               <div className="space-y-2">
                 {(() => {
-                  const allComments = (activePost.comments && activePost.comments.length > 0)
-                    ? activePost.comments
-                    : postComments;
+                  const allComments = activePost?.comments || [];
                   const rootComments = allComments.filter(c => !c.parentComment && !c.parentCommentId);
 
                   if (rootComments.length === 0) {

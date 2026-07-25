@@ -35,16 +35,30 @@ const getPosts = async (req, res, next) => {
       .populate('subjectId', 'name description tags')
       .populate('authorId', 'name username avatar profilePic role')
       .populate('resourceIds')
-      .populate('resourceIds')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum);
 
+    // Attach comments for each post from MongoDB Comment collection
+    const postsWithComments = await Promise.all(
+      posts.map(async (postDoc) => {
+        const postObj = postDoc.toObject();
+        const queryIds = [postDoc._id, String(postDoc._id)];
+        if (postDoc.id) queryIds.push(String(postDoc.id));
+
+        const comments = await Comment.find({ postId: { $in: queryIds } })
+          .populate('authorId', 'name username avatar profilePic role')
+          .sort({ createdAt: 1 });
+        postObj.comments = comments;
+        return postObj;
+      })
+    );
+
     res.status(200).json({
       success: true,
-      count: posts.length,
-      data: posts,
-      posts,
+      count: postsWithComments.length,
+      data: postsWithComments,
+      posts: postsWithComments,
       pagination: {
         total,
         page: pageNum,
@@ -74,7 +88,6 @@ const getPostById = async (req, res, next) => {
     const post = await Post.findById(req.params.id)
       .populate('subjectId', 'name description tags')
       .populate('authorId', 'name username avatar profilePic bio college role')
-      .populate('resourceIds')
       .populate('resourceIds');
 
     if (!post) {
@@ -85,7 +98,14 @@ const getPostById = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({ success: true, data: post, post });
+    const postObj = post.toObject();
+    const queryIds = [post._id, String(post._id), req.params.id];
+    const comments = await Comment.find({ postId: { $in: queryIds } })
+      .populate('authorId', 'name username avatar profilePic role')
+      .sort({ createdAt: 1 });
+    postObj.comments = comments;
+
+    res.status(200).json({ success: true, data: postObj, post: postObj });
   } catch (error) {
     if (next) next(error);
     else res.status(500).json({ success: false, message: error.message });
