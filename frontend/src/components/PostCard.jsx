@@ -5,7 +5,7 @@ import { generatePostAlignedResources } from '../services/resourceSearchService'
 import ResourceViewerModal from './ResourceViewerModal';
 
 export default function PostCard({ post }) {
-  const { user, toggleUpvotePost, toggleSavePost, addComment, handleSelectTag, openPost, navigateToPost, navigateToProfile, addSavedResource, savedResources } = useApp();
+  const { user, toggleUpvotePost, toggleSavePost, deletePost, addComment, handleSelectTag, openPost, navigateToPost, navigateToProfile, addSavedResource, savedResources } = useApp();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -95,15 +95,33 @@ export default function PostCard({ post }) {
           </div>
         </div>
 
-        <span className="text-[11px] font-bold px-3 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-          {post.subjectName}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold px-3 py-1 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+            {post.subjectName}
+          </span>
+          {isCurrentUser && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm('Are you sure you want to delete this post?')) {
+                  deletePost && deletePost(post.id);
+                }
+              }}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+              title="Delete Post"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title */}
       <h2
         onClick={() => navigateHandler && navigateHandler(post.id)}
-        className="text-lg sm:text-xl font-extrabold tracking-tight theme-text-primary leading-snug mb-2.5 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+        className="text-lg sm:text-xl font-extrabold tracking-tight theme-text-primary leading-snug mb-2.5 cursor-pointer hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
       >
         {post.title}
       </h2>
@@ -137,54 +155,50 @@ export default function PostCard({ post }) {
 
       {/* Syntax Code Block (if present) */}
       {post.codeSnippet && (
-        <div className="mb-3.5 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-800 text-[10px] font-mono text-cyan-400">
+        <div className="mb-3.5 rounded-xl border theme-border theme-surface overflow-hidden shadow-inner">
+          <div className="flex items-center justify-between px-3 py-1.5 border-b theme-border text-[10px] font-mono text-purple-600 dark:text-purple-400">
             <span>Code Snippet</span>
-            <button onClick={handleCopyCode} className="hover:text-white transition-colors">
+            <button onClick={handleCopyCode} className="hover:theme-text-primary transition-colors">
               {codeCopied ? 'Copied!' : 'Copy Code'}
             </button>
           </div>
-          <pre className="p-3 text-xs font-mono overflow-x-auto text-cyan-300 leading-relaxed custom-scrollbar">
+          <pre className="p-3 text-xs font-mono overflow-x-auto text-purple-600 dark:text-purple-300 leading-relaxed custom-scrollbar">
             <code>{post.codeSnippet}</code>
           </pre>
         </div>
       )}
 
-      {/* Attachments / Resources Section */}
-      {(() => {
-        const displayResources = generatePostAlignedResources(post);
-
-        return (
-          <div className="mb-3.5 pt-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block mb-2 flex items-center justify-between">
-              <span>Attached External Learning Resources ({displayResources.length})</span>
-              <span className="font-mono text-[10px] theme-text-muted">Verified Study Guides</span>
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {displayResources.map(res => (
-                <div
-                  key={res.id}
-                  onClick={() => handleViewResource(res)}
-                  className="flex items-center gap-2.5 p-2 rounded-xl border theme-border theme-surface transition-all hover:border-indigo-500/40 group cursor-pointer shadow-2xs"
-                >
-                  <span className="text-lg p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 dark:bg-slate-800 dark:text-indigo-300 dark:border-slate-700 shrink-0">{res.icon || '📄'}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold theme-text-primary truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-                      {res.title}
-                    </p>
-                    <p className="text-[10px] theme-text-muted font-mono">
-                      {res.type} • {res.size || 'External'}
-                    </p>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                    View 🔗
-                  </span>
+      {/* Attachments / Resources Section - ONLY if user attached resources */}
+      {post.resources && post.resources.length > 0 && (
+        <div className="mb-3.5 pt-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block mb-2 flex items-center justify-between">
+            <span>Attached External Learning Resources ({post.resources.length})</span>
+            <span className="font-mono text-[10px] theme-text-muted">Verified Study Guides</span>
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {post.resources.map(res => (
+              <div
+                key={res.id}
+                onClick={() => handleViewResource(res)}
+                className="flex items-center gap-2.5 p-2 rounded-xl border theme-border theme-surface transition-all hover:border-purple-500/40 group cursor-pointer shadow-2xs"
+              >
+                <span className="text-lg p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 dark:bg-slate-800 dark:text-purple-300 dark:border-slate-700 shrink-0">{res.icon || '📄'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold theme-text-primary truncate group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+                    {res.title}
+                  </p>
+                  <p className="text-[10px] theme-text-muted font-mono">
+                    {res.type} • {res.size || 'External'}
+                  </p>
                 </div>
-              ))}
-            </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                  View 🔗
+                </span>
+              </div>
+            ))}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* Bottom Row: Tags on Left, Actions on Right */}
       <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
@@ -195,7 +209,7 @@ export default function PostCard({ post }) {
             <button
               key={tag}
               onClick={() => handleSelectTag(tag)}
-              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
             >
               #{tag}
             </button>
@@ -209,8 +223,8 @@ export default function PostCard({ post }) {
           <button
             onClick={() => toggleUpvotePost(post.id)}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border ${post.userVoted
-              ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-              : 'theme-surface theme-text-secondary theme-border hover:border-indigo-400'
+              ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
+              : 'theme-surface theme-text-secondary theme-border hover:border-purple-400'
               }`}
           >
             <svg className="w-3.5 h-3.5" fill={post.userVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">

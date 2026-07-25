@@ -3,6 +3,7 @@ const Subject = require('../models/Subject');
 const Comment = require('../models/Comment');
 const Resource = require('../models/Resource');
 const Vote = require('../models/Vote');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 const aiServiceClient = require('../services/aiServiceClient');
 
@@ -437,12 +438,57 @@ const summarizePostHandler = async (req, res, next) => {
   }
 };
 
+// @desc    Toggle saving a post for the authenticated user
+// @route   POST /api/posts/:id/save
+// @access  Private
+const toggleSavePost = async (req, res, next) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.user._id || req.user.userId || req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const postExists = await Post.findById(postId);
+    if (!postExists) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    user.savedPosts = user.savedPosts || [];
+    const isSavedIndex = user.savedPosts.findIndex(sp => sp.toString() === postId.toString());
+
+    let isSaved = false;
+    if (isSavedIndex > -1) {
+      user.savedPosts.splice(isSavedIndex, 1);
+      isSaved = false;
+    } else {
+      user.savedPosts.push(postId);
+      isSaved = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      saved: isSaved,
+      savedPosts: user.savedPosts,
+      message: isSaved ? 'Post saved to collection' : 'Post removed from saved collection'
+    });
+  } catch (error) {
+    if (next) next(error);
+    else res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getPosts,
   getPostById,
   createPost,
   updatePost,
   deletePost,
+  toggleSavePost,
   getPostComments,
   addPostComment,
   getPostResources,

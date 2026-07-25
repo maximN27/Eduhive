@@ -34,6 +34,11 @@ export const postService = {
     return await apiRequest(`/posts/${id}`, 'DELETE');
   },
 
+  // Toggle saving a post
+  toggleSavePost: async (id) => {
+    return await apiRequest(`/posts/${id}/save`, 'POST');
+  },
+
   // Get comments for a post
   getPostComments: async (id) => {
     return await apiRequest(`/posts/${id}/comments`, 'GET');

@@ -6,6 +6,7 @@ const {
   createPost,
   updatePost,
   deletePost,
+  toggleSavePost,
   getPostResources,
   addPostResource,
   summarizePostHandler
@@ -25,6 +26,7 @@ router.route('/:id')
   .put(protect, updatePost)
   .delete(protect, deletePost);
 
+router.post('/:id/save', protect, toggleSavePost);
 router.post('/:id/summarize', protect, summarizePostHandler);
 
 router.route('/:id/comments')

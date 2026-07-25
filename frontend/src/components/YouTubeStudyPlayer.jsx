@@ -400,14 +400,14 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
           <div>
             <h3 className="text-sm font-extrabold theme-text-primary flex items-center gap-2">
               <span>YouTube</span>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
+              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/30">
                 {subject}
               </span>
             </h3>
           </div>
         </div>
 
-        <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-bold hidden sm:inline-block px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+        <span className="text-[11px] font-mono text-purple-600 dark:text-purple-400 font-bold hidden sm:inline-block px-3 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30">
           5 Aligned Study Tags
         </span>
       </div>
@@ -416,7 +416,7 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
       <div className="space-y-1.5">
         <span className="text-[10px] font-bold uppercase tracking-wider theme-text-muted block flex items-center justify-between">
           <span>Aligned Lecture Tags for this Post:</span>
-          {loadingLive && <span className="text-cyan-500 animate-pulse font-mono">Fetching YouTube API...</span>}
+          {loadingLive && <span className="text-purple-500 animate-pulse font-mono">Fetching YouTube API...</span>}
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {postTagsList.map((tag) => {
@@ -427,15 +427,15 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
                 onClick={() => setSelectedTagId(tag.id)}
                 className={`p-2.5 rounded-2xl text-left transition-all border cursor-pointer flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border-cyan-500/50 shadow-md font-bold'
-                    : 'theme-surface theme-text-secondary border theme-border hover:border-cyan-500/30'
+                    ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/50 shadow-md font-bold'
+                    : 'theme-surface theme-text-secondary border theme-border hover:border-purple-500/30'
                 }`}
               >
                 <span className="text-xs font-bold leading-tight block mb-1">
                   {tag.label}
                 </span>
                 <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded w-fit ${
-                  isSelected ? 'bg-cyan-600 text-white' : 'bg-slate-500/10 theme-text-muted'
+                  isSelected ? 'bg-purple-600 text-white' : 'bg-slate-500/10 theme-text-muted'
                 }`}>
                   {tag.badge}
                 </span>
@@ -462,7 +462,7 @@ export default function YouTubeStudyPlayer({ initialTopic = 'Computer Science', 
       <div className="p-4 rounded-2xl theme-surface border theme-border flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/30">
               {displayBadge}
             </span>
             <span className="text-xs font-bold theme-text-secondary">{displayChannel}</span>

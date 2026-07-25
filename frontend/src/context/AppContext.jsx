@@ -35,9 +35,11 @@ function formatRelativeTime(dateString) {
 }
 
 // Format API post data for UI components
-function formatApiPost(p, activeUser) {
+function formatApiPost(p, activeUser, savedIdsSet = new Set()) {
   const authorObj = typeof p.authorId === 'object' && p.authorId !== null ? p.authorId : {};
   const subjectObj = typeof p.subjectId === 'object' && p.subjectId !== null ? p.subjectId : {};
+  const postId = String(p._id || p.id);
+  const isSaved = p.saved || savedIdsSet.has(postId);
 
   return {
     id: p._id || p.id,
@@ -56,7 +58,7 @@ function formatApiPost(p, activeUser) {
     codeSnippet: p.codeSnippet || '',
     upvotes: p.voteScore !== undefined ? p.voteScore : (p.upvotes || 0),
     userVoted: p.userVoted || false,
-    saved: p.saved || false,
+    saved: isSaved,
     createdAt: p.createdAt ? formatRelativeTime(p.createdAt) : 'Just now',
     comments: (p.comments || []).map(c => {
       const cAuthor = typeof c.authorId === 'object' && c.authorId !== null ? c.authorId : {};
@@ -138,6 +140,27 @@ export const AppProvider = ({ children }) => {
   const [savedResources, setSavedResources] = useState(INITIAL_SAVED_RESOURCES);
   const [notifications, setNotifications] = useState([]);
 
+  // Saved Post IDs state persisted in LocalStorage & MongoDB
+  const [savedPostIds, setSavedPostIds] = useState(() => {
+    try {
+      const uKey = user?.id || user?.username || 'user';
+      const stored = localStorage.getItem(`eduhive_saved_posts_${uKey}`) || localStorage.getItem('eduhive_saved_posts');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed.map(String);
+      }
+    } catch (e) {}
+    return (user?.savedPosts || []).map(sp => String(sp._id || sp.id || sp));
+  });
+
+  // Sync user.savedPosts from backend profile into savedPostIds state
+  useEffect(() => {
+    if (user?.savedPosts && Array.isArray(user.savedPosts) && user.savedPosts.length > 0) {
+      const dbIds = user.savedPosts.map(sp => String(sp._id || sp.id || sp)).filter(Boolean);
+      setSavedPostIds(prev => Array.from(new Set([...prev, ...dbIds])));
+    }
+  }, [user]);
+
   // Auth Modals & Layout UI States
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
@@ -198,7 +221,8 @@ export const AppProvider = ({ children }) => {
 
       const res = await postService.getPosts(params);
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        const formatted = res.data.map(p => formatApiPost(p, user));
+        const idsSet = new Set(savedPostIds.map(String));
+        const formatted = res.data.map(p => formatApiPost(p, user, idsSet));
         setPosts(formatted);
         setApiOnline(true);
       } else {
@@ -210,7 +234,7 @@ export const AppProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [activeSubject, activeTag, searchQuery, user]);
+  }, [activeSubject, activeTag, searchQuery, user, savedPostIds]);
 
   // Initial Data Load
   useEffect(() => {
@@ -291,12 +315,72 @@ export const AppProvider = ({ children }) => {
   };
 
   // Toggle saving a post
-  const toggleSavePost = (postId) => {
+  const toggleSavePost = async (postId) => {
+    const targetIdStr = String(postId);
+    const isAlreadySaved = savedPostIds.includes(targetIdStr);
+    const updatedIds = isAlreadySaved
+      ? savedPostIds.filter(id => id !== targetIdStr)
+      : [...savedPostIds, targetIdStr];
+
+    setSavedPostIds(updatedIds);
+
+    // Save to LocalStorage
+    try {
+      const uKey = user?.id || user?.username || 'user';
+      localStorage.setItem(`eduhive_saved_posts_${uKey}`, JSON.stringify(updatedIds));
+      localStorage.setItem('eduhive_saved_posts', JSON.stringify(updatedIds));
+    } catch (e) {}
+
+    // Update posts state to reflect toggle
     setPosts(prevPosts =>
-      prevPosts.map(p =>
-        p.id === postId ? { ...p, saved: !p.saved } : p
-      )
+      prevPosts.map(p => {
+        if (String(p.id) === targetIdStr || String(p._id) === targetIdStr) {
+          return { ...p, saved: !isAlreadySaved };
+        }
+        return p;
+      })
     );
+
+    // Call API if token is present
+    if (token) {
+      try {
+        await postService.toggleSavePost(postId);
+      } catch (err) {
+        console.warn('Save post API error:', err.message);
+      }
+    }
+  };
+
+  // Delete a post
+  const deletePost = async (postId) => {
+    const targetIdStr = String(postId);
+
+    // Optimistically update posts state
+    setPosts(prevPosts => prevPosts.filter(p => String(p.id) !== targetIdStr && String(p._id) !== targetIdStr));
+
+    if (activePostId && String(activePostId) === targetIdStr) {
+      goHome();
+    }
+
+    // Clean up local custom posts
+    try {
+      const uKey = user?.id || user?.username || 'user';
+      const c1 = JSON.parse(localStorage.getItem('eduhive_custom_posts') || '[]');
+      const c2 = JSON.parse(localStorage.getItem(`eduhive_custom_posts_${uKey}`) || '[]');
+      const f1 = c1.filter(p => String(p.id) !== targetIdStr && String(p._id) !== targetIdStr);
+      const f2 = c2.filter(p => String(p.id) !== targetIdStr && String(p._id) !== targetIdStr);
+      localStorage.setItem('eduhive_custom_posts', JSON.stringify(f1));
+      localStorage.setItem(`eduhive_custom_posts_${uKey}`, JSON.stringify(f2));
+    } catch (e) {}
+
+    // Call API if token is present
+    if (token) {
+      try {
+        await postService.deletePost(postId);
+      } catch (err) {
+        console.warn('Delete post API error:', err.message);
+      }
+    }
   };
 
   // Toggle upvoting a post
@@ -519,8 +603,9 @@ export const AppProvider = ({ children }) => {
 
   // Derived Saved Posts List
   const savedPosts = useMemo(() => {
-    return posts.filter(p => p.saved);
-  }, [posts]);
+    const idsSet = new Set(savedPostIds.map(String));
+    return posts.filter(p => p.saved || idsSet.has(String(p.id)) || idsSet.has(String(p._id)));
+  }, [posts, savedPostIds]);
 
   // Derived Active Post
   const activePost = useMemo(() => {
@@ -583,6 +668,7 @@ export const AppProvider = ({ children }) => {
         setSearchQuery,
         clearFilters,
         toggleSavePost,
+        deletePost,
         toggleUpvotePost,
         addPost,
         addComment,

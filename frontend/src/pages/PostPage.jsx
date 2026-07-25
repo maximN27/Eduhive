@@ -13,6 +13,8 @@ export default function PostPage() {
     goHome,
     toggleUpvotePost,
     toggleSavePost,
+    deletePost,
+    user,
     addComment,
     handleSelectTag,
     addSavedResource,
@@ -88,9 +90,9 @@ export default function PostPage() {
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={goHome}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl theme-surface hover:border-cyan-500/40 theme-text-primary border theme-border text-xs font-semibold transition-all group shadow-md"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl theme-surface hover:border-purple-500/40 theme-text-primary border theme-border text-xs font-semibold transition-all group shadow-md"
               >
-                <svg className="w-4 h-4 text-cyan-500 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-purple-500 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 <span>Back to Home Feed</span>
@@ -110,14 +112,14 @@ export default function PostPage() {
                   <img
                     src={activePost.author?.avatar || activePost.author?.profilePic || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
                     alt={activePost.author?.name || activePost.author?.username || 'Author'}
-                    className="w-12 h-12 rounded-2xl object-cover ring-2 ring-cyan-500/30"
+                    className="w-12 h-12 rounded-2xl object-cover ring-2 ring-purple-500/30"
                   />
                   <div>
                     <div className="flex items-center gap-2">
                       <h1 className="text-sm font-bold theme-text-primary">{activePost.author?.name || activePost.author?.username || 'Scholar'}</h1>
                       <span className="text-xs theme-text-muted font-mono">{activePost.author?.handle || (activePost.author?.username ? `@${activePost.author.username}` : '@scholar')}</span>
                     </div>
-                    <p className="text-xs font-medium mt-0.5 text-cyan-600 dark:text-cyan-400">{activePost.author?.role || 'Student'}</p>
+                    <p className="text-xs font-medium mt-0.5 text-purple-600 dark:text-purple-400">{activePost.author?.role || 'Student'}</p>
                   </div>
                 </div>
 
@@ -128,14 +130,14 @@ export default function PostPage() {
 
               {/* Badges: Subject & Tags */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/20">
+                <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
                   {activePost.subjectName}
                 </span>
                 {activePost.tags.map(tag => (
                   <button
                     key={tag}
                     onClick={() => handleSelectTag(tag)}
-                    className="text-xs font-mono px-2.5 py-0.5 rounded-lg theme-surface theme-text-secondary hover:text-cyan-600 dark:hover:text-cyan-300 transition-colors border theme-border"
+                    className="text-xs font-mono px-2.5 py-0.5 rounded-lg theme-surface theme-text-secondary hover:text-purple-600 dark:hover:text-purple-300 transition-colors border theme-border"
                   >
                     #{tag}
                   </button>
@@ -154,49 +156,51 @@ export default function PostPage() {
 
               {/* Code Snippet (if present) */}
               {activePost.codeSnippet && (
-                <div className="mb-6 rounded-2xl bg-slate-900 border border-slate-700/80 overflow-hidden shadow-inner">
-                  <div className="flex items-center justify-between px-4 py-2 bg-slate-800/90 border-b border-slate-700/80 text-xs font-mono text-cyan-400">
+                <div className="mb-6 rounded-2xl theme-surface border theme-border overflow-hidden shadow-inner">
+                  <div className="flex items-center justify-between px-4 py-2 border-b theme-border text-xs font-mono text-purple-600 dark:text-purple-400">
                     <span>Code Snippet</span>
-                    <span className="text-slate-400">Syntax Highlighted</span>
+                    <span className="theme-text-muted">Syntax Highlighted</span>
                   </div>
-                  <pre className="p-4 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed custom-scrollbar">
+                  <pre className="p-4 text-xs font-mono text-purple-600 dark:text-purple-300 overflow-x-auto leading-relaxed custom-scrollbar">
                     <code>{activePost.codeSnippet}</code>
                   </pre>
                 </div>
               )}
 
-              {/* Attached External Learning Resources Section */}
-              <div className="mb-6 pt-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block mb-3 flex items-center justify-between">
-                  <span>Attached External Learning Resources ({postResources.length})</span>
-                  <span className="font-mono text-[10px] theme-text-muted">Verified Study Guides & Notebooks</span>
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {postResources.map(res => (
-                    <div
-                      key={res.id}
-                      onClick={() => {
-                        setSelectedResource(res);
-                        setIsResourceModalOpen(true);
-                      }}
-                      className="flex items-center gap-2.5 p-2.5 rounded-2xl border theme-border theme-surface transition-all hover:border-cyan-500/40 group cursor-pointer"
-                    >
-                      <span className="text-lg p-1.5 rounded-xl bg-slate-500/10 text-cyan-600 dark:text-cyan-300 border theme-border shrink-0">{res.icon || '📄'}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold theme-text-primary truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
-                          {res.title}
-                        </p>
-                        <p className="text-[10px] theme-text-muted font-mono mt-0.5">
-                          {res.type} • {res.size || 'External'}
-                        </p>
+              {/* Attached External Learning Resources Section - ONLY if user attached resources */}
+              {postResources && postResources.length > 0 && (
+                <div className="mb-6 pt-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400 block mb-3 flex items-center justify-between">
+                    <span>Attached External Learning Resources ({postResources.length})</span>
+                    <span className="font-mono text-[10px] theme-text-muted">Verified Study Guides & Notebooks</span>
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {postResources.map(res => (
+                      <div
+                        key={res.id}
+                        onClick={() => {
+                          setSelectedResource(res);
+                          setIsResourceModalOpen(true);
+                        }}
+                        className="flex items-center gap-2.5 p-2.5 rounded-2xl border theme-border theme-surface transition-all hover:border-purple-500/40 group cursor-pointer"
+                      >
+                        <span className="text-lg p-1.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 dark:bg-slate-800 dark:text-purple-300 dark:border-slate-700 shrink-0">{res.icon || '📄'}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold theme-text-primary truncate group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+                            {res.title}
+                          </p>
+                          <p className="text-[10px] theme-text-muted font-mono mt-0.5">
+                            {res.type} • {res.size || 'External'}
+                          </p>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                          View 🔗
+                        </span>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                        View 🔗
-                      </span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Embedded YouTube Recommended Video Player */}
               <div className="mb-6">
@@ -214,11 +218,11 @@ export default function PostPage() {
                     onClick={() => toggleUpvotePost(activePost.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-xs transition-all ${
                       activePost.userVoted
-                        ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/50 shadow-md font-bold'
+                        ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/50 shadow-md font-bold'
                         : 'theme-surface theme-text-secondary hover:theme-text-primary border theme-border'
                     }`}
                   >
-                    <svg className={`w-4 h-4 ${activePost.userVoted ? 'text-cyan-500 fill-cyan-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 ${activePost.userVoted ? 'text-purple-500 fill-purple-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
                     </svg>
                     <span>{activePost.upvotes} Upvotes</span>
@@ -240,21 +244,42 @@ export default function PostPage() {
                   </button>
                 </div>
 
-                {/* Share Button */}
-                <button
-                  onClick={handleShare}
-                  className="p-2.5 rounded-xl theme-surface theme-text-secondary hover:theme-text-primary border theme-border transition-colors relative"
-                  title="Share post"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                  {copied && (
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-cyan-600 text-white text-[10px] rounded font-bold whitespace-nowrap shadow-lg">
-                      Link Copied!
-                    </span>
+                {/* Actions Right Group (Share & Delete) */}
+                <div className="flex items-center gap-2">
+                  {/* Delete Button */}
+                  {user && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this post?')) {
+                          deletePost && deletePost(activePost.id);
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 transition-all cursor-pointer"
+                      title="Delete post"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Delete</span>
+                    </button>
                   )}
-                </button>
+
+                  {/* Share Button */}
+                  <button
+                    onClick={handleShare}
+                    className="p-2.5 rounded-xl theme-surface theme-text-secondary hover:theme-text-primary border theme-border transition-colors relative"
+                    title="Share post"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    {copied && (
+                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-purple-600 text-white text-[10px] rounded font-bold whitespace-nowrap shadow-lg">
+                        Link Copied!
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
 
             </article>
@@ -262,7 +287,7 @@ export default function PostPage() {
             {/* Comments Discussion Section */}
             <div className="pb-6 mb-6 border-b theme-border">
               <h3 className="text-sm font-bold theme-text-primary mb-4 flex items-center gap-2">
-                <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 24 24">
+                <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 <span>Discussion ({postComments.length})</span>
@@ -275,7 +300,7 @@ export default function PostPage() {
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Share your thoughts or answer questions..."
-                  className="flex-1 theme-surface border theme-border rounded-xl px-4 py-2.5 text-xs theme-text-primary placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/40"
+                  className="flex-1 theme-surface border theme-border rounded-xl px-4 py-2.5 text-xs theme-text-primary placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/40"
                 />
                 <button
                   type="submit"
@@ -320,7 +345,7 @@ export default function PostPage() {
                   onClick={() => setActiveRightTab('resources')}
                   className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'resources'
-                      ? 'bg-cyan-600 text-white shadow-md'
+                      ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
                   }`}
                   title="Posted Resources"
@@ -332,7 +357,7 @@ export default function PostPage() {
                   onClick={() => setActiveRightTab('gaps')}
                   className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'gaps'
-                      ? 'bg-cyan-600 text-white shadow-md'
+                      ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
                   }`}
                   title="AI Knowledge Gaps"
@@ -344,7 +369,7 @@ export default function PostPage() {
                   onClick={() => setActiveRightTab('path')}
                   className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'path'
-                      ? 'bg-cyan-600 text-white shadow-md'
+                      ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
                   }`}
                   title="Adaptive Learning Path"
@@ -356,7 +381,7 @@ export default function PostPage() {
                   onClick={() => setActiveRightTab('mentors')}
                   className={`flex-1 text-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
                     activeRightTab === 'mentors'
-                      ? 'bg-cyan-600 text-white shadow-md'
+                      ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
                   }`}
                   title="AI Peer Mentors"
@@ -372,7 +397,7 @@ export default function PostPage() {
                     <h2 className="text-xs font-extrabold uppercase tracking-wider theme-text-secondary flex items-center gap-1.5">
                       <span>📁</span> Posted Resources
                     </h2>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                       {postResources.length}
                     </span>
                   </div>
@@ -389,18 +414,18 @@ export default function PostPage() {
                         return (
                           <div
                             key={res.id}
-                            className="p-3.5 rounded-2xl theme-surface border theme-border hover:border-cyan-500/40 transition-all group"
+                            className="p-3.5 rounded-2xl theme-surface border theme-border hover:border-purple-500/40 transition-all group"
                           >
                             <div className="flex items-start gap-3">
                               <span className="text-xl p-2 rounded-xl bg-slate-500/10 border theme-border shrink-0">
                                 {res.icon || '📄'}
                               </span>
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-xs font-bold theme-text-primary group-hover:text-cyan-600 dark:group-hover:text-cyan-300 leading-snug line-clamp-2">
+                                <h4 className="text-xs font-bold theme-text-primary group-hover:text-purple-600 dark:group-hover:text-purple-300 leading-snug line-clamp-2">
                                   {res.title}
                                 </h4>
                                 <div className="flex items-center justify-between text-[10px] theme-text-muted mt-2 font-mono">
-                                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                                  <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                                     {res.type}
                                   </span>
                                   <span>{res.size}</span>
@@ -414,7 +439,7 @@ export default function PostPage() {
                                   setSelectedResource(res);
                                   setIsResourceModalOpen(true);
                                 }}
-                                className="flex-1 text-center py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 text-cyan-600 hover:text-white dark:text-cyan-300 text-[11px] font-semibold transition-all border border-cyan-500/30 cursor-pointer"
+                                className="flex-1 text-center py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 text-purple-600 hover:text-white dark:text-purple-300 text-[11px] font-semibold transition-all border border-purple-500/30 cursor-pointer"
                               >
                                 View / Download 🔗
                               </button>
