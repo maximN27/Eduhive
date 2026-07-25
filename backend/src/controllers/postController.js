@@ -4,7 +4,7 @@ const Comment = require('../models/Comment');
 const Resource = require('../models/Resource');
 const Vote = require('../models/Vote');
 const mongoose = require('mongoose');
-const geminiService = require('../services/geminiService');
+const aiServiceClient = require('../services/aiServiceClient');
 
 // @desc    Get all posts with optional filtering and pagination
 // @route   GET /api/posts
@@ -380,17 +380,44 @@ const summarizePostHandler = async (req, res, next) => {
       .sort({ voteScore: -1 })
       .limit(10);
 
+    const preferences = {};
+    if (req.user.experienceLevel && req.user.experienceLevel.trim()) {
+      preferences.experienceLevel = req.user.experienceLevel;
+    }
+    if (req.user.preferredLanguage && req.user.preferredLanguage.trim()) {
+      preferences.preferredLanguage = req.user.preferredLanguage;
+    }
+
     let summary;
     try {
-      summary = await geminiService.summarizePost(post.title, post.content, topComments);
+      const aiResponse = await aiServiceClient.summarizeWithAIService({
+        title: post.title,
+        content: post.content,
+        comments: topComments.map((comment) => ({
+          content: comment.content,
+          isDeleted: comment.isDeleted,
+          parentComment: comment.parentComment ? comment.parentComment.toString() : null
+        })),
+        ...(Object.keys(preferences).length > 0 ? { preferences } : {})
+      });
+      summary = aiResponse.summary;
     } catch (err) {
-      return res.status(503).json({
+      const isAIServiceError = err instanceof aiServiceClient.AIServiceError;
+      const status = isAIServiceError ? err.status : 503;
+      const message = isAIServiceError
+        ? err.message
+        : 'AI service is currently unavailable';
+      const code = isAIServiceError
+        ? err.code
+        : 'AI_SERVICE_UNAVAILABLE';
+
+      return res.status(status).json({
         success: false,
         error: {
-          message: err.message || 'Summary temporarily unavailable',
-          code: 'SERVICE_UNAVAILABLE'
+          message,
+          code
         },
-        message: err.message || 'Summary temporarily unavailable'
+        message
       });
     }
 

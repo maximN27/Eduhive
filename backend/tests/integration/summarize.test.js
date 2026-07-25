@@ -7,14 +7,14 @@ const User = require('../../src/models/User');
 const Subject = require('../../src/models/Subject');
 const Post = require('../../src/models/Post');
 const Comment = require('../../src/models/Comment');
-const geminiService = require('../../src/services/geminiService');
+const aiServiceClient = require('../../src/services/aiServiceClient');
 
 let mongoServer;
 let token;
 let post;
 
 beforeAll(async () => {
-  process.env.GEMINI_API_KEY = 'test_dummy_key';
+  process.env.AI_SERVICE_URL = 'http://127.0.0.1:8000';
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
   await connectDB(mongoUri);
@@ -70,10 +70,12 @@ beforeEach(async () => {
     .send({ content: 'L2 penalizes large weights proportionally, preserving features.' });
 });
 
-describe('Gemini Summarization API Integration Tests', () => {
-  it('should call geminiService and return generated summary on first request', async () => {
+describe('AI Service Summarization API Integration Tests', () => {
+  it('should call the AI service and return generated summary on first request', async () => {
     const mockSummaryText = 'L1 regularization creates sparse models, while L2 handles multicollinearity by shrinking weights.';
-    jest.spyOn(geminiService, 'summarizePost').mockResolvedValue(mockSummaryText);
+    const spy = jest.spyOn(aiServiceClient, 'summarizeWithAIService').mockResolvedValue({
+      summary: mockSummaryText
+    });
 
     const res = await request(app)
       .post(`/posts/${post._id}/summarize`)
@@ -82,12 +84,18 @@ describe('Gemini Summarization API Integration Tests', () => {
     expect(res.statusCode).toEqual(200);
     expect(res.body.summary).toEqual(mockSummaryText);
     expect(res.body.cached).toEqual(false);
-    expect(geminiService.summarizePost).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      title: post.title,
+      content: post.content,
+      comments: expect.any(Array)
+    }));
   });
 
-  it('should return cached summary on second request without invoking Gemini service again', async () => {
+  it('should return cached summary on second request without invoking the AI service again', async () => {
     const mockSummaryText = 'Cached summary text of regularization.';
-    const spy = jest.spyOn(geminiService, 'summarizePost').mockResolvedValue(mockSummaryText);
+    const spy = jest.spyOn(aiServiceClient, 'summarizeWithAIService').mockResolvedValue({
+      summary: mockSummaryText
+    });
 
     // First call (cache miss)
     await request(app)
@@ -107,8 +115,14 @@ describe('Gemini Summarization API Integration Tests', () => {
     expect(spy).toHaveBeenCalledTimes(1); // Not called a second time
   });
 
-  it('should handle Gemini service errors gracefully with 503 status', async () => {
-    jest.spyOn(geminiService, 'summarizePost').mockRejectedValue(new Error('Summary temporarily unavailable'));
+  it('should handle AI service errors gracefully with 503 status', async () => {
+    jest.spyOn(aiServiceClient, 'summarizeWithAIService').mockRejectedValue(
+      new aiServiceClient.AIServiceError(
+        'AI service is currently unavailable',
+        503,
+        'AI_SERVICE_UNAVAILABLE'
+      )
+    );
 
     const res = await request(app)
       .post(`/posts/${post._id}/summarize`)
