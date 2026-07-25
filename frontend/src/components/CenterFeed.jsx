@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import CreatePostBox from './CreatePostBox';
 import PostCard from './PostCard';
@@ -6,13 +6,10 @@ import PostCard from './PostCard';
 export default function CenterFeed() {
   const {
     posts,
-    allPostsCount,
     subjects,
     activeSubject,
     activeTag,
     searchQuery,
-    feedSort,
-    setFeedSort,
     handleSelectSubject,
     handleSelectTag,
     setSearchQuery,
@@ -24,50 +21,7 @@ export default function CenterFeed() {
   return (
     <section className="w-full flex-1 max-w-full">
       
-      {/* Feed Control Bar: Sorting & Counter */}
-      <div className="theme-card p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
-        
-        {/* Sorting Tabs */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl border" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
-          <button
-            onClick={() => setFeedSort('latest')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              backgroundColor: feedSort === 'latest' ? 'var(--primary)' : 'transparent',
-              color: feedSort === 'latest' ? '#FFFFFF' : 'var(--text-secondary)'
-            }}
-          >
-            🔥 Latest
-          </button>
-          <button
-            onClick={() => setFeedSort('trending')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              backgroundColor: feedSort === 'trending' ? 'var(--primary)' : 'transparent',
-              color: feedSort === 'trending' ? '#FFFFFF' : 'var(--text-secondary)'
-            }}
-          >
-            📈 Trending
-          </button>
-          <button
-            onClick={() => setFeedSort('top')}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              backgroundColor: feedSort === 'top' ? 'var(--primary)' : 'transparent',
-              color: feedSort === 'top' ? '#FFFFFF' : 'var(--text-secondary)'
-            }}
-          >
-            ⭐ Top Rated
-          </button>
-        </div>
-
-        {/* Counter Info */}
-        <div className="text-xs font-medium theme-text-muted">
-          Showing <span className="font-bold theme-text-primary">{posts.length}</span> of {allPostsCount} posts
-        </div>
-      </div>
-
-      {/* Active Filter Chips */}
+      {/* Active Filter Chips (if any filter is selected) */}
       {(activeSubject || activeTag || searchQuery) && (
         <div className="flex flex-wrap items-center gap-2 mb-4 px-1">
           <span className="text-xs font-semibold theme-text-muted">Active Filters:</span>

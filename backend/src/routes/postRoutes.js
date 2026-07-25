@@ -2,16 +2,37 @@ const express = require('express');
 const router = express.Router();
 const {
   getPosts,
+  getPostById,
   createPost,
-  upvotePost,
-  toggleSavePost,
-  addComment
+  updatePost,
+  deletePost,
+  getPostResources,
+  addPostResource,
+  summarizePostHandler
 } = require('../controllers/postController');
+const {
+  getPostComments,
+  createComment
+} = require('../controllers/commentController');
+const protect = require('../middleware/authMiddleware');
 
-router.get('/', getPosts);
-router.post('/', createPost);
-router.put('/:id/upvote', upvotePost);
-router.put('/:id/save', toggleSavePost);
-router.post('/:id/comments', addComment);
+router.route('/')
+  .get(getPosts)
+  .post(protect, createPost);
+
+router.route('/:id')
+  .get(getPostById)
+  .put(protect, updatePost)
+  .delete(protect, deletePost);
+
+router.post('/:id/summarize', protect, summarizePostHandler);
+
+router.route('/:id/comments')
+  .get(getPostComments)
+  .post(protect, createComment);
+
+router.route('/:id/resources')
+  .get(getPostResources)
+  .post(protect, addPostResource);
 
 module.exports = router;

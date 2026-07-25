@@ -23,16 +23,27 @@ const postSchema = new mongoose.Schema({
   tags: [{
     type: String
   }],
-  reserouseIds: [{
+  resourceIds: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Resource'
   }],
   voteScore: {
     type: Number,
     default: 0
+  },
+  cachedSummary: {
+    type: String,
+    default: null
+  },
+  commentCountAtSummary: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
+
+// Text index for search functionality
+postSchema.index({ title: 'text', content: 'text', tags: 'text' });
 
 module.exports = mongoose.model('Post', postSchema);

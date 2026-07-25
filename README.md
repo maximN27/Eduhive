@@ -1,6 +1,6 @@
 # EduHive
 
-> A Collaborative Peer-to-Peer Educational Platform for Knowledge Sharing and Academic Discussions.
+> A Collaborative Peer-to-Peer Educational Platform for Knowledge Sharing, AI-Driven Adaptive Learning, and Academic Discussions.
 
 ### Team Details
 * **Project Name**: EduHive
@@ -18,22 +18,25 @@
 ## Problem Statement and Solution
 
 ### Problem Statement
-Students and self-learners often struggle to find structured, noise-free platforms to discuss subject-specific queries, share code snippets, and store reference study material. Existing general-purpose social networks lack academic categorization, tag filtering, code highlight capabilities, and peer-reviewed answer threads.
+Students and self-learners often struggle to find structured, noise-free platforms to discuss subject-specific queries, share code snippets, store reference study material, and track their personal learning progress. Existing platforms lack automated feedback on conceptual weak spots, tailored adaptive study paths, and verified peer mentorship.
 
 ### Solution
-**EduHive** provides a centralized, subject-focused educational hub where learners can post questions, share code snippets, engage in peer discussions through comments, upvote valuable contributions, and save posts for offline review. By organizing content around subjects and tags, EduHive fosters focused academic collaboration.
+**EduHive** provides a centralized, subject-focused educational hub where learners can post questions, share code snippets, engage in peer discussions, upvote valuable contributions, and save study resources. Integrated with an **AI-Powered Personalized Learning Path & Knowledge Gap Engine** (powered by Google Gemini 2.5 AI), EduHive automatically analyzes post content and code snippets to detect concept gaps, generate customized multi-step study roadmaps, and connect students with verified Professors, Industry Professionals, and top Scholars.
 
 ---
 
-## Features
+## Key Features
 
+- 🧠 **AI Knowledge Gap Detection**: Real-time concept analysis powered by Google Gemini API (`gemini-flash-latest`), identifying weak spots (e.g. Recursion, Call Stack, Memory Leaks) with confidence meters and severity indicators.
+- 🗺️ **Adaptive AI Learning Paths**: Automatically generated 3-step study roadmaps complete with estimated study times, exercise prompts, documentation links, and interactive progress tracking.
+- 🤝 **Peer Mentor Matching**: AI compatibility pairing connecting students with verified Professors, Industry Professionals, or top-reputation Scholars.
+- 🔐 **Role-Based Authentication**: Full-page responsive login & role selection modal supporting Student, Professor, and Professional accounts.
 - 📚 **Subject & Tag Categorization**: Filter discussions by academic subjects and specific skill tags.
 - 🔍 **Interactive Search**: Full-text search across titles, post content, and tags.
 - 💻 **Code Snippet Integration**: Dedicated support for sharing and formatting code snippets within posts.
-- 👍 **Upvoting System**: Community moderation enabling upvoting of helpful posts.
-- 🔖 **Post Bookmarking**: Ability to save key posts for quick retrieval.
+- 👍 **Upvoting & Bookmarking**: Community moderation enabling upvoting of helpful posts and saving key resources.
 - 💬 **Nested Discussions**: Author-attributed comment threads on posts.
-- 🛡️ **JWT Authentication & Authorization**: Secure user registration, password hashing with `bcrypt`, and session verification via JSON Web Tokens.
+- 🛡️ **JWT Security**: Password hashing with `bcryptjs`, session verification via JSON Web Tokens, and persistent session restoration.
 
 ---
 
@@ -47,11 +50,12 @@ Students and self-learners often struggle to find structured, noise-free platfor
 ### Backend
 - **Runtime**: Node.js
 - **Web Framework**: Express.js
+- **AI Integration**: `@google/genai` (Google Gemini 2.5 AI)
 - **Authentication**: `jsonwebtoken` (JWT), `bcryptjs`
-- **CORS**: `cors`
+- **CORS & Logging**: `cors`, `morgan`
 
 ### Database
-- **Database**: MongoDB Atlas
+- **Database**: MongoDB / MongoDB Atlas
 - **ODM**: Mongoose 8
 
 ---
@@ -60,38 +64,37 @@ Students and self-learners often struggle to find structured, noise-free platfor
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Frontend (React + Vite + Tailwind CSS)"]
+    subgraph Client ["Frontend (React 19 + Vite + Tailwind CSS)"]
         UI["User Interface Component"]
-        State["State / API Client"]
+        AuthCtx["AuthContext & AppContext"]
+        AiWidget["PostAiLearningWidget"]
     end
 
     subgraph Server ["Backend (Node.js + Express)"]
-        Router["Express Router (/api/posts)"]
-        Controller["Post Controller"]
-        AuthMiddleware["JWT Middleware"]
+        Router["Express Router (/api)"]
+        AuthCtrl["Auth Controller"]
+        AiCtrl["AI Learning Controller"]
+        AiEngine["AI Learning Engine"]
+    end
+
+    subgraph External ["External AI Service"]
+        Gemini["Google Gemini 2.5 API"]
     end
 
     subgraph Database ["Database Layer"]
-        MongoDB[("MongoDB Atlas")]
+        MongoDB[("MongoDB (User, Post, KnowledgeGap, LearningPath, MentorMatch)")]
     end
 
     UI -->|HTTP Requests| Router
-    Router --> AuthMiddleware
-    AuthMiddleware --> Controller
-    Controller -->|Mongoose Queries| MongoDB
-    MongoDB -->|JSON Data| Controller
-    Controller -->|API Response| UI
+    Router --> AuthCtrl
+    Router --> AiCtrl
+    AiCtrl --> AiEngine
+    AiEngine -->|Generate Content| Gemini
+    Gemini -->|JSON Analysis| AiEngine
+    AuthCtrl & AiCtrl -->|Mongoose Queries| MongoDB
+    MongoDB -->|JSON Data| Router
+    Router -->|API Response| UI
 ```
-
----
-
-## Detailed Workflow
-
-1. **User Request**: The user interacts with the React frontend to browse, create, upvote, or save educational posts.
-2. **API Routing**: Requests are sent to `http://localhost:5000/api/posts` endpoints handled by Express router middleware.
-3. **Business Logic Execution**: The `postController` handles validation, query filtering (by subject, tag, or search term), and upvote/save state transitions.
-4. **Data Persistence**: Mongoose executes queries against MongoDB Atlas collections (`Post` and nested `commentSchema`).
-5. **Response Rendering**: Formatted JSON responses are returned to the client and rendered dynamically via React state updates.
 
 ---
 
@@ -102,179 +105,122 @@ EduHive/
 ├── frontend/                     # React 19 + Vite + Tailwind CSS App
 │   ├── public/
 │   ├── src/
-│   │   ├── components/           # Reusable UI components
-│   │   ├── pages/                # Main application views
-│   │   ├── services/             # API request wrappers
-│   │   ├── context/              # React state context
-│   │   ├── App.jsx               # Application root
+│   │   ├── components/           # UI Components (Navbar, PostAiLearningWidget, RoleSelectionModal, EduHiveLogo, AuthIcons)
+│   │   ├── pages/                # Main Application Views (Home, PostPage, ProfilePage, Login, Signup)
+│   │   ├── services/             # API Wrappers (authService, postService, aiLearningService, api.js)
+│   │   ├── context/              # Context Providers (AuthContext, AppContext)
+│   │   ├── App.jsx               # Application Auth Gate & Root
 │   │   ├── main.jsx              # React DOM entry point
-│   │   └── index.css             # Tailwind CSS import directives
-│   ├── index.html
+│   │   └── index.css             # Design Tokens & Tailwind Directives
 │   ├── vite.config.js            # Vite configuration
-│   ├── package.json
-│   ├── .env.example              # Frontend environment template
-│   └── .gitignore
+│   └── package.json
 ├── backend/                      # Node.js + Express + Mongoose Backend
 │   ├── src/
 │   │   ├── config/
 │   │   │   └── db.js             # MongoDB connection utility
-│   │   ├── controllers/
-│   │   │   └── postController.js # Post CRUD and interaction handlers
+│   │   ├── controllers/          # Controllers (authController, aiLearningController, postController)
 │   │   ├── middleware/           # Auth and error handling middlewares
-│   │   ├── models/
-│   │   │   └── Post.js           # Mongoose Post & Comment schemas
-│   │   ├── routes/
-│   │   │   └── postRoutes.js     # API endpoints mapping
-│   │   ├── utils/                # Helper functions
+│   │   ├── models/               # Mongoose Schemas (User, Post, KnowledgeGap, LearningPath, MentorMatch)
+│   │   ├── routes/               # API Routes (authRoutes, aiLearningRoutes, postRoutes)
+│   │   ├── services/             # AI Engine (aiLearningEngine.js, geminiService.js)
 │   │   └── server.js             # Express application server
-│   ├── package.json
-│   ├── .env.example              # Backend environment template
-│   └── .gitignore
-├── .gitignore                    # Root gitignore
+│   └── package.json
 └── README.md                     # Project documentation
 ```
 
 ---
 
-## Installation and Usage Guide
+## Installation and Starting Guide
 
 ### Prerequisites
 - Node.js (v18.0.0 or higher)
 - npm (v9.0.0 or higher)
-- MongoDB Atlas database connection URI
+- MongoDB URI (local instance or MongoDB Atlas)
+- Google Gemini API Key
 
-### 1. Repository Setup
+### 1. Clone Repository
 ```bash
 git clone https://github.com/maximN27/Eduhive.git
 cd Eduhive
 ```
 
-### 2. Backend Setup
+### 2. Backend Setup & Start
 ```bash
 cd backend
 npm install
 
-# Create environment configuration
-cp .env.example .env
+# Create environment configuration file (.env)
 ```
-Edit `backend/.env` with your credentials:
+Add your credentials to `backend/.env`:
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/eduhive?retryWrites=true&w=majority
+MONGODB_URI=mongodb://127.0.0.1:27017/eduhive
 JWT_SECRET=your_super_secret_jwt_key
+GEMINI_API_KEY=your_google_gemini_api_key
 ```
 Start the backend development server:
 ```bash
 npm run dev
 ```
+*(Server will start on `http://localhost:5000`)*
 
-### 3. Frontend Setup
-Open a new terminal window:
+### 3. Frontend Setup & Start
+Open a **new terminal window**:
 ```bash
-cd frontend
+cd Eduhive/frontend
 npm install
-
-# Create environment configuration
-cp .env.example .env
-```
-Edit `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:5000/api
 ```
 Start the frontend development server:
 ```bash
 npm run dev
 ```
+*(Application will open on `http://localhost:3000`)*
 
 ---
 
-## API & Database Documentation
+## API Documentation Summary
 
-### API Endpoints (`/api/posts`)
+### Authentication Endpoints (`/api/auth`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register user (`student`, `teacher`, `professional`) |
+| `POST` | `/api/auth/login` | Login user with email & password |
+| `GET` | `/api/auth/me` | Fetch authenticated user profile & restore session |
+| `POST` | `/api/auth/logout` | Logout user session |
 
-| Method | Endpoint | Description | Query / Body Params |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/posts` | Fetch all posts with optional filtering | `?subject=ID`, `?tag=NAME`, `?search=QUERY` |
-| `POST` | `/api/posts` | Create a new post | Body: `{ author, subjectId, subjectName, title, content, tags, codeSnippet }` |
-| `PUT` | `/api/posts/:id/upvote` | Increment post upvote count | URL parameter: `id` |
-| `PUT` | `/api/posts/:id/save` | Toggle saved status for a post | URL parameter: `id` |
-| `POST` | `/api/posts/:id/comments` | Add a comment to a post | Body: `{ author, avatar, content }` |
-
-### Database Schemas (Mongoose)
-
-#### Post Schema
-```js
-{
-  author: {
-    name: String,
-    handle: String,
-    avatar: String,
-    role: String // Default: 'Scholar'
-  },
-  subjectId: String,
-  subjectName: String,
-  tags: [String],
-  title: String,
-  content: String,
-  codeSnippet: String,
-  upvotes: Number,
-  saved: Boolean,
-  comments: [commentSchema],
-  timestamps: true
-}
-```
+### AI Learning Endpoints (`/api/ai-learning`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/ai-learning/analyze-post` | Analyze post content for conceptual knowledge gaps |
+| `POST` | `/api/ai-learning/generate-path` | Generate adaptive multi-step study path for concept |
+| `PATCH` | `/api/ai-learning/paths/:id/modules/:step` | Update module step completion progress |
+| `POST` | `/api/ai-learning/mentor-matches` | Recommend peer mentors (Professors, Professionals, Scholars) |
+| `POST` | `/api/ai-learning/mentors/connect` | Send mentorship connection request notification |
 
 ---
 
-## AI/ML Workflow
-*N/A (Skipped - Not applicable for current core Web application build).*
+## AI/ML Integration Details
 
----
-
-## Hardware Components & Circuit Diagrams
-*N/A (Skipped - Software project).*
+EduHive leverages Google Gemini API (`gemini-flash-latest`) via the `@google/genai` SDK:
+1. **Gap Analysis Prompting**: Structured JSON prompts inspect post titles, code snippets, and comments to extract specific concept weak spots and confidence scores.
+2. **Adaptive Curriculum Sequencing**: Generates milestone modules with estimated study durations, exercise descriptions, and external doc links.
+3. **Mentor Match Scoring**: Computes compatibility fit based on subject mastery, streak XP, and account verification status.
 
 ---
 
 ## Security Measures
 
-- **Password Hashing**: Passwords stored via `bcryptjs` with salt rounds.
-- **Stateless Authentication**: JSON Web Tokens (JWT) for secure API request authentication.
-- **Environment Isolation**: Sensitive database URIs and secret keys stored strictly in `.env` files (excluded via `.gitignore`).
-- **CORS Configuration**: Restricts unauthorized cross-origin requests.
+- **Password Security**: Passwords hashed using `bcryptjs` with 10 salt rounds.
+- **JWT Authorization**: Signed JSON Web Tokens with 30-day expiration.
+- **Environment Isolation**: Sensitive keys (`GEMINI_API_KEY`, `MONGODB_URI`, `JWT_SECRET`) stored strictly in `.env`.
+- **Input Validation**: Strict role validation accepting only `student`, `teacher`, or `professional`.
 
 ---
 
-## Testing and Performance
-
-- **Backend Health Check**: Server exposes `/health` route returning application connectivity metrics.
-- **Fast Module Bundling**: Frontend powered by Vite HMR (Hot Module Replacement) for instant sub-second reloads.
-- **Database Indexing**: Text search queries performed using optimized MongoDB regex and index matching.
-
----
-
-## Challenges Faced and Future Scope
-
-### Challenges Faced
-- Managing seamless search filtering across multiple fields (titles, tags, and content) efficiently.
-- Ensuring clean sync between nested Mongoose schemas (comments array inside Post model) and atomic updates.
-
-### Future Scope
-- Real-time notifications using Socket.io when users reply to posted questions.
-- Peer code execution environment (Sandbox/Judge0 integration).
-- Direct peer-to-peer chat and study rooms.
-
----
-
-## Demo Screenshots / Video Links
-*Demo screenshots and walk-through videos will be added upon deployment.*
-
----
-
-## References
+## License & References
 
 - [React Documentation](https://react.dev/)
 - [Vite Guide](https://vite.dev/guide/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Express.js API Reference](https://expressjs.com/)
-- [Mongoose Docs](https://mongoosejs.com/docs/)
+- [Google Gemini API Docs](https://ai.google.dev/gemini-api/docs)

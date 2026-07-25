@@ -5,7 +5,7 @@ export default function SavedPostItem({ post }) {
   const { toggleSavePost } = useApp();
 
   return (
-    <div className="group relative p-3.5 rounded-xl border transition-all hover:-translate-y-0.5" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
+    <div className="group relative p-2.5 rounded-xl border transition-all hover:-translate-y-0.5" style={{ backgroundColor: 'var(--surface-main)', borderColor: 'var(--border-color)' }}>
       <div className="flex items-start justify-between gap-2">
         <span 
           className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
