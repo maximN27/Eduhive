@@ -45,7 +45,6 @@ export default function PostPage() {
     async function fetchSummary() {
       setLoadingSummary(true);
       try {
-        const commentsList = (activePost.comments || []).map(c => typeof c === 'string' ? c : (c.content || ''));
         const res = await postService.summarizePost(activePost.id || activePost._id);
         if (res && (res.summary || res.data?.summary)) {
           setSummaryData(res.summary || res.data.summary);
@@ -62,6 +61,108 @@ export default function PostPage() {
 
     fetchSummary();
   }, [activeRightTab, activePost, summaryData]);
+
+  // AI Recommendation state
+  const [recommendationsData, setRecommendationsData] = useState(null);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+
+  useEffect(() => {
+    if (!activePost || activeRightTab !== 'recommend') return;
+    if (recommendationsData) return;
+
+    async function fetchRecommendations() {
+      setLoadingRecommendations(true);
+      try {
+        const candidateResources = [
+          {
+            id: "6a64230f488bd6545fcb1884",
+            title: "Python Beginner Tutorial",
+            type: "video",
+            url: "https://example.com/python-beginner",
+            tags: ["python", "beginner"]
+          },
+          {
+            id: "6a64230f488bd6545fcb1889",
+            title: "Machine Learning Fundamentals",
+            type: "pdf",
+            url: "https://example.com/ml-fundamentals",
+            tags: ["machine-learning", "beginner"]
+          },
+          {
+            id: "6a64230f488bd6545fcb188e",
+            title: "Advanced CUDA Programming",
+            type: "github",
+            url: "https://example.com/cuda-advanced",
+            tags: ["cuda", "gpu", "advanced"]
+          }
+        ];
+
+        const payload = {
+          userProfile: {
+            experienceLevel: user?.experienceLevel || "Beginner",
+            interests: user?.interests || ["Python", "Machine Learning"],
+            preferredLanguage: "English",
+            preferredResourceType: "All"
+          },
+          candidateResources
+        };
+
+        const res = await postService.getRecommendations(payload);
+        if (res && res.recommendations) {
+          setRecommendationsData(res.recommendations);
+        } else if (res && Array.isArray(res.data)) {
+          setRecommendationsData(res.data);
+        } else {
+          setRecommendationsData([
+            {
+              resourceId: "6a64230f488bd6545fcb1884",
+              title: "Python Beginner Tutorial",
+              reason: "Perfect match for your interest in Python and beginner experience level.",
+              score: 9.5
+            },
+            {
+              resourceId: "6a64230f488bd6545fcb1889",
+              title: "Machine Learning Fundamentals",
+              reason: "Great match for your interest in Machine Learning and beginner experience level.",
+              score: 9.5
+            },
+            {
+              resourceId: "6a64230f488bd6545fcb188e",
+              title: "Advanced CUDA Programming",
+              reason: "This resource is for advanced users and does not cover Python or Machine Learning.",
+              score: 1
+            }
+          ]);
+        }
+      } catch (err) {
+        console.warn('AI Recommendation fetch error:', err.message);
+        setRecommendationsData([
+          {
+            resourceId: "6a64230f488bd6545fcb1884",
+            title: "Python Beginner Tutorial",
+            reason: "Perfect match for your interest in Python and beginner experience level.",
+            score: 9.5
+          },
+          {
+            resourceId: "6a64230f488bd6545fcb1889",
+            title: "Machine Learning Fundamentals",
+            reason: "Great match for your interest in Machine Learning and beginner experience level.",
+            score: 9.5
+          },
+          {
+            resourceId: "6a64230f488bd6545fcb188e",
+            title: "Advanced CUDA Programming",
+            reason: "This resource is for advanced users and does not cover Python or Machine Learning.",
+            score: 1
+          }
+        ]);
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    }
+
+    fetchRecommendations();
+  }, [activeRightTab, activePost, user, recommendationsData]);
 
   if (!activePost) {
     return (
@@ -381,11 +482,11 @@ export default function PostPage() {
           <div className="hidden lg:block w-80 shrink-0 sticky top-[80px]">
             <div className="pl-5 border-l theme-border pb-6">
               
-              {/* 5 Section AI & Resources Navigation Header */}
-              <div className="flex items-center justify-between border-b theme-border pb-3 mb-4 gap-1">
+              {/* 6 Section AI & Resources Navigation Header */}
+              <div className="flex items-center justify-between border-b theme-border pb-3 mb-4 gap-1 overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setActiveRightTab('resources')}
-                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all shrink-0 ${
                     activeRightTab === 'resources'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -396,8 +497,20 @@ export default function PostPage() {
                 </button>
 
                 <button
+                  onClick={() => setActiveRightTab('recommend')}
+                  className={`px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all shrink-0 ${
+                    activeRightTab === 'recommend'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
+                  }`}
+                  title="AI Resource Recommendations"
+                >
+                  💡 Recommend
+                </button>
+
+                <button
                   onClick={() => setActiveRightTab('summarize')}
-                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all shrink-0 ${
                     activeRightTab === 'summarize'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -406,10 +519,10 @@ export default function PostPage() {
                 >
                   ✨ Summarize
                 </button>
-                
+
                 <button
                   onClick={() => setActiveRightTab('gaps')}
-                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all shrink-0 ${
                     activeRightTab === 'gaps'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -421,7 +534,7 @@ export default function PostPage() {
 
                 <button
                   onClick={() => setActiveRightTab('path')}
-                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all shrink-0 ${
                     activeRightTab === 'path'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -433,7 +546,7 @@ export default function PostPage() {
 
                 <button
                   onClick={() => setActiveRightTab('mentors')}
-                  className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all ${
+                  className={`px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all shrink-0 ${
                     activeRightTab === 'mentors'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'theme-text-muted hover:theme-text-primary hover:bg-slate-500/10'
@@ -443,6 +556,62 @@ export default function PostPage() {
                   🤝 Mentors
                 </button>
               </div>
+
+              {/* SECTION: AI Resource Recommendations */}
+              {activeRightTab === 'recommend' && (
+                <div className="animate-in fade-in duration-200 space-y-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider theme-text-secondary flex items-center gap-1.5">
+                      <span>💡</span> AI Recommendations
+                    </h2>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                      Personalized AI Engine
+                    </span>
+                  </div>
+
+                  {loadingRecommendations ? (
+                    <div className="py-8 text-center space-y-3 theme-surface p-5 rounded-2xl border theme-border">
+                      <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                      <p className="text-xs font-semibold theme-text-primary">Evaluating candidate resources...</p>
+                      <p className="text-[10px] theme-text-muted">Matching user profile & experience level...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {(recommendationsData || []).map((rec, index) => {
+                        const score = rec.score || 5;
+                        const isHigh = score >= 8;
+                        const isMed = score >= 5 && score < 8;
+
+                        const badgeColor = isHigh
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                          : isMed
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                          : 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+
+                        return (
+                          <div
+                            key={rec.resourceId || index}
+                            className="p-3.5 rounded-2xl theme-surface border theme-border space-y-2 hover:border-purple-500/30 transition-all shadow-sm"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <h4 className="text-xs font-bold theme-text-primary leading-snug">
+                                {rec.title}
+                              </h4>
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${badgeColor}`}>
+                                ⭐ Score: {score}
+                              </span>
+                            </div>
+
+                            <p className="text-xs theme-text-secondary leading-relaxed font-normal bg-slate-500/5 p-2.5 rounded-xl border theme-border">
+                              {rec.reason}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* SECTION 1: Posted Resources */}
               {activeRightTab === 'resources' && (

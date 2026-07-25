@@ -62,5 +62,10 @@ export const postService = {
   // Summarize post with Gemini AI
   summarizePost: async (id) => {
     return await apiRequest(`/posts/${id}/summarize`, 'POST');
+  },
+
+  // Get AI resource recommendations
+  getRecommendations: async (payload) => {
+    return await apiRequest('/ai/recommend', 'POST', payload);
   }
 };
