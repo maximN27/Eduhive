@@ -10,14 +10,14 @@ export default function CreatePostBox() {
   const [content, setContent] = useState('');
   const [codeSnippet, setCodeSnippet] = useState('');
   const [showCodeInput, setShowCodeInput] = useState(false);
-  const [showResourceInput, setShowResourceInput] = useState(false);
-  const [resourceTitle, setResourceTitle] = useState('');
-  const [resourceType, setResourceType] = useState('PDF Guide');
-  const [resourceUrl, setResourceUrl] = useState('');
   
   // Local image file insertion state & ref
   const [localImages, setLocalImages] = useState([]);
   const fileInputRef = useRef(null);
+
+  // Local resource file insertion state & ref
+  const [attachedResourceFiles, setAttachedResourceFiles] = useState([]);
+  const resourceFileInputRef = useRef(null);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
@@ -36,8 +36,51 @@ export default function CreatePostBox() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleResourceFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) {
+          const ext = file.name.split('.').pop()?.toLowerCase() || '';
+          let type = 'Study Resource';
+          let icon = '📁';
+          if (['pdf'].includes(ext)) { type = 'PDF Guide'; icon = '📄'; }
+          else if (['doc', 'docx', 'txt', 'rtf', 'md'].includes(ext)) { type = 'Research Paper'; icon = '📑'; }
+          else if (['ppt', 'pptx'].includes(ext)) { type = 'Lecture Presentation'; icon = '📊'; }
+          else if (['zip', 'rar', 'tar', 'gz'].includes(ext)) { type = 'Resource Archive'; icon = '📦'; }
+          else if (['py', 'js', 'jsx', 'ts', 'tsx', 'cpp', 'c', 'java', 'ipynb'].includes(ext)) { type = 'Code Script'; icon = '💻'; }
+
+          const k = 1024;
+          const sizes = ['B', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(file.size || 1024) / Math.log(k));
+          const formattedSize = parseFloat(((file.size || 1024) / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+
+          const newRes = {
+            id: `r-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            title: file.name,
+            fileName: file.name,
+            type,
+            icon,
+            size: formattedSize,
+            url: ev.target.result,
+            isFileResource: true,
+            subject: subjects.find(s => s.id === subjectId)?.name || 'General'
+          };
+          setAttachedResourceFiles(prev => [...prev, newRes]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    if (resourceFileInputRef.current) resourceFileInputRef.current.value = '';
+  };
+
   const removeLocalImage = (indexToRemove) => {
     setLocalImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const removeResourceFile = (idToRemove) => {
+    setAttachedResourceFiles(prev => prev.filter(res => res.id !== idToRemove));
   };
 
   const handleSubmit = (e) => {
@@ -48,16 +91,6 @@ export default function CreatePostBox() {
       ? tagInput.split(',').map(t => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean)
       : [];
 
-    const resources = resourceTitle.trim() && resourceUrl.trim()
-      ? [{
-          id: `r-${Date.now()}`,
-          title: resourceTitle.trim(),
-          type: resourceType,
-          url: resourceUrl.trim(),
-          subject: subjects.find(s => s.id === subjectId)?.name || 'General'
-        }]
-      : [];
-
     addPost({
       title: title.trim(),
       subjectId,
@@ -65,19 +98,17 @@ export default function CreatePostBox() {
       content: content.trim(),
       codeSnippet: codeSnippet.trim(),
       images: localImages,
-      resources
+      resources: attachedResourceFiles
     });
 
     // Reset Form
     setTitle('');
     setContent('');
     setCodeSnippet('');
-    setResourceTitle('');
-    setResourceUrl('');
     setTagInput('');
     setLocalImages([]);
+    setAttachedResourceFiles([]);
     setShowCodeInput(false);
-    setShowResourceInput(false);
     setIsOpen(false);
   };
 
@@ -96,13 +127,21 @@ export default function CreatePostBox() {
       ) : (
         <div className="border theme-border theme-surface rounded-2xl p-5">
           <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in duration-150">
-            {/* Hidden File Input */}
+            {/* Hidden File Inputs */}
             <input 
               type="file" 
               ref={fileInputRef} 
               accept="image/*" 
               multiple 
               onChange={handleImageUpload} 
+              className="hidden" 
+            />
+            <input 
+              type="file" 
+              ref={resourceFileInputRef} 
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip,.rar,.tar,.gz,.png,.jpg,.jpeg,.py,.js,.jsx,.ts,.tsx,.cpp,.c,.java,.ipynb" 
+              multiple 
+              onChange={handleResourceFileUpload} 
               className="hidden" 
             />
 
@@ -197,6 +236,38 @@ export default function CreatePostBox() {
               </div>
             )}
 
+            {/* Attached Study Resource Files List */}
+            {attachedResourceFiles.length > 0 && (
+              <div className="p-3 rounded-xl border space-y-2 theme-border" style={{ backgroundColor: 'var(--input-bg)' }}>
+                <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">
+                  Attached Study Resource Files ({attachedResourceFiles.length})
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {attachedResourceFiles.map((res) => (
+                    <div key={res.id} className="flex items-center justify-between p-2 rounded-xl border theme-border theme-surface">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-lg p-1.5 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-slate-800 dark:text-indigo-300 border border-indigo-100 dark:border-slate-700 shrink-0">
+                          {res.icon}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold theme-text-primary truncate">{res.fileName}</p>
+                          <p className="text-[10px] theme-text-muted font-mono">{res.type} • {res.size}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeResourceFile(res.id)}
+                        className="w-5 h-5 rounded-full bg-rose-500/10 text-rose-500 hover:bg-rose-600 hover:text-white transition-colors flex items-center justify-center text-[10px] shrink-0 font-bold"
+                        title="Remove File Resource"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {showCodeInput && (
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -224,51 +295,6 @@ export default function CreatePostBox() {
               </div>
             )}
 
-            {showResourceInput ? (
-              <div className="p-3 rounded-xl border space-y-2.5 theme-surface theme-border">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Attach Study Resource</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowResourceInput(false)}
-                    className="text-[10px] text-rose-500 hover:underline"
-                  >
-                    Remove resource
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    value={resourceTitle}
-                    onChange={(e) => setResourceTitle(e.target.value)}
-                    placeholder="Resource Title (e.g. Cheat Sheet PDF)"
-                    className="sm:col-span-2 border rounded-lg px-2.5 py-1.5 text-xs theme-text-primary focus:outline-none"
-                    style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
-                  />
-                  <select
-                    value={resourceType}
-                    onChange={(e) => setResourceType(e.target.value)}
-                    className="border rounded-lg px-2 py-1.5 text-xs theme-text-primary focus:outline-none"
-                    style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
-                  >
-                    <option value="PDF Guide">📄 PDF Guide</option>
-                    <option value="Research Paper">📑 Research Paper</option>
-                    <option value="Video Lecture">🎥 Video Lecture</option>
-                    <option value="GitHub Repo">💻 GitHub Repo</option>
-                    <option value="Interactive Note">✏️ Interactive Note</option>
-                  </select>
-                </div>
-                <input
-                  type="url"
-                  value={resourceUrl}
-                  onChange={(e) => setResourceUrl(e.target.value)}
-                  placeholder="Resource URL / Link (https://...)"
-                  className="w-full border rounded-lg px-2.5 py-1.5 text-xs theme-text-primary focus:outline-none"
-                  style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
-                />
-              </div>
-            ) : null}
-
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t theme-border">
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -280,6 +306,15 @@ export default function CreatePostBox() {
                   <span>Add Local Image</span>
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => resourceFileInputRef.current?.click()}
+                  className="btn-secondary text-xs flex items-center gap-1.5"
+                >
+                  <span>📁</span>
+                  <span>+ Attach Resource File</span>
+                </button>
+
                 {!showCodeInput && (
                   <button
                     type="button"
@@ -287,16 +322,6 @@ export default function CreatePostBox() {
                     className="btn-secondary text-xs"
                   >
                     + Add Code Snippet
-                  </button>
-                )}
-
-                {!showResourceInput && (
-                  <button
-                    type="button"
-                    onClick={() => setShowResourceInput(true)}
-                    className="btn-secondary text-xs"
-                  >
-                    + Attach Resource
                   </button>
                 )}
               </div>
