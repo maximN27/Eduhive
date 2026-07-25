@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
 import Navbar from '../components/Navbar';
 import LeftSidebar from '../components/LeftSidebar';
 import CenterFeed from '../components/CenterFeed';
 import RightSidebar from '../components/RightSidebar';
-import SettingsModal from '../components/SettingsModal';
 
 export default function Home() {
-  const { isSettingsOpen, setIsSettingsOpen } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -58,12 +55,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* Settings Modal (Appearance & Theme Settings) */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
 
       {/* Footer */}
       <footer className="border-t py-8 mt-12 transition-colors" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
